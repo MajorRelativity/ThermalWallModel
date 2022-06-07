@@ -8,14 +8,14 @@ axis equal
 
 %% Manual Thermal Property Settings:
 %Foam:
-TCf = 5
-TMf = 5
-TSf = 5
+TCf = 5;
+TMf = 5;
+TSf = 5;
 
 %Wall
-TCw = 10
-TMw = 10
-TSw = 10
+TCw = 10;
+TMw = 10;
+TSw = 10;
 
 
 %% Thermal Properties of the Material:
