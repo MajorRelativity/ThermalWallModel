@@ -1,7 +1,11 @@
-%% ThermalWallModel Version R0.05
+%% ThermalWallModel Version R0.06
 % Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
+
+%% Initialization
+close
+
 
 %% Creating Model
 thermalmodel = createpde('thermal','transient');
@@ -46,12 +50,27 @@ thermalresults = solve(thermalmodel,tlist)
 
 %% Plot Temperature and Heat Flux:
 
-pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,end), ...
+pause(1)
+close('all')
+
+%Initial Setup:
+M = 1000; %Time Skip
+P = 1;
+
+%Plot Animation
+for n = M*(0:(size(tlist,2)/M))+1
+    F = [num2str(tlist(n)),' seconds in'];
+    figure('Name',F)
+    pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,n), ...
                      'Contour','on',...
                      'FlowData',[qx(:,end),qy(:,end)], ...
                      'ColorMap','hot')
-
-
+    pause(P)
+    if n>1
+        close('Name',Fprev)
+    end
+    Fprev = F;
+end
 
 
 

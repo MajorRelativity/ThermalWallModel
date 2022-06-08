@@ -1,7 +1,11 @@
-%% ThermalWallModel Version R0.03
+%% ThermalWallModel Version R0.05
 % Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
+
+%% Initialization
+close
+
 
 %% Creating Model
 thermalmodel = createpde('thermal','transient');
@@ -14,16 +18,21 @@ axis equal
 
 %% Thermal Properties:
 
-thermalProperties(thermalmodel,'ThermalConductivity',1,...
-                               'MassDensity',1,...
-                               'SpecificHeat',1);
+%Wall
+TCw = .03; % Thermal Conductivity for the Wall W/(m*K)
+TMw = 24; % Mass Density for the Wall kg/m^3
+TSw = 1500; % Specific Heat for the Wall J / kg * K
+
+thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
+                               'MassDensity',TMw,...
+                               'SpecificHeat',TSw);
 
 HF = (1.82)*1055/((60*60)*(.305^2))
 
 thermalBC(thermalmodel,'Edge',1,'Temperature',303);
-thermalBC(thermalmodel,'Edge',5,'HeatFlux',HF);
+thermalBC(thermalmodel,'Edge',5,'HeatFlux',-HF);
 
-thermalIC(thermalmodel,0);
+thermalIC(thermalmodel,300);
 
 %% Generate Mesh
 
@@ -35,18 +44,33 @@ title('Mesh with Quadratic Triangular Elements')
 
 %% Set Times and Solve the Model:
 
-tlist = 0:0.5:5;
+tlist = 0:1:10^4;
 thermalresults = solve(thermalmodel,tlist)
 [qx,qy] = evaluateHeatFlux(thermalresults);
 
 %% Plot Temperature and Heat Flux:
 
-pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,end), ...
+pause(1)
+close
+
+%Initial Setup:
+M = 1000; %Time Skip
+P = 1;
+
+%Plot Animation
+for n = 1:(size(tlist,2)/M)
+    F = [num2str(tlist(M*n)),' seconds in'];
+    figure('Name',F)
+    pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,M*n), ...
                      'Contour','on',...
                      'FlowData',[qx(:,end),qy(:,end)], ...
                      'ColorMap','hot')
-
-
+    pause(P)
+    if n>1
+        close('Name',Fprev)
+    end
+    Fprev = F;
+end
 
 
 
