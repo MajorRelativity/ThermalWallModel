@@ -1,5 +1,5 @@
-%% ThermalWallModel Version R0.01
-% Updated to R0.01 on June 8 2022
+%% ThermalWallModel Version R0.02
+% Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
 
@@ -7,7 +7,7 @@
 thermalmodel = createpde('thermal','transient');
 
 %% Importing and Ploting Geometry
-geometryFromEdges(thermalmodel,@crackg);
+geometryFromEdges(thermalmodel,@modelshapew);
 pdegplot(thermalmodel,'EdgeLabels','on')
 ylim([-10,10])
 axis equal
@@ -18,8 +18,8 @@ thermalProperties(thermalmodel,'ThermalConductivity',1,...
                                'MassDensity',1,...
                                'SpecificHeat',1);
 
-thermalBC(thermalmodel,'Edge',6,'Temperature',100);
-thermalBC(thermalmodel,'Edge',1,'HeatFlux',-10);
+thermalBC(thermalmodel,'Edge',1,'Temperature',100);
+thermalBC(thermalmodel,'Edge',5,'HeatFlux',-10);
 
 thermalIC(thermalmodel,0);
 
