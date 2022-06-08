@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.06
+%% ThermalWallModel Version R0.07
 % Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -27,10 +27,10 @@ thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
                                'MassDensity',TMw,...
                                'SpecificHeat',TSw);
 
-HF = (1.82)*1055/((60*60)*(.305^2))
+HF = (1.82)*1055/((60*60)*(.305^2));
 
 thermalBC(thermalmodel,'Edge',1,'Temperature',303);
-thermalBC(thermalmodel,'Edge',5,'HeatFlux',-HF);
+thermalBC(thermalmodel,'Edge',[3,5,7],'HeatFlux',-HF);
 
 thermalIC(thermalmodel,300);
 
