@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.03
+%% ThermalWallModel Version R0.05
 % Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -16,8 +16,8 @@ axis equal
 
 %Wall
 TCw = .03; % Thermal Conductivity for the Wall W/(m*K)
-TMw = .96 * ((100^3)/(10^3)); % Mass Density for the Wall kg/m^3
-TSw = 1100 * (10^3); % Specific Heat for the Wall J / kg * K
+TMw = 24; % Mass Density for the Wall kg/m^3
+TSw = 1500; % Specific Heat for the Wall J / kg * K
 
 thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
                                'MassDensity',TMw,...
@@ -26,9 +26,9 @@ thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
 HF = (1.82)*1055/((60*60)*(.305^2))
 
 thermalBC(thermalmodel,'Edge',1,'Temperature',303);
-thermalBC(thermalmodel,'Edge',5,'HeatFlux',HF);
+thermalBC(thermalmodel,'Edge',5,'HeatFlux',-HF);
 
-thermalIC(thermalmodel,0);
+thermalIC(thermalmodel,300);
 
 %% Generate Mesh
 
@@ -40,7 +40,7 @@ title('Mesh with Quadratic Triangular Elements')
 
 %% Set Times and Solve the Model:
 
-tlist = 0:50:10^7;
+tlist = 0:1:10^4;
 thermalresults = solve(thermalmodel,tlist)
 [qx,qy] = evaluateHeatFlux(thermalresults);
 
