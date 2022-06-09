@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.12
+%% ThermalWallModel Version R0.13
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -9,9 +9,9 @@ clear
 
 %Preferences:
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
-qSMpm = 100; %Mesh Pause Duration
-qSMpw = 1; %Wall Pause Duration
-qPss = 1; %Plot Steady State Animation
+qSMpm = 20; %Mesh Pause Duration (s)
+qSMpw = 1; %Wall Pause Duration (s)
+qPss = 1; %Plot Steady State Animation (1 = yes, 0 = no)
 
 %% User Edited Section:
 
@@ -37,17 +37,16 @@ TempwO = 297; %Outdoor Wall Temperature K
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
-timeE = 1000; %End Time s
-timeStep = 5; %The step between when the model calculates s
+timeE = 60*60; %End Time s
+timeStep = 60; %The step between when the model calculates s
 
 %Plot Conditions:
 timeStepP = 60; %The step in between plots s
-PauseP = .1; %The time in between frames during plot s
 qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
 
 %Mesh Specifications:
-Hmin = .001 %Minimum Mesh legn
-Hmax = .001
+Hmin = .0001; %Minimum Mesh Length
+Hmax = .001; %Maximum Mesh Length
 
 %% Initialization
 close
@@ -55,7 +54,7 @@ tf = FoamThickness;
 lf = FoamLength;
 Tw = WallThickness;
 Lw = WallLength;
-wallGeometry(Lw,Tw,lf,tf)
+wallGeometry(Lw,Tw,lf,tf);
 
 %% Creating Model
 thermalmodel = createpde('thermal','transient');
@@ -102,10 +101,18 @@ Fmg.Visible = "off";
 pdemesh(thermalmodel)
 title('Mesh with Quadratic Triangular Elements')
 disp('[+] Mesh Generated')
+Fmgz = figure('Name','Mesh Geomerty Zoom');
+Fmgz.Visible = "off";
+pdemesh(thermalmodel)
+hold on
+axis([0,Tw+tf,(-lf/2),(lf/2)])
+title('Zoomed Mesh with Quadratic Triangular Elements')
+hold off
+disp('[+] Mesh Generated')
 
 %% Set Times and Solve the Model:
-
 tlist = 0:timeStep:timeE; %24 hours
+disp('[$] Solving Thermal Model')
 thermalresults = solve(thermalmodel,tlist);
 [qx,qy] = evaluateHeatFlux(thermalresults);
 disp('[+] Thermal Model Solved')
@@ -114,8 +121,12 @@ disp('[+] Thermal Model Solved')
 
 % Show Mesh and Geometry
 if qSM == 1
+    Fmgz.Visible = "on";
     Fwg.Visible = "on";
     Fmg.Visible = "on";
+    disp(['[@] Displaying Mesh Geometry for ',num2str(qSMpm),' second(s):'])
+    pause(qSMpmz)
+    close(Fmg)
     disp(['[@] Displaying Mesh Geometry for ',num2str(qSMpm),' second(s):'])
     pause(qSMpm)
     close(Fmg)
@@ -130,7 +141,6 @@ end
 %Initial Setup:
 if qPss == 1
     M = timeStepP/timeStep; %Time Skip
-    P = PauseP;
     cM = 1;
     
     F = figure;

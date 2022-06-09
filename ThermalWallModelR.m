@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.13
+%% ThermalWallModel Version R0.14
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -6,10 +6,12 @@
 %% Initialization and Preferences:
 
 clear
+close('all')
 
 %Preferences:
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
-qSMpm = 20; %Mesh Pause Duration (s)
+qSMpmz = 10; %Zoomed Mesh Pause Duration (s)
+qSMpm = 2; %Mesh Pause Duration (s)
 qSMpw = 1; %Wall Pause Duration (s)
 qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
 
@@ -102,6 +104,15 @@ pdemesh(thermalmodel)
 title('Mesh with Quadratic Triangular Elements')
 disp('[+] Mesh Generated')
 
+Fmgz = figure('Name','Mesh Geomerty Zoom');
+Fmgz.Visible = "off";
+pdemesh(thermalmodel)
+hold on
+axis([0,Tw+tf,(-lf/2),(lf/2)])
+title('Zoomed Mesh with Quadratic Triangular Elements')
+hold off
+disp('[+] Zoom Mesh Generated')
+
 %% Set Times and Solve the Model:
 tlist = 0:timeStep:timeE; %24 hours
 disp('[$] Solving Thermal Model')
@@ -113,8 +124,12 @@ disp('[+] Thermal Model Solved')
 
 % Show Mesh and Geometry
 if qSM == 1
+    Fmgz.Visible = "on";
     Fwg.Visible = "on";
     Fmg.Visible = "on";
+    disp(['[@] Displaying Zoom Mesh Geometry for ',num2str(qSMpmz),' second(s):'])
+    pause(qSMpmz)
+    close(Fmgz)
     disp(['[@] Displaying Mesh Geometry for ',num2str(qSMpm),' second(s):'])
     pause(qSMpm)
     close(Fmg)
