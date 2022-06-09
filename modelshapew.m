@@ -18,10 +18,10 @@ function [x,y]=modelshapew(bs,s)
 
 %% Parameter Inputs:
 
-FoamThickness = 1;
-FoamLength = 12;
-WallThickness = 2;
-WallLength = 30;
+FoamThickness = 1.6 * 10^-2; %m
+FoamLength = 45.6 * 10^-2; %m
+WallThickness = 5.1 * 10^-2; %m
+WallLength = 126 * 10^-2; %m 
 
 %The below seems to organize whether the determined box is inside or not
 d=[

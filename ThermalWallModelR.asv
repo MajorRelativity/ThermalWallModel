@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.06
+%% ThermalWallModel Version R0.07
 % Updated on June 8 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -27,16 +27,19 @@ thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
                                'MassDensity',TMw,...
                                'SpecificHeat',TSw);
 
-HF = (1.82)*1055/((60*60)*(.305^2))
+HF = (1.82)*1055/((60*60)*(.305^2));
 
 thermalBC(thermalmodel,'Edge',1,'Temperature',303);
-thermalBC(thermalmodel,'Edge',5,'HeatFlux',-HF);
+%thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',297);
 
+%thermalBC(thermalmodel,'Edge',[3,5,7],'HeatFlux',-HF);
+
+thermalIC(thermalmodel,297,"Edge",[3,5,7])
 thermalIC(thermalmodel,300);
 
 %% Generate Mesh
 
-generateMesh(thermalmodel);
+generateMesh(thermalmodel,'Hmin',.001,'Hmax',.01);
 figure
 pdemesh(thermalmodel)
 title('Mesh with Quadratic Triangular Elements')
@@ -44,7 +47,7 @@ title('Mesh with Quadratic Triangular Elements')
 
 %% Set Times and Solve the Model:
 
-tlist = 0:1:10^4;
+tlist = 0:1:86400; %24 hours
 thermalresults = solve(thermalmodel,tlist)
 [qx,qy] = evaluateHeatFlux(thermalresults);
 
@@ -54,8 +57,8 @@ pause(1)
 close('all')
 
 %Initial Setup:
-M = 1000; %Time Skip
-P = 1;
+M = 10; %Time Skip
+P = .1;
 
 %Plot Animation
 for n = M*(0:(size(tlist,2)/M))+1
@@ -63,7 +66,7 @@ for n = M*(0:(size(tlist,2)/M))+1
     figure('Name',F)
     pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,n), ...
                      'Contour','on',...
-                     'FlowData',[qx(:,end),qy(:,end)], ...
+                     'FlowData',[qx(:,n),qy(:,n)], ...
                      'ColorMap','hot')
     pause(P)
     if n>1
@@ -72,7 +75,7 @@ for n = M*(0:(size(tlist,2)/M))+1
     Fprev = F;
 end
 
-
+%SEE LOG DAY FOR DAY 10!!!!
 
 
 
