@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.10
+%% ThermalWallModel Version R0.11
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -11,6 +11,7 @@ clear
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMpm = 3; %Mesh Pause Duration
 qSMpw = 1; %Wall Pause Duration
+qPss = 1; %Plot Steady State Animation
 
 %% User Edited Section:
 
@@ -123,57 +124,58 @@ else
 end
 
 %Initial Setup:
-if qP == 1
-M = timeStepP/timeStep; %Time Skip
-P = PauseP;
-cM = 1;
-
-F = figure;
-F.Visible = "off";
-n = M*(0:((size(tlist,2)-1)/M))+1;
-Fssp(size(n,2)) = struct('cdata',[],'colormap',[]);
-
-%Plot Animation
-for n = n
+if qPss == 1
+    M = timeStepP/timeStep; %Time Skip
+    P = PauseP;
+    cM = 1;
     
-    %Figure Name (seconds, minutes, or hours)
-    if qPF == 2
-        Fname = [num2str(tlist(n)/60),' minutes in'];
-    elseif qPF == 3
-        Fname = [num2str(tlist(n)/(60*60)),' hours in'];
-    else
-        Fname = [num2str(tlist(n)),' seconds in'];
+    F = figure;
+    F.Visible = "off";
+    n = M*(0:((size(tlist,2)-1)/M))+1;
+    Fssp(size(n,2)) = struct('cdata',[],'colormap',[]);
+    
+    %Plot Animation
+    for n = n
+        
+        %Figure Name (seconds, minutes, or hours)
+        if qPF == 2
+            Fname = [num2str(tlist(n)/60),' minutes in'];
+        elseif qPF == 3
+            Fname = [num2str(tlist(n)/(60*60)),' hours in'];
+        else
+            Fname = [num2str(tlist(n)),' seconds in'];
+        end
+    
+        %Plot Figure:
+        F.Name = Fname;
+        pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,n), ...
+                         'Contour','on',...
+                         'FlowData',[qx(:,n),qy(:,n)], ...
+                         'ColorMap','hot')
+        xaxis = [0,Tw+tf+Tw];
+        yaxis = [-3*Lw/4,3*Lw/4];
+        axis([xaxis,yaxis])
+        title(Fname)
+        xlabel('Meters')
+        ylabel('Meters')
+    
+        %Store Figure:
+        Fssp(cM) = getframe(F); %Fssp = Stores Progression to Steady State
+    
+        % Inform User and Repeat:
+        cM = cM + 1;
+        FsspProgress = num2str((tlist(n)/tlist(end))*100); %Creates a Progress Bar
+        disp(['[*] Building Steady State Creation Animation: ',FsspProgress,'% Complete'])
     end
-
-    %Plot Figure:
-    F.Name = Fname;
-    pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,n), ...
-                     'Contour','on',...
-                     'FlowData',[qx(:,n),qy(:,n)], ...
-                     'ColorMap','hot')
-    xaxis = [0,Tw+tf+Tw];
-    yaxis = [-3*Lw/4,3*Lw/4];
-    axis([xaxis,yaxis])
-    title(Fname)
-    xlabel('Meters')
-    ylabel('Meters')
-
-    %Store Figure:
-    Fssp(cM) = getframe(F); %Fssp = Stores Progression to Steady State
-
-    % Inform User and Repeat:
-    cM = cM + 1;
-    FsspProgress = num2str((tlist(n)/tlist(end))*100); %Creates a Progress Bar
-    disp(['[*] Building Steady State Creation Animation: ',FsspProgress,'% Complete'])
+    
+    disp('[+] Steady State Creation Animation Completed')
+    
+    % Return figure visibility and play movie:
+    close(F)
+    figure('Name','Steady State Creation Animation')
+    disp('[@] Playing "Steady State Creation Animation" (Fssp)')
+    movie(gcf,Fssp,2,5)
 end
-
-disp('[+] Steady State Creation Animation Completed')
-
-% Return figure visibility and play movie:
-close(F)
-figure('Name','Steady State Creation Animation')
-disp('[@] Playing "Steady State Creation Animation" (Fssp)')
-movie(gcf,Fssp,2,5)
 
 %% Find Temperature at Point Between Foam Using interpolateTemperature:
 disp('[$] Finding Temperatures in Between the Foam and Wall')
@@ -181,7 +183,7 @@ Y = linspace(-lf/2,lf/2,11);
 cI = 1;
 for n = Y
 TempAtIntersect(cI) = interpolateTemperature(thermalresults,Tw,n,...
-    2); %interpolates temperature at (Tw,Y)
+    ); %interpolates temperature at (Tw,Y)
 cI = cI+1;
 end
 

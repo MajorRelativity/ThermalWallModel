@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.11
+%% ThermalWallModel Version R0.12
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -16,9 +16,9 @@ qPss = 1; %Plot Steady State Animation
 %% User Edited Section:
 
 % Shape of Wall:
-FoamThickness = 1.6 * 10^-2; %m
+FoamThickness = 2.54 * 10^-2; %m
 FoamLength = 45.6 * 10^-2; %m
-WallThickness = 5.1 * 10^-2; %m
+WallThickness = 5.08 * 10^-2; %m
 WallLength = 126 * 10^-2; %m 
 
 % Wall Thermal Properties:
@@ -183,7 +183,7 @@ Y = linspace(-lf/2,lf/2,11);
 cI = 1;
 for n = Y
 TempAtIntersect(cI) = interpolateTemperature(thermalresults,Tw,n,...
-    2); %interpolates temperature at (Tw,Y)
+    size(tlist,2)); %interpolates temperature at (Tw,Y)
 cI = cI+1;
 end
 
