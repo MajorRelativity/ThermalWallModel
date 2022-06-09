@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.09
+%% ThermalWallModel Version R0.10
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -27,13 +27,13 @@ TempwO = 297; %Outdoor Wall Temperature K
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
-timeE = 86400; %End Time s
-timeStep = 5; %The step between when the model calculates s
+timeE = 100000; %End Time s
+timeStep = 100000; %The step between when the model calculates s
 
 %Plot Conditions:
-timeStepP = 120; %The step in between plots s
+timeStepP = 100000; %The step in between plots s
 PauseP = .1; %The time in between frames during plot s
-qPF = 2; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
+qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
 %% Initialization
 close
 tf = FoamThickness;
@@ -66,14 +66,13 @@ thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
 
 thermalBC(thermalmodel,'Edge',1,'Temperature',TempwI);
 
-%thermalBC(thermalmodel,'Edge',[3,5,7],'HeatFlux',-HFo);
+thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',TempwO);
 
-thermalIC(thermalmodel, TempwO,'Edge',[3,5,7])
+%thermalIC(thermalmodel, TempwO,'Edge',[3,5,7])
 thermalIC(thermalmodel,Tempi);
-
 %% Generate Mesh
 
-generateMesh(thermalmodel,'Hmin',.001,'Hmax',.01);
+Mesh = generateMesh(thermalmodel,'Hmin',.001,'Hmax',.01);
 figure(2)
 pdemesh(thermalmodel)
 title('Mesh with Quadratic Triangular Elements')
@@ -81,7 +80,7 @@ title('Mesh with Quadratic Triangular Elements')
 
 %% Set Times and Solve the Model:
 
-tlist = 0:5:timeE; %24 hours
+tlist = 0:timeStep:timeE; %24 hours
 thermalresults = solve(thermalmodel,tlist)
 [qx,qy] = evaluateHeatFlux(thermalresults);
 
@@ -95,33 +94,64 @@ close(1)
 %Initial Setup:
 M = timeStepP/timeStep; %Time Skip
 P = PauseP;
+cM = 1;
+
+F = figure;
+F.Visible = "off";
+n = M*(0:((size(tlist,2)-1)/M))+1;
+Fssp(size(n,2)) = struct('cdata',[],'colormap',[]);
 
 %Plot Animation
-for n = M*(0:(size(tlist,2)/M))+1
+for n = n
     
     %Figure Name (seconds, minutes, or hours)
     if qPF == 2
-        F = [num2str(tlist(n)/60),' minutes in'];
+        Fname = [num2str(tlist(n)/60),' minutes in'];
     elseif qPF == 3
-        F = [num2str(tlist(n)/(60*60)),' hours in'];
+        Fname = [num2str(tlist(n)/(60*60)),' hours in'];
     else
-        F = [num2str(tlist(n)),' seconds in'];
+        Fname = [num2str(tlist(n)),' seconds in'];
     end
 
     %Plot Figure:
-    figure('Name',F)
+    F.Name = Fname;
     pdeplot(thermalmodel,'XYData',thermalresults.Temperature(:,n), ...
                      'Contour','on',...
                      'FlowData',[qx(:,n),qy(:,n)], ...
                      'ColorMap','hot')
-    pause(P)
+    title(Fname)
 
-    %Close Previous Figure
-    if n>1
-        close('Name',Fprev)
-    end
-    Fprev = F;
+    %Store Figure:
+    ax = gca; %axis
+    ax.Units = 'pixels';
+    axpos = ax.Position;
+    marg1 = -30;
+    marg2 = -20;
+    marg3 = 100;
+    marg4 = 100;
+    %rect = [axpos(1)+marg1, axpos(2)+marg2, axpos(3)+marg3, axpos(4)+marg4];
+    Fssp(cM) = getframe(F); %Fssp = Stores Progression to Steady State
+    ax.Units = 'normalized';
+
+
+
+    %Repeat:
+    cM = cM + 1;
 end
 
+% Return figure visibility and play movie:
+F.Visible = "on";
+figure(2)
+movie(gcf,Fssp)
+
+%% Find Temperature at Point Between Foam:
+
+Y = linspace(-lf/2,lf/2,11);
+cI = 1;
+for n = Y
+TempIntersect(cI) = interpolateTemperature(thermalresults,Tw,n,...
+    2) %interpolates temperature at (Tw,Y)
+cI = cI+1
+end
 
 
