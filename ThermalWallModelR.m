@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.12
+%% ThermalWallModel Version R0.13
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -9,9 +9,9 @@ clear
 
 %Preferences:
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
-qSMpm = 3; %Mesh Pause Duration
-qSMpw = 1; %Wall Pause Duration
-qPss = 1; %Plot Steady State Animation
+qSMpm = 20; %Mesh Pause Duration (s)
+qSMpw = 1; %Wall Pause Duration (s)
+qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
 
 %% User Edited Section:
 
@@ -37,13 +37,16 @@ TempwO = 297; %Outdoor Wall Temperature K
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
-timeE = 1000; %End Time s
-timeStep = 5; %The step between when the model calculates s
+timeE = 60*60; %End Time s
+timeStep = 60; %The step between when the model calculates s
 
 %Plot Conditions:
 timeStepP = 60; %The step in between plots s
-PauseP = .1; %The time in between frames during plot s
 qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
+
+%Mesh Specifications:
+Hmin = .0001; %Minimum Mesh Length
+Hmax = .001; %Maximum Mesh Length
 
 %% Initialization
 close
@@ -51,7 +54,7 @@ tf = FoamThickness;
 lf = FoamLength;
 Tw = WallThickness;
 Lw = WallLength;
-wallGeometry(Lw,Tw,lf,tf)
+wallGeometry(Lw,Tw,lf,tf);
 
 %% Creating Model
 thermalmodel = createpde('thermal','transient');
@@ -92,7 +95,7 @@ thermalIC(thermalmodel,Tempi);
 disp('[+] Geomerty Imported and Conditions Applied')
 %% Generate Mesh
 disp('[$] Generating Mesh')
-Mesh = generateMesh(thermalmodel,'Hmin',.001,'Hmax',.01);
+Mesh = generateMesh(thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
 Fmg = figure('Name','Mesh Geomerty');
 Fmg.Visible = "off";
 pdemesh(thermalmodel)
@@ -100,8 +103,8 @@ title('Mesh with Quadratic Triangular Elements')
 disp('[+] Mesh Generated')
 
 %% Set Times and Solve the Model:
-
 tlist = 0:timeStep:timeE; %24 hours
+disp('[$] Solving Thermal Model')
 thermalresults = solve(thermalmodel,tlist);
 [qx,qy] = evaluateHeatFlux(thermalresults);
 disp('[+] Thermal Model Solved')
@@ -126,7 +129,6 @@ end
 %Initial Setup:
 if qPss == 1
     M = timeStepP/timeStep; %Time Skip
-    P = PauseP;
     cM = 1;
     
     F = figure;
