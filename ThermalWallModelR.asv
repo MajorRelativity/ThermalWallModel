@@ -11,8 +11,9 @@ close('all')
 %Preferences:
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMp = 10; %Show Mesh Pause Length (s)
-qPss = 1; %Plot Steady State Animation (1 = yes, 0 = no)
-qIT = 1; %Readjust time? (1 = yes, 0 = no)
+qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
+qIT = 0; %Readjust time? (1 = yes, 0 = no)
+qFM = 1; % Foam Measurement Analysis? (1 = yes, 0 = no)
 
 %% User Edited Section:
 
@@ -26,6 +27,11 @@ WallLength = 126 * 10^-2; %m
 ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
+
+% Wall and Foam R Values. Foam Adjustment Settings:
+Rw = 10; 
+Rf = 5;
+FMas = .01; % How much the foam size is decreased on each wraparound
 
 % Heat Flux (if Applicable):
 HFo = (1.82)*1055/((60*60)*(.305^2)); %Heat Flux Outdoor
@@ -49,6 +55,9 @@ qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
 Hming = .001; %Minimum Mesh Length Guess
 Hdelta = 10^-5; %How much you are willing to let it be above the minimum length
 
+%Hming = .001 % Second Setting
+%Hdelta = 10^-5; % Second Setting
+
 %Model Solver Settings:
 Tmax = 100; %Max Time Allowed
 Tmin = 60; %Min Time Allowed
@@ -56,6 +65,12 @@ tO = .5; %Time Percision: To what percision the model solver will keep track of 
 Dp = 5; %Time Between Statements
 
 %% Initialization
+
+%Foam Modification
+TriesF = 0;
+pErrorT = 0;
+FLc = 0;
+
 %Initial Model
 close
 tf = FoamThickness;
@@ -99,8 +114,10 @@ modOTr20 = 1.005;
 modOTr30 = 1.001;
 modOTr50 = 1.0001;
 
+%% While Statements:
+while pErrorT <= 10 %Foam Size Analysis
 
-while ModelIT == 0
+while ModelIT == 0 || % Time Analysis
 Tries = ModelUTc + ModelOTc;
 
     %% Determining Changes to Hmin and Hmax:
@@ -330,7 +347,7 @@ Tries = ModelUTc + ModelOTc;
     PLog(PLc,4) = Hdelta;
     PLog(PLc,5) = Hmax;
     PLog(PLc,6) = ModelOT;
-    PLog(PLc,7) = ModelIT;
+    PLog(PLc,7) = ModelUT;
 
 end
 
@@ -451,10 +468,53 @@ FI = [Y(2:end-1)',TempAtIntersect(2:end-1)']; %Returns array with first column b
 FITable = array2table(FI);
 FITable.Properties.VariableNames(1:2) = {'Y-Value','Temperature'};
 
+%% Foam Modification End Statement:
+if qFM == 0
+    pErrorT = 999;
+else
+    % Calculate Error
+    dTempRatio = ((TempwI-TempwO)/(FI(5,2)-TempwO)); %Whole Wall dT / Foam dT
+    RwM = Rf * dTempRatio;
+    RwM = RwM - Rf;
+    pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
+    
+    % Log Current Settings
+    FLc = FLc + 1;
+
+    FLog(FLc,1) = TriesF;
+    FLog(FLc,2) = lf;
+    FLog(FLc,3) = dTempRatio;
+    FLog(FLc,4) = RwM;
+    FLog(FLc,5) = pErrorT;
+
+    % ReAdjust Foam
+    if pErrorT <= 10
+        TriesF = TriesF + 1;
+        lf = lf - FMas;
+        ModelIT = 0;
+    end
+end
+    
+end
 
 %% Final Results:
-% Process Log:
-PLog = array2str(PLog,'')
+% Process Logs:
+PLog = array2table(PLog,...
+    'VariableNames',{'Attempt','Refine Attempt','Hmin','Hdelta','Hmax','OT','UT'});
+disp('[+] Mesh Size Attempt Log Has Been Stored in "PLog"')
+
+if qFM == 1
+    FLog = array2table(FLog,...
+    'VariableNames',{'Attempt','Foam Length','Delta Temp Ratio','Predicted Rwall','Percent Error (Rwall)'});
+    disp('[+] Foam Size Attempt Log Has Been Stored in "FLog"')
+end
+
+% Stores Hmin, Hdelta, and Hmax for certain time
+if qIT == 1
+    HminT = Hmin;
+    HdeltaT = Hdelta;
+    HmaxT = Hmax;
+end
 
 % Messages:
 disp('[+] Temperatures Have Been Found and Stored in Array "FI" and Table "FITable"')
