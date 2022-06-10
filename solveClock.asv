@@ -1,0 +1,9 @@
+function [] = solveClock(T,tO)
+
+% tO = time between outputs
+% T = total time until cutoff
+
+while f(1).State(1) == ~'f'
+    
+    pause(tO)
+
