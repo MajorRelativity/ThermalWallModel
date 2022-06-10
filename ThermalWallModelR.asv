@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.15
+%% ThermalWallModel Version R0.16
 % Updated on June 9 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -10,9 +10,9 @@ close('all')
 
 %Preferences:
 qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
-qSMp = 1; %Show Mesh Pause Length (s)
-qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
-qIT = 0; %Readjust time? (1 = yes, 0 = no)
+qSMp = 10; %Show Mesh Pause Length (s)
+qPss = 1; %Plot Steady State Animation (1 = yes, 0 = no)
+qIT = 1; %Readjust time? (1 = yes, 0 = no)
 
 %% User Edited Section:
 
@@ -50,8 +50,8 @@ Hming = .001; %Minimum Mesh Length Guess
 Hdelta = 10^-5; %How much you are willing to let it be above the minimum length
 
 %Model Solver Settings:
-Tmax = 60; %Max Time Allowed
-Tmin = 50; %Min Time Allowed
+Tmax = 100; %Max Time Allowed
+Tmin = 60; %Min Time Allowed
 tO = .5; %Time Percision: To what percision the model solver will keep track of the time it takes
 Dp = 5; %Time Between Statements
 
@@ -73,6 +73,12 @@ ModelIT = 0; %In Desired Time
 rTries = 0; %Refinement Tries
 
 %Modifications:
+PLc = 0;
+
+modUTDelta = .5; %Modifies Delta if needed.
+modOTDelta = 2;
+modD = [0,0]; %Tells through display if the delta has been modified
+
 modUT = 0.5; %initial change
 modUTd = 0.1; %drastic change
 modUTr0 = 0.9; %refinement changes
@@ -106,11 +112,16 @@ Tries = ModelUTc + ModelOTc;
             if Tries >=3
                 Hmin = Hmin*modUTd;
                 mod = modUTd;
-
             else
                 Hmin = Hmin*modUT;
                 mod = modUT;
             end
+
+            if Tries >=6
+                Hdelta = Hdelta*modUTDelta;
+                modD = [1,modUTDelta];
+            end
+
             PrevEstimate = 'Undertime';
         elseif ModelUTc == 0
             if Tries >=3
@@ -120,6 +131,12 @@ Tries = ModelUTc + ModelOTc;
                 Hmin = Hmin*modOT;
                 mod = modOT;
             end
+
+            if Tries >=6
+                Hdelta = Hdelta*modOTDelta;
+                modD = [1,modOTDelta];
+            end
+
             PrevEstimate = 'Overtime';
         else
             if ModelUT == 1
@@ -180,8 +197,11 @@ Tries = ModelUTc + ModelOTc;
         %Messages:
 
         disp(['[&] Previous Attempt was ',PrevEstimate])
-        disp(['[&] Applying modification *',num2str(mod),' to Hmin'])
-
+        disp(['[*] Applying modification *',num2str(mod),' to Hmin'])
+        
+        if modD(1) == 1
+            disp(['[*] Modifying Delta by *',modD(2),' becuase previous percision has been ineffective.'])
+        end
     end
 
     if rTries >= 100
@@ -239,32 +259,41 @@ Tries = ModelUTc + ModelOTc;
     thermalIC(thermalmodel,Tempi);
     
     disp('[+] Geomerty Imported and Conditions Applied')
-    %% Generate Mesh
-    disp('[$] Generating Mesh')
-    Mesh = generateMesh(thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
-    
-    %% Set Times and Solve the Model:
 
+    %% Set Times and Solve the Model:
+    
     %Solve Model:
     tlist = 0:timeStep:timeE; 
-    disp('[$] Solving Thermal Model')
-    f(1) = parfeval(@solve,1,thermalmodel,tlist);
-    f(2) = parfeval(@pause,0,Tmax);
+    disp('[$] Generating Mesh')
+    f(1) = parfeval(@generateMesh,1,thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
     
-    StateF = f(1).State(1) == 'f';
+    StateF1 = f(1).State(1) == 'f';
+    StateF2 = 0;
+    StartF2 = 0;
     Cc = 0;
     Pc = 0;
     Dc = 0;
-    while StateF == 0
-        StateF = f(1).State(1) == 'f';
+    while StateF2 == 0
+        StateF1 = f(1).State(1) == 'f';
         
+        if StartF2 == 1
+            StateF2 = f(2).State(1) == 'f';
+        end
+        if StateF1 == 1 && StartF2 == 0
+            Ccm = Cc;
+            disp('[$] Solving Thermal Model')
+            thermalmodel.Mesh = fetchOutputs(f(1));
+            f(2) = parfeval(@solve,1,thermalmodel,tlist);
+            StartF2 = 1;
+        end
+
         pause(tO)
         Cc = Cc + tO;
         Pc = (Cc/Tmax)*100;
         Dc = Dc+1;
-    
+
         if Pc >= 100 && (Dc*tO) == Dp
-            StateF = 1;
+            StateF2 = 1;
             Dc = 0;
             disp(['[-] Process has been running for ',num2str(Cc),' seconds. It will be canceled.'])
         elseif (Dc*tO) == Dp
@@ -292,32 +321,46 @@ Tries = ModelUTc + ModelOTc;
         disp('[+] Thermal Model Solved')
         ModelIT = 1;
     end
+
+    %Process Log:
+    PLc = PLc + 1;
+    PLog(PLc,1) = Tries;
+    PLog(PLc,2) = rTries;
+    PLog(PLc,3) = Hmin;
+    PLog(PLc,4) = Hdelta;
+    PLog(PLc,5) = Hmax;
+    PLog(PLc,6) = ModelOT;
+    PLog(PLc,7) = ModelIT;
+
 end
 
 %Fetching and Processing Results
 disp('[$] Processing Results')
-thermalresults = fetchOutputs(f(1));
+thermalresults = fetchOutputs(f(2));
 [qx,qy] = evaluateHeatFlux(thermalresults);
 disp('[+] Results Processed')
 
 %% Plot Temperature and Heat Flux:
 
 % Create Mesh Plots
-    Fmg = figure('Name','Mesh Geomerty');
-    Fmg.Visible = "off";
-    pdemesh(thermalmodel)
-    title('Mesh with Quadratic Triangular Elements')
-    disp('[+] Mesh Generated')
-    
-    Fmgz = figure('Name','Mesh Geomerty Zoom');
-    Fmgz.Visible = "off";
-    pdemesh(thermalmodel)
-    hold on
-    axis([-tf,Tw+tf+tf,(-lf/10),(lf/10)])
-    title('Zoomed Mesh with Quadratic Triangular Elements (Zoomed About Center)')
-    movegui(Fmgz,'east');
-    hold off
-    disp('[+] Zoom Mesh Generated')
+
+disp('[$] Creating Mesh Plots')
+
+Fmg = figure('Name','Mesh Geomerty');
+Fmg.Visible = "off";
+pdemesh(thermalmodel)
+title('Mesh with Quadratic Triangular Elements')
+disp('[+] Mesh Plot Generated')
+
+Fmgz = figure('Name','Mesh Geomerty Zoom');
+Fmgz.Visible = "off";
+pdemesh(thermalmodel)
+hold on
+axis([-tf,Tw+tf+tf,(-lf/10),(lf/10)])
+title('Zoomed Mesh with Quadratic Triangular Elements (Zoomed About Center)')
+movegui(Fmgz,'east');
+hold off
+disp('[+] Zoom Mesh Plot Generated')
 
 % Show Mesh and Geometry
 if qSM == 1
@@ -410,7 +453,12 @@ FITable.Properties.VariableNames(1:2) = {'Y-Value','Temperature'};
 
 
 %% Final Results:
+% Process Log:
+PLog = array2str(PLog,'')
+
+% Messages:
 disp('[+] Temperatures Have Been Found and Stored in Array "FI" and Table "FITable"')
 disp(['[#] Hmin was ',num2str(Hmin)])
 disp(['[#] Hmax was ',num2str(Hmax)])
-disp(['[#] Time Taken: ',num2str(Cc),' seconds'])
+disp(['[#] Mesh Generation - Time Taken: ',num2str(Ccm),' seconds'])
+disp(['[#] Thermal Model Solution - Time Taken: ',num2str(Cc),' seconds'])
