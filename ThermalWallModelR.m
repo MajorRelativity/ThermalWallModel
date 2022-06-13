@@ -1,5 +1,5 @@
-%% ThermalWallModel Version R0.18
-% Updated on June 9 2022
+%% ThermalWallModel Version R0.19
+% Updated on June 13 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
 
@@ -7,9 +7,22 @@
 % This code comes in __ Stages:
 % 1) Preferences: This section is made to be edited by users. It sets all
 % of the variables that will be used for the rest of the process
-% 2) While Statements: This section has two subfeatures. First, it has the
-% power to analyze the effectiveness of various foam sizes, and second it
-% has the power to find a mesh size for a desired time.
+
+% 2) Model Settings: Go here to edit the settings that will be used during
+% the model.
+
+% 3) While Statements: This section has two subfeatures. 
+%   a) First, it has the power to analyze the effectiveness of various 
+%   foam sizes, and second it has the power to find a mesh size 
+%   for a desired time.
+%   b) Second, it has the power to estimate the mesh size needed for a
+%   desired minimum time length and maximum time length.
+
+% Important Variables:
+%   1) FLog = Table that logs all of the data for Foam Analysis
+%   2) FLogD = A Double Version of FLog
+%   3) MeshSettings specifies the appropriate mesh settings for specific
+%   runtimes
 
 
 %% Initialization and Preferences:
@@ -17,15 +30,24 @@
 clear
 close('all')
 
-%Preferences:
+% Load:
+if exist('MeshSettings.mat','file')
+    load 'MeshSettings.mat'
+end
+
+% Preferences:
 qSM = 0; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMp = 10; %Show Mesh Pause Length (s)
 qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
-qIT = 0; %Readjust time? (1 = yes, 0 = no)
-qFM = 1; % Foam Measurement Analysis? (1 = yes, 0 = no)
+qIT = 1; %Readjust time? (1 = yes, 0 = no)
+qFM = 0; % Foam Measurement Analysis? (1 = yes, 0 = no)
 qP = 0; % Pause in between Models? (1 = yes, 0 = no)
 
-%% User Edited Section:
+% Save Preferences:
+qSMeshs = 2; % Save Mesh Settings Table (2 = yes, 1 = ask, 0 = no)
+qSLog = 1; % Save Logs to ThermalData (2 = yes, 1 = ask, 0 = no)
+
+%% User Edited Section (Model Settings):
 
 % Shape of Wall:
 FoamThickness = 2.54 * 10^-2; %m
@@ -62,15 +84,16 @@ timeStepP = 60; %The step in between plots s
 qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
 
 %Initial Mesh Specifications:
-%Hming = .001; %Minimum Mesh Length Guess
-%Hdelta = 10^-5; %How much you are willing to let it be above the minimum length
+%Hmaxg = .001; %Minimum Mesh Length Guess
+%HdeltaP = .50; % The Percentage of Hmax you want the difference between
+                  %the two to be. Given in # between 0 and 1, NOT percent.
 
-Hming = 7.62*10^-4; % Second Setting
-Hdelta = 10^-4; % Second Setting
+Hmaxg = 7.62*10^-4; % Second Setting
+HdeltaP = .10; % Second Setting
 
 %Model Solver Settings:
-Tmax = 120; %Max Time Allowed
-Tmin = 50; %Min Time Allowed
+Tmax = 20; %Max Time Allowed
+Tmin = 15; %Min Time Allowed
 tO = .5; %Time Percision: To what percision the model solver will keep track of the time it takes
 Dp = 5; %Time Between Statements
 
@@ -88,7 +111,7 @@ lf = FoamLength;
 Tw = WallThickness;
 Lw = WallLength;
 
-Hmin = Hming; %Imports the Guess
+Hmax = Hmaxg; %Imports the Guess
 ModelOTc = 0; %Overtime Count
 ModelUTc = 0; %Undertime Count
 ModelOT = 0; %Overtime 
@@ -97,14 +120,9 @@ ModelIT = 0; %In Desired Time
 rTries = 0; %Refinement Tries
 cTries = 0; %Catch Up Tries
 pModelT = 0; %Previous Model OT/UT
-pmodD = 0;
 
 %Modifications:
 PLc = 0;
-
-modUTDelta = .9; %Modifies Delta if needed.
-modOTDelta = 1.3;
-modD = [0,0]; %Tells through display if the delta has been modified
 
 modUT = 0.5; %initial change
 modUTd = 0.1; %drastic change
@@ -136,66 +154,53 @@ Tries = ModelUTc + ModelOTc;
 
     %% Determining Changes to Hmin and Hmax:
     if qIT == 1    
-        %Hmin
+        %Hmax
         if Tries >= 1 && pModelT ~= 0
             %Adjustments:
             if ModelOTc == 0
                 if Tries >=3
-                    Hmin = Hmin*modUTd;
+                    Hmax = Hmax*modUTd;
                     mod = modUTd;
                 else
-                    Hmin = Hmin*modUT;
+                    Hmax = Hmax*modUT;
                     mod = modUT;
-                end
-    
-                if Tries >=6
-                    Hdelta = Hdelta*modUTDelta;
-                    modD = [1,modUTDelta];
                 end
                 pModelT = 1;
                 PrevEstimate = 'Undertime';
             elseif ModelUTc == 0
                 if Tries >=3
-                    Hmin = Hmin*modOTd;
+                    Hmax = Hmax*modOTd;
                     mod = modOTd;
                 else
-                    Hmin = Hmin*modOT;
+                    Hmax = Hmax*modOT;
                     mod = modOT;
-                end
-    
-                if Tries >=5
-                    Hdelta = Hdelta*modOTDelta;
-                    modD = [1,modOTDelta];
                 end
                 pModelT = 2;
                 PrevEstimate = 'Overtime';
             else
                 if ModelOT == 1 && pModelT == 1
-                    Hmin = Hmin/mod; %undoes previous change
-                    if pmodD(1) == 1 %divedes by the previous delta change if it was changed
-                        Hdelta = Hdelta/modD(2);
-                        pmodD(1) = 0;
-                    end
+                    Hmax = Hmax/mod; %undoes previous change
+
                     if rTries >= 0 && rTries < 1
-                        Hmin = Hmin*modUTr0;
+                        Hmax = Hmax*modUTr0;
                         mod = modUTr0;
                     elseif rTries >= 1 && rTries < 2
-                        Hmin = Hmin*modUTr1;
+                        Hmax = Hmax*modUTr1;
                         mod = modUTr1;
                     elseif rTries >= 2 && rTries < 3
-                        Hmin = Hmin*modUTr2;
+                        Hmax = Hmax*modUTr2;
                         mod = modUTr2;
                     elseif rTries >= 3 && rTries < 4
-                        Hmin = Hmin*modUTr3;
+                        Hmax = Hmax*modUTr3;
                         mod = modUTr3;
                     elseif rTries >= 4 && rTries < 5
-                        Hmin = Hmin*modUTr4;
+                        Hmax = Hmax*modUTr4;
                         mod = modUTr4;
                     elseif rTries >= 5 && rTries < 6
-                        Hmin = Hmin*modUTr5;
+                        Hmax = Hmax*modUTr5;
                         mod = modUTr5;
                     elseif rTries >= 6
-                        Hmin = Hmin*modUTr6;
+                        Hmax = Hmax*modUTr6;
                         mod = modUTr6;
                     end
                     pModelT = 1;
@@ -203,31 +208,28 @@ Tries = ModelUTc + ModelOTc;
                     cTries = 0;
     
                 elseif ModelUT == 1 && pModelT == 2 
-                    Hmin = Hmin/mod; %undoes previous change
-                    if pmodD(1) == 1
-                    Hdelta = Hdelta/modD(2);
-                    pmodD(1) = 0;
-                    end
+                    Hmax = Hmax/mod; %undoes previous change
+
                     if rTries >= 0 && rTries < 1
-                        Hmin = Hmin*modOTr0;
+                        Hmax = Hmax*modOTr0;
                         mod = modOTr0;
                     elseif rTries >= 1 && rTries < 2
-                        Hmin = Hmin*modOTr1;
+                        Hmax = Hmax*modOTr1;
                         mod = modOTr1;
                     elseif rTries >= 2 && rTries < 3
-                        Hmin = Hmin*modOTr2;
+                        Hmax = Hmax*modOTr2;
                         mod = modOTr2;
                     elseif rTries >= 3 && rTries < 4
-                        Hmin = Hmin*modOTr3;
+                        Hmax = Hmax*modOTr3;
                         mod = modOTr3;
                     elseif rTries >= 4 && rTries < 5
-                        Hmin = Hmin*modOTr4;
+                        Hmax = Hmax*modOTr4;
                         mod = modOTr4;
                     elseif rTries >= 5 && rTries < 6
-                        Hmin = Hmin*modOTr5;
+                        Hmax = Hmax*modOTr5;
                         mod = modOTr5;
                     elseif rTries >= 6
-                        Hmin = Hmin*modOTr6;
+                        Hmax = Hmax*modOTr6;
                         mod = modOTr6;
                     end
                     pModelT = 2;
@@ -235,25 +237,19 @@ Tries = ModelUTc + ModelOTc;
                     cTries = 0;
 
                 elseif ModelUT == 1 && pModelT == 1
-                    Hmin = Hmin*modUT;
+                    Hmax = Hmax*modUT;
                     mod = modUT;
                     pModelT = 1;
                     PrevEstimate = 'Undertime';
                     rTries = 0;
-                    if cTries >=3
-                        Hdelta = Hdelta*modUTDelta;
-                        modD = [1,modUTDelta];
-                    end
+
                 elseif ModelOT == 1 && pModelT == 2 
-                    Hmin = Hmin*modOT;
+                    Hmax = Hmax*modOT;
                     mod = modOT;
                     pModelT = 2;
                     PrevEstimate = 'Overtime';
                     rTries = 0;
-                    if cTries >=2
-                        Hdelta = Hdelta*modUTDelta;
-                        modD = [1,modUTDelta];
-                    end
+
                 end
                 rTries = rTries + 1; % Refinement Tries
                 cTries = cTries + 1; % Catchup Tries (refinement doesn't work)
@@ -262,43 +258,30 @@ Tries = ModelUTc + ModelOTc;
             %Messages:
     
             disp(['[~] Previous Attempt was ',PrevEstimate])
-            disp(['[*] Applying modification *',num2str(mod),' to Hmin'])
+            disp(['[*] Applying modification *',num2str(mod),' to Hmax'])
             
-            if modD(1) == 1
-                disp(['[*] Modifying Delta by *',num2str(modD(2)),' becuase previous percision has been ineffective.'])
-                pmodD = modD;
-                modD(1) = 0;
-            end
         elseif Tries >= 1 && pModelT == 0
 %Adjustments:
             if ModelOTc == 0
                 if Tries >=3
-                    Hmin = Hmin*modUTd;
+                    Hmax = Hmax*modUTd;
                     mod = modUTd;
                 else
-                    Hmin = Hmin*modUT;
+                    Hmax = Hmax*modUT;
                     mod = modUT;
                 end
     
-                if Tries >=6
-                    Hdelta = Hdelta*modUTDelta;
-                    modD = [1,modUTDelta];
-                end
                 pModelT = 1;
                 PrevEstimate = 'Undertime';
             elseif ModelUTc == 0
                 if Tries >=3
-                    Hmin = Hmin*modOTd;
+                    Hmax = Hmax*modOTd;
                     mod = modOTd;
                 else
-                    Hmin = Hmin*modOT;
+                    Hmax = Hmax*modOT;
                     mod = modOT;
                 end
     
-                if Tries >=6
-                    Hdelta = Hdelta*modOTDelta;
-                    modD = [1,modOTDelta];
-                end
                 pModelT = 2;
                 PrevEstimate = 'Overtime';
             end
@@ -306,22 +289,19 @@ Tries = ModelUTc + ModelOTc;
             %Messages:
     
             disp(['[&] Previous Attempt was ',PrevEstimate])
-            disp(['[*] Applying modification *',num2str(mod),' to Hmin'])
+            disp(['[*] Applying modification *',num2str(mod),' to Hmax'])
             
-            if modD(1) == 1
-                disp(['[*] Modifying Delta by *',modD(2),' becuase previous percision has been ineffective.'])
-                modD(1) = 0;
-            end
         end
     end
 
     if rTries >= 100
-        disp('[-] ThermalWallModel has tried over 100 times to refine the mesh. Enough is Enough. Try increasing Hdelta.')
+        disp('[-] ThermalWallModel has tried over 100 times to refine the mesh. Enough is Enough. Try increasing HdeltaP.')
         return
     end
 
-    %Hmax
-    Hmax = Hmin + Hdelta; %Maximum Mesh Length
+    %Hmin and Delta:
+    Hdelta = Hmax*HdeltaP;
+    Hmin = Hmax - Hdelta; %Maximum Mesh Length
 
     %Statements:
     disp('[&] Starting Model Attempt in 5 seconds')
@@ -331,9 +311,7 @@ Tries = ModelUTc + ModelOTc;
     end
 
     disp(['[&] Starting Model Attempt # ',num2str(Tries)])
-    disp(['[#] Hmin = ',num2str(Hmin)])
-    disp(['[#] Hmax = ',num2str(Hmax)])
-    disp(['[#] Hdelta = ',num2str(Hdelta)])
+    disp(['[#] Hmax = ',num2str(Hmax),', Hdelta = ',num2str(Hdelta),', Hmin = ',num2str(Hmin)])
     disp(['[#] Foam Length = ',num2str(lf)])
 
     if qP == 1
@@ -460,6 +438,7 @@ Tries = ModelUTc + ModelOTc;
 end
 
 % Specifies that no more time reprosessing shall be done:
+qITstore = qIT;
 qIT = 0; 
 
 %Fetching and Processing Results
@@ -614,17 +593,67 @@ PLog = array2table(PLog,...
 disp('[+] Mesh Size Attempt Log Has Been Stored in "PLog"')
 
 if qFM == 1
+    FLogD = FLog;
     FLog = array2table(FLog,...
-    'VariableNames',{'Attempt','Foam Length','Delta Temp Ratio','Predicted Rwall','Percent Error (Rwall)'});
+    'VariableNames',{'Attempt #','Foam Length (m)','Delta Temp Ratio','Predicted Rwall','Percent Error (Rwall)'});
     disp('[+] Foam Size Attempt Log Has Been Stored in "FLog"')
+else
+    FLog = 'N/A';
+    FLogD = 'N/A';
 end
 
-% Stores Hmin, Hdelta, and Hmax for certain time
-if qIT == 1
-    HminT = Hmin;
-    HdeltaT = Hdelta;
-    HmaxT = Hmax;
+% Save Logs:
+qSLogTemp = qSLog;
+
+while qSLog == 1
+    qSLog = input('[?] Would you like to save Logs? (2 = yes, 0 = no): ');
+    if qSLog == 1
+        disp('[!] Invalid Input, try again.')
+    end
 end
+
+if qSLog == 2
+    disp('[?] Choose the path you want to save to:')
+    pathName = uigetdir(path,'[?] Choose the path you want to save to:');
+    LogSavename = [pathName,'/LogData ',datestr(now,'yyyy-MM-dd HH:mm:ss'),'.mat'];
+    save(LogSavename,"FLog","FLogD","PLog")
+    disp('[+] Logs have been saved.')
+else
+    disp('[-] Logs have not been saved.')
+end
+
+
+% Stores Hmin, Hdelta, and Hmax for certain time
+if qITstore == 1
+    if exist('MeshC','var')
+        MeshC = MeshC+1;
+    else
+        MeshC = 1;
+    end
+    MeshSettingsD(MeshC,:) = [Cc,Hmax,HdeltaP,Hmin];
+    MeshSettings = array2table(MeshSettingsD,'VariableNames',{'Time (s)','Hmax (m)','HdeltaP (0 to 1)','Hmin (m)'});
+    
+    % Save:
+    qSMeshsTemp = qSMeshs;
+
+    while qSMeshs == 1
+        qSMeshs = input('[?] Would you like to save the mesh settings? (2 = yes, 0 = no): ');
+        if qSMeshs == 1
+            disp('[!] Invalid Input, try again.')
+        end
+    end
+    
+    if qSMeshs == 2
+        save('MeshSettings.mat',"MeshSettings","MeshC")
+        disp('[+] Mesh Settings have been saved.')
+    else
+        disp('[-] Mesh Settings have not been saved.')
+    end
+    qSMeshs = qSMeshsTemp;
+end
+
+%Reset Question Variables (that needed to get adjusted mid run)
+qIT = qITstore;
 
 % Messages:
 disp('[+] Temperatures Have Been Found and Stored in Array "FI" and Table "FITable"')
