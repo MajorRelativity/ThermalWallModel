@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R0.19
+%% ThermalWallModel Version R0.20
 % Updated on June 13 2022
 % Code take from MatLab demonstration on how to model a wall with a crack
 % in it.
@@ -23,6 +23,7 @@
 %   2) FLogD = A Double Version of FLog
 %   3) MeshSettings specifies the appropriate mesh settings for specific
 %   runtimes
+%   4) PLog = The log for a mesh generation test.
 
 
 %% Initialization and Preferences:
@@ -40,8 +41,9 @@ qSM = 0; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMp = 10; %Show Mesh Pause Length (s)
 qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
 qIT = 1; %Readjust time? (1 = yes, 0 = no)
-qFM = 0; % Foam Measurement Analysis? (1 = yes, 0 = no)
-qP = 1; % Pause in between Models? (1 = yes, 0 = no)
+qFM = 1; % Foam Measurement Analysis? (1 = yes, 0 = no)
+qP = 0; % Pause in between Models? (1 = yes, 0 = no)
+qC = 0; % Cancel if time max is hit? (1 = yes, 0 = no). Only applies if qIT == 1
 
 % Save Preferences:
 qSMeshs = 2; % Save Mesh Settings Table (2 = yes, 1 = ask, 0 = no)
@@ -89,15 +91,21 @@ qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
                   %the two to be. Given in # between 0 and 1, NOT percent.
 
 Hmaxg = 7.62*10^-4; % Second Setting
-HdeltaP = .10; % Second Setting
+HdeltaP = .90; % Second Setting
 
 %Model Solver Settings:
-Tmax = 20; %Max Time Allowed
-Tmin = 15; %Min Time Allowed
+Tmax = 70; %Max Time Allowed
+Tmin = 50; %Min Time Allowed
 tO = .5; %Time Percision: To what percision the model solver will keep track of the time it takes
 Dp = 5; %Time Between Statements
 
 %% Initialization
+
+% Set to cancel if qIT = 1
+qCstore = qC;
+if qIT == 1
+    qC = 1;
+end
 
 %Foam Modification
 TriesF = 0;
@@ -388,7 +396,7 @@ Tries = ModelUTc + ModelOTc;
         Pc = (Cc/Tmax)*100;
         Dc = Dc+1;
 
-        if Pc >= 100 && (Dc*tO) == Dp
+        if Pc >= 100 && (Dc*tO) == Dp && qC == 1
             StateF2 = 1;
             Dc = 0;
             disp(['[-] Process has been running for ',num2str(Cc),' seconds. It will be canceled.'])
@@ -398,7 +406,7 @@ Tries = ModelUTc + ModelOTc;
         end
     end
     
-    if Pc >= 100 
+    if Pc >= 100 && qC == 1
         cancel(f)
         ModelOTc = ModelOTc+1;
         ModelOT = 1;
@@ -440,6 +448,7 @@ end
 % Specifies that no more time reprosessing shall be done:
 qITstore = qIT;
 qIT = 0; 
+qC = qCstore;
 
 %Fetching and Processing Results
 disp('[$] Processing Results')
@@ -630,7 +639,7 @@ if qITstore == 1
     else
         MeshC = 1;
     end
-    MeshSettingsD(:,MeshC) = [Cc,Hmax,HdeltaP,Hmin]';
+    MeshSettingsD(MeshC,:) = [Cc,Hmax,HdeltaP,Hmin];
     MeshSettings = array2table(MeshSettingsD,'VariableNames',{'Time (s)','Hmax (m)','HdeltaP (0 to 1)','Hmin (m)'});
     
     % Save:
