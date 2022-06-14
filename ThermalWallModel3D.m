@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R1.01
+%% ThermalWallModel3D Version 3D0.01
 % Updated on June 14 2022
 % Description: Thermal model used to analyze lab conditions
 % Code taken from MatLab demonstration on how to model a wall with a crack

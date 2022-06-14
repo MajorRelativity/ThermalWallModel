@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R1.00
+%% ThermalWallModel2D Version 2D1.01
 % Updated on June 14 2022
 % Description: Thermal model used to analyze lab conditions
 % Code taken from MatLab demonstration on how to model a wall with a crack
@@ -40,6 +40,7 @@
 %   4) PLog = The log for mesh generation testing.
 %   5) TempAtIntersect = Gives temperature at intersection between foam and
 %   wall
+%   6) Specifications = Contains the key data for model writeups
 
 
 %% Initialization and Preferences:
@@ -133,6 +134,7 @@ Dp = 5; %Time Between Statements
 
 % Set to cancel if qIT = 1
 qCstore = qC;
+qITstore = qIT;
 if qIT == 1
     qC = 1;
 end
@@ -484,7 +486,6 @@ Tries = ModelUTc + ModelOTc;
 end
 
 % Specifies that no more time reprosessing shall be done:
-qITstore = qIT;
 qIT = 0; 
 qC = qCstore;
 
@@ -666,7 +667,7 @@ end
 PLog = array2table(PLog,...
     'VariableNames',{'Attempt','Refine Attempt','Hmin','Hdelta','Hmax','OT','UT','Time'});
 disp('[+] Mesh Size Attempt Log Has Been Stored in "PLog"')
-Specifications = [Hmin,HdeltaP,Hmax,'N/A','N/A',ModelType]
+Specifications = [Hmin,HdeltaP,Hmax,'N/A','N/A',modelType];
 
 if qFM == 1
     FLogD = FLog;
@@ -675,12 +676,15 @@ if qFM == 1
     disp('[+] Foam Size Attempt Log Has Been Stored in "FLog"')
     
     Specifications(4) = FLogD(1,2);
-    Specifications()
+    Specifications(5) = FMas;
 else
     FLog = 'N/A';
     FLogD = 'N/A';
 
 end
+
+Specifications = array2table(Specifications,...
+    'VariableNames',{'Hmin','Hdelta (% of Hmax)','Hmax','Initial Foam Size','Foam Step','Model Type'});
 
 % Save Logs:
 qSLogTemp = qSLog;
@@ -696,7 +700,7 @@ if qSLog == 2
     disp('[?] Choose the path you want to save to:')
     pathName = uigetdir(path,'[?] Choose the path you want to save to:');
     LogSavename = [pathName,'/LogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
-    save(LogSavename,"FLog","FLogD","PLog","TempAtIntersect")
+    save(LogSavename,"FLog","FLogD","PLog","TempAtIntersect","Specifications")
     disp('[+] Logs have been saved.')
 else
     disp('[-] Logs have not been saved.')
@@ -710,8 +714,8 @@ if qITstore == 1
     else
         MeshC = 1;
     end
-    MeshSettingsD(MeshC,:) = [Cc,Hmax,HdeltaP,Hmin];
-    MeshSettings = array2table(MeshSettingsD,'VariableNames',{'Time (s)','Hmax (m)','HdeltaP (0 to 1)','Hmin (m)'});
+    MeshSettingsD(MeshC,:) = [modelType,Cc,Hmax,HdeltaP,Hmin];
+    MeshSettings = array2table(MeshSettingsD,'VariableNames',{'Model Type','Time (s)','Hmax (m)','HdeltaP (0 to 1)','Hmin (m)'});
     
     % Save:
     qSMeshsTemp = qSMeshs;
