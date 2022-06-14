@@ -1,6 +1,7 @@
-%% ThermalWallModel Version R0.20
-% Updated on June 13 2022
-% Code take from MatLab demonstration on how to model a wall with a crack
+%% ThermalWallModel Version R1.00
+% Updated on June 14 2022
+% Description: Thermal model used to analyze lab conditions
+% Code taken from MatLab demonstration on how to model a wall with a crack
 % in it.
 
 %% Documentation:
@@ -18,12 +19,25 @@
 %   b) Second, it has the power to estimate the mesh size needed for a
 %   desired minimum time length and maximum time length.
 
+% 4) Mesh Graph: To aid in the understanding of the mesh size, the program
+% can plot the mesh and geometry graphs after the model is run. This is
+% configurable in preferences.
+
+% 5) Animation: The script can also create an animation of the thermal
+% model as it evolves through time. These specifications can be configured
+% in preferences.
+
+% 6) Log and Save: The program will save the data to two files. The
+% MeshSettings get autosaved into a big file (for futre reference on
+% times). The other Log Files can get saved into a separate
+% LogData.mat file that contains the current date and time.
+
 % Important Variables:
 %   1) FLog = Table that logs all of the data for Foam Analysis
 %   2) FLogD = A Double Version of FLog
 %   3) MeshSettings specifies the appropriate mesh settings for specific
 %   runtimes
-%   4) PLog = The log for a mesh generation test.
+%   4) PLog = The log for mesh generation testing.
 
 
 %% Initialization and Preferences:
@@ -32,6 +46,16 @@ clear
 close('all')
 
 % Load:
+qLL = input('[?] Would you like to load log data? (1 = yes, 0 = no): ');
+if qLL == 1
+   disp('[?] Choose the Log file you would like to load: ')
+   [filenameL, pathnameL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
+   addpath(pathnameL)
+   load(filenameL)
+   disp(['[+] File ',filenameL,' has been loaded!'])
+   return
+end
+
 if exist('MeshSettings.mat','file')
     load 'MeshSettings.mat'
 end
@@ -624,7 +648,7 @@ end
 if qSLog == 2
     disp('[?] Choose the path you want to save to:')
     pathName = uigetdir(path,'[?] Choose the path you want to save to:');
-    LogSavename = [pathName,'/LogData ',datestr(now,'yyyy-MM-dd HH:mm:ss'),'.mat'];
+    LogSavename = [pathName,'/LogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
     save(LogSavename,"FLog","FLogD","PLog")
     disp('[+] Logs have been saved.')
 else
