@@ -1,16 +1,14 @@
-function gm = modelshapew3D(Lw,Hw,Tw,Lf,Hf,Tf)
+function gm = modelshapew3D(model,Lw,Hw,Tw,Lf,Hf,Tf)
 % Description: Creates a 3D model of the wall and foam by plotting a grid
 % of points in the shape of the model and applying alphaShape
 
 %% Initialization
 
-wallGeometry %Runs function to pull data from the thermal model
-
 %Pointsw = [0 Lw/2 Hw/2; 0 Lw/2 -Hw/2; 0 -Lw/2 Hw/2; 0 -Lw/2 -Hw/2; Tw Lw/2 Hw/2; Tw Lw/2 -Hw/2; Tw -Lw/2 Hw/2; Tw -Lw/2 -Hw/2];
 %Pointsf = [Tw Lf/2 Hf/2; Tw Lf/2 -Hf/2; Tw -Lf/2 Hf/2; Tw -Lf/2 -Hf/2; (Tw+Tf) Lf/2 Hf/2; (Tw+Tf) Lf/2 -Hf/2; (Tw+Tf) -Lf/2 Hf/2; (Tw+Tf) -Lf/2 -Hf/2];
 %Points = [Pointsw;Pointsf];
 
-IntSize = .05; %Controls the spread of points created within the geometry
+IntSize = .005; %Controls the spread of points created within the geometry
 
 
 %% Wall:
@@ -52,7 +50,6 @@ IntPointsf(Index,3) = Zf(Index);
 IntPoints = [IntPointsw;IntPointsf];
 
 IntPoints = unique(IntPoints,'row');
-disp('[+] Point Indexing Complete')
 
 
 %% Shape Creation:
