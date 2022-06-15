@@ -1,4 +1,4 @@
-function [L,T,l,t] = wallGeometry(Ls,Ts,ls,ts)
+function [Lw,Tw,Lf,Tf] = wallGeometry(Lws,Tws,Lfs,Tfs)
 
 %% Description:
 % This function allows the program to call and store variables
@@ -7,15 +7,16 @@ function [L,T,l,t] = wallGeometry(Ls,Ts,ls,ts)
 
 if nargin == 0
     if exist("wallGeometry.mat","file")
-        load("wallGeometry.mat","L","T","l","t")
+        load("wallGeometry.mat")
     else
         disp('[!] Unable to call the wallGeometry. Check wallGeometry.m or modelshapew.m')
     end
 elseif nargin == 4
-    L = Ls;
-    T = Ts;
-    l = ls;
-    t = ts;
+    Lw = Lws;
+    Tw = Tws;
+    Lf = Lfs;
+    Tf = Tfs;
+
     save wallGeometry.mat
 else
     disp('[!] Invalid number of arguments in wallGeometry.m')
