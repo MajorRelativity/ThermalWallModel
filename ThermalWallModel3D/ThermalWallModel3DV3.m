@@ -1,10 +1,10 @@
-%% ThermalWallModel3D v 3D0.04
+%% ThermalWallModel3D v 3D0.05
 
 
 clear
 
 %% Preferences:
-qF = 0; % Perform Foam analysis?
+qF = 1; % Perform Foam analysis?
 
 %% Model Specifications:
 
@@ -54,9 +54,9 @@ HdeltaP = .90; % Second Setting
 Hmin = Hmax*HdeltaP;
 
 % Foam Modification Settings:
-FstepT = .01; % Step size between foam trials for thickness
-FstepH % Step size between foam trials for thickness
-FstepL % Step size between foam trials for length
+FstepT = .005; % Step size between foam trials for thickness
+FstepH = .05;% Step size between foam trials for thickness
+FstepL = .05; % Step size between foam trials for length
 
 % Save Settings:
 save ModelSpecification.mat
@@ -71,9 +71,9 @@ Lw = WallLength;
 Hw = WallHeight;
 
 if qF == 1
-    Tfm = 0:Fstep:Tf;
-    Lfm = 0:Fstep:Lf;
-    Hfm = 0:Fstep:Hf;
+    Tfm = 0:FstepT:Tf;
+    Lfm = 0:FstepL:Lf;
+    Hfm = 0:FstepH:Hf;
     [Tfm, Lfm, Hfm] = meshgrid(Tfm,Lfm,Hfm);
     
     Logic = Tfm > 0 & Lfm > 0 &  Hfm > 0;
@@ -111,10 +111,10 @@ parfor (i = 1:size(Foam,1),Fsize)
     
     timerf = datetime('now')
     duration = timerf - timeri
+    
+    FAResults(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
+    FAResultsD(i,:) = [i,0,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
+
 
     disp(['[&] Process ',num2str(i),' has finished over duration: ',datestr(duration)])
-
-    FAResults(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
-
 end
-
