@@ -15,7 +15,10 @@ thermalmodel = createpde('thermal',modelType);
 %% Thermal Geometry:
 gm = modelshapew3D(thermalmodel,Lw,Hw,Tw,Lf,Hf,Tf);
 thermalmodel.Geometry = gm;
-pdegplot(thermalmodel,'FaceLabels','on','FaceAlpha',.5)
+if i == 1
+    figure
+    pdegplot(thermalmodel,'FaceLabels','on','FaceAlpha',.5)
+end
 disp(['[Process ',num2str(i),'] [+] Geometry Created'])
 
 %% Initial Conditions:
@@ -46,6 +49,12 @@ thermalIC(thermalmodel,Tempi);
 %% Generate Mesh:
 
 generateMesh(thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
+
+if i == 1
+    figure
+    pdemesh(thermalmodel)
+end
+
 disp(['[Process ',num2str(i),'] [+] Mesh Generated'])
 
 %% Solve Model:
@@ -73,5 +82,29 @@ RwM = Rf * dTempRatio;
 RwM = RwM - Rf;
 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
 
-% Reenable Warnings:
+%% For when Process = 1
+if i == 1
+    figure(2)
+
+    [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
+    Y = 0.*ones(size(X,1),size(X,2));
+    V = interpolateTemperature(thermalresults,X,Y,Z);
+    V = reshape(V,size(X));
+    figure
+%     subplot(2,1,1)
+%     contour(X,Z,V);
+%     title('Contour Plot on Tilted Plane')
+%     xlabel('x')
+%     ylabel('z')
+%     colorbar
+%     subplot(2,1,2)
+    surf(X,Z,V,'LineStyle','none');
+    view(0,90)
+    title('Colored Plot through Y (Length) = 0')
+    xlabel('X (Thickness)')
+    ylabel('Z (Height)')
+    colorbar
+end
+
+%% Reenable Warnings:
 w = warning ('on','all');
