@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.09
+%% ThermalWallModel3D v 3D0.10
 % Updated on June 17 2022
 % Created by Jackson Kustell
 
@@ -68,13 +68,14 @@ if qAT == 1 || qAT == 2 || qAT == 4
         
         % Save Settings:
         savedate = datetime('now');
-        save('ModelSpecification.mat','-regexp', '^(?!(qAT|qF|qUI|qPlot)$).')
+        save('ModelSpecification.mat')
 
         if qAT == 4
             disp(['[+] Model Specifications have been saved to ModelSpecification.mat at ',datestr(savedate)])
             return
         end
     elseif qAT == 2
+        save('ModelSpecification.mat','qAT','qF','qUI','qPlot','-append')
         load ModelSpecification.mat
         disp(['[+] Model Specifications have been loaded from ', datestr(savedate)])
     end
@@ -88,7 +89,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         else
             %In the noui version, there is currently no way to choose your save
             %location
-            LogSavename = ['3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+            LogSavename = ['3DThermalData3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
         end
     end
     
