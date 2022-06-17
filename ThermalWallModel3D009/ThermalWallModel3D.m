@@ -1,72 +1,95 @@
-%% ThermalWallModel3D v 3D0.08
-% Updated on June 16 2022
+%% ThermalWallModel3D v 3D0.09
+% Updated on June 17 2022
+% Created by Jackson Kustell
 
 clear
 
 %% Preferences:
 
-qF = 0; % Perform Foam analysis?
-qAT = input(['[?] What would you like to do?','\n    Run Model = 1','\n    Analyze Data = 2','\n    Quit = -1','\n    Input: ']);
+
+qAT = input(['[?] What would you like to do?','\n    Save ModelSpecifications and Run Model = 1','\n    Load ModelSpecifications and Run Model = 2','\n    Analyze Data = 3','\n    Save to ModelSpecifications.mat = 4','\n    Quit = -1','\n    Input: ']);
+
+if qAT == 1 || qAT == 2
+qF = input('[?] Would you like to perform foam anaylsis? (yes = 1, 0 = no): ');
 qS = 1; % Save Data? (1 = yes, 0 = no)
+qUI = input('[?] Would you like to use UI features while running this model? (yes = 1, no = 0): ');
+qPlot = input('[?] Would you like to create plots of the model? (1 = yes, 0 = no): ');
+end 
 
-if qAT == 1
+if qAT == 1 || qAT == 2 || qAT == 4
+    if qAT == 1 || qAT == 4
+        %% Model Specifications (User Edited):
+        
+        % Model Type ("transient", "steadystate")
+        modelType = "steadystate";
+        
+        % Shape of Wall:
+        FoamThickness = 2.54 * 10^-2; %m
+        FoamLength = 45.6 * 10^-2; %m
+        FoamHeight = FoamLength; 
+        WallThickness = 5.08 * 10^-2; %m
+        WallLength = 90 * 10^-2; %m 
+        WallHeight = 90 * 10^-2; %m 
+        
+        % Wall Thermal Properties:
+        ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
+        MassDensity = 24; % Mass Density for the Wall kg/m^3
+        SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
+        
+        % Wall and Foam R Values. Foam Adjustment Settings:
+        Rw = 10; 
+        Rf = 5;
+        
+        % Indoor Boundary Conditions (BC stays constant in time):
+        TempwI = 303; %Interior Wall Temperature K
+        
+        % Outdoor Initial Conditions (IC are flexable with time):
+        TempwO = 297; %Outdoor Wall Temperature K
+        Tempi = 300; %Interior Temperature K
+        
+        %Time Conditions:
+        timeE = 60*30; %End Time s
+        timeStep = 60; %The step between when the model calculates s
+        
+        %Initial Mesh Specifications:
+        %Hmax = .001; %Minimum Mesh Length Guess
+        %HdeltaP = .50; % The Percentage of Hmax you want the difference between
+                          %the two to be. Given in # between 0 and 1, NOT percent.
+        
+        Hmax = 1*10^-1; % Second Setting
+        HdeltaP = .10; % Second Setting
+        Hmin = Hmax*HdeltaP;
+        
+        % Foam Modification Settings:
+        FstepT = .01; % Step size between foam trials for thickness
+        FstepH = .1;% Step size between foam trials for thickness
+        FstepL = .1; % Step size between foam trials for length
+        qSF = 1; %Only analyze square foam sizes?
+        
+        % Save Settings:
+        savedate = datetime('now');
+        save('ModelSpecification.mat','-regexp', '^(?!(qAT|qF|qUI|qPlot)$).')
 
-    %% Model Specifications (User Edited):
-    
-    % Model Type ("transient", "steadystate")
-    modelType = "steadystate";
-    
-    % Shape of Wall:
-    FoamThickness = 2.54 * 10^-2; %m
-    FoamLength = 45.6 * 10^-2; %m
-    FoamHeight = FoamLength; 
-    WallThickness = 5.08 * 10^-2; %m
-    WallLength = 94 * 10^-2; %m 
-    WallHeight = 180 * 10^-2; %m 
-    
-    % Wall Thermal Properties:
-    ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
-    MassDensity = 24; % Mass Density for the Wall kg/m^3
-    SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
-    
-    % Wall and Foam R Values. Foam Adjustment Settings:
-    Rw = 10; 
-    Rf = 5;
-    
-    % Indoor Boundary Conditions (BC stays constant in time):
-    TempwI = 303; %Interior Wall Temperature K
-    
-    % Outdoor Initial Conditions (IC are flexable with time):
-    TempwO = 297; %Outdoor Wall Temperature K
-    Tempi = 300; %Interior Temperature K
-    
-    %Time Conditions:
-    timeE = 60*30; %End Time s
-    timeStep = 60; %The step between when the model calculates s
-    
-    %Initial Mesh Specifications:
-    %Hmax = .001; %Minimum Mesh Length Guess
-    %HdeltaP = .50; % The Percentage of Hmax you want the difference between
-                      %the two to be. Given in # between 0 and 1, NOT percent.
-    
-    Hmax = 1*10^-3; % Second Setting
-    HdeltaP = .10; % Second Setting
-    Hmin = Hmax*HdeltaP;
-    
-    % Foam Modification Settings:
-    FstepT = .01; % Step size between foam trials for thickness
-    FstepH = .1;% Step size between foam trials for thickness
-    FstepL = .1; % Step size between foam trials for length
-    qSF = 1; %Only analyze square foam sizes?
-    
-    % Save Settings:
-    save ModelSpecification.mat
+        if qAT == 4
+            disp(['[+] Model Specifications have been saved to ModelSpecification.mat at ',datestr(savedate)])
+            return
+        end
+    elseif qAT == 2
+        load ModelSpecification.mat
+        disp(['[+] Model Specifications have been loaded from ', datestr(savedate)])
+    end
     
     %% Non-User Edited Settings:
     if qS == 1
-        disp('[?] Choose the path you want to save to:')
-        pathName = uigetdir(path,'[?] Choose the path you want to save to:');
-        LogSavename = [pathName,'/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+        if qUI == 1
+            disp('[?] Choose the path you want to save to Log Data to:')
+            pathName = uigetdir(path,'[?] Choose the path you want to save to Log Data to:');
+            LogSavename = [pathName,'/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+        else
+            %In the noui version, there is currently no way to choose your save
+            %location
+            LogSavename = ['3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+        end
     end
     
     %% Foam Modification Matrix:
@@ -180,7 +203,7 @@ if qAT == 1
         disp('[-] Logs have not been saved')
     end
 
-elseif qAT == 2
+elseif qAT == 3
     
    % Choosing Data to Load:
    disp('[?] Choose the Log file you would like to load: ')

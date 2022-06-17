@@ -74,3 +74,6 @@ elements = elements';
 
 % Create Geometry
 gm = geometryFromMesh(model,nodes,elements);
+
+% Clears all other variables
+clearvars -except gm

@@ -13,9 +13,10 @@ load('ModelSpecification.mat','')
 thermalmodel = createpde('thermal',modelType);
 
 %% Thermal Geometry:
+disp(['[Process ',num2str(i),'] [$] Creating Geometry'])
 gm = modelshapew3D(thermalmodel,Lw,Hw,Tw,Lf,Hf,Tf);
 thermalmodel.Geometry = gm;
-if i == 1
+if qPlot == 1
     figure
     pdegplot(thermalmodel,'FaceLabels','on','FaceAlpha',.5)
 end
@@ -47,10 +48,10 @@ thermalBC(thermalmodel,'Face',[1,2],'Temperature',TempwO);
 thermalIC(thermalmodel,Tempi);
 
 %% Generate Mesh:
-
+disp(['[Process ',num2str(i),'] [$] Generating Mesh'])
 generateMesh(thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
 
-if i == 1
+if qPlot == 1
     figure
     pdemesh(thermalmodel)
 end
@@ -58,6 +59,7 @@ end
 disp(['[Process ',num2str(i),'] [+] Mesh Generated'])
 
 %% Solve Model:
+disp(['[Process ',num2str(i),'] [$] Solving Model'])
 if all(modelType=="transient")
 tlist = 0:timeStep:timeE;
 thermalresults = solve(thermalmodel,tlist);
@@ -82,8 +84,8 @@ RwM = Rf * dTempRatio;
 RwM = RwM - Rf;
 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
 
-%% For when Process = 1
-if i == 1
+%% Plotting Thermal Contour Map
+if qPlot == 1
     figure(2)
 
     [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
