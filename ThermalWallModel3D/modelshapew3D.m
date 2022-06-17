@@ -9,14 +9,20 @@ function gm = modelshapew3D(model,Lw,Hw,Tw,Lf,Hf,Tf)
 %Points = [Pointsw;Pointsf];
 
 IntSize = .005; %Controls the spread of points created within the geometry
+qRM = 0; % Use reduced size model (only uses the upper left corner of the model)
 
 
 %% Wall:
 
 % Create Mesh Grid: Creates a 3D mesh grid of all points in the wall
 xw = 0:IntSize:Tw;
-yw = (-Lw/2):IntSize:(Lw/2);
-zw = (-Hw/2):IntSize:(Hw/2);
+if qRM == 0
+    yw = (-Lw/2):IntSize:(Lw/2);
+    zw = (-Hw/2):IntSize:(Hw/2);
+elseif qRM == 1
+    yw = (0):IntSize:(Lw/2);
+    zw = (0):IntSize:(Hw/2);
+end
 [Xw, Yw, Zw] = meshgrid(xw,yw,zw);
 
 % Index: calculates a linear index for every point in the mesh grid
@@ -35,8 +41,13 @@ IntPointsw(Index,3) = Zw(Index);
 
 %% Foam (runs same as wall):
 xf = Tw:IntSize:(Tw+Tf);
-yf = (-Lf/2):IntSize:(Lf/2);
-zf = (-Hf/2):IntSize:(Hf/2);
+if qRM == 0
+    yf = (-Lf/2):IntSize:(Lf/2);
+    zf = (-Hf/2):IntSize:(Hf/2);
+elseif qRM == 1
+    yf = (0):IntSize:(Lf/2);
+    zf = (0):IntSize:(Hf/2);
+end
 [Xf, Yf, Zf] = meshgrid(xf,yf,zf);
 
 Index = 1:(size(Xf,1)*size(Xf,2)*size(Xf,3));

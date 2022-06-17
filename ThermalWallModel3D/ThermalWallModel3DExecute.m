@@ -40,9 +40,9 @@ elseif all(modelType=="steadystate")
 end
 
 %boundary Conditions:
-thermalBC(thermalmodel,'Face',1,'Temperature',TempwI);
+thermalBC(thermalmodel,'Face',3,'Temperature',TempwI);
 
-thermalBC(thermalmodel,'Face',[2,4],'Temperature',TempwO);
+thermalBC(thermalmodel,'Face',[1,2],'Temperature',TempwO);
 
 thermalIC(thermalmodel,Tempi);
 

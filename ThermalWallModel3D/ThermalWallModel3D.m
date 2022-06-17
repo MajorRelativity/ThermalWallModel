@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.07
+%% ThermalWallModel3D v 3D0.08
 % Updated on June 16 2022
 
 clear
@@ -7,7 +7,7 @@ clear
 
 qF = 0; % Perform Foam analysis?
 qAT = input(['[?] What would you like to do?','\n    Run Model = 1','\n    Analyze Data = 2','\n    Quit = -1','\n    Input: ']);
-qS = 0; % Save Data? (1 = yes, 0 = no)
+qS = 1; % Save Data? (1 = yes, 0 = no)
 
 if qAT == 1
 
@@ -49,7 +49,7 @@ if qAT == 1
     %HdeltaP = .50; % The Percentage of Hmax you want the difference between
                       %the two to be. Given in # between 0 and 1, NOT percent.
     
-    Hmax = .5*10^-1; % Second Setting
+    Hmax = 1*10^-3; % Second Setting
     HdeltaP = .10; % Second Setting
     Hmin = Hmax*HdeltaP;
     
