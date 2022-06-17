@@ -14,7 +14,7 @@ thermalmodel = createpde('thermal',modelType);
 
 %% Thermal Geometry:
 disp(['[Process ',num2str(i),'] [$] Creating Geometry'])
-gm = modelshapew3D(thermalmodel,Lw,Hw,Tw,Lf,Hf,Tf);
+gm = modelshapew3D(thermalmodel,qRM,Lw,Hw,Tw,Lf,Hf,Tf);
 thermalmodel.Geometry = gm;
 if qPlot == 1
     figure

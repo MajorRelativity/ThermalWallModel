@@ -1,4 +1,4 @@
-function gm = modelshapew3D(model,Lw,Hw,Tw,Lf,Hf,Tf)
+function gm = modelshapew3D(model,qRM,Lw,Hw,Tw,Lf,Hf,Tf)
 % Description: Creates a 3D model of the wall and foam by plotting a grid
 % of points in the shape of the model and applying alphaShape
 
@@ -9,7 +9,6 @@ function gm = modelshapew3D(model,Lw,Hw,Tw,Lf,Hf,Tf)
 %Points = [Pointsw;Pointsf];
 
 IntSize = .005; %Controls the spread of points created within the geometry
-qRM = 0; % Use reduced size model (only uses the upper left corner of the model)
 
 
 %% Wall:

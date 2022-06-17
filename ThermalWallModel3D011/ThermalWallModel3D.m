@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.10
+%% ThermalWallModel3D v 3D0.11
 % Updated on June 17 2022
 % Created by Jackson Kustell
 
@@ -14,6 +14,8 @@ qF = input('[?] Would you like to perform foam anaylsis? (yes = 1, 0 = no): ');
 qS = 1; % Save Data? (1 = yes, 0 = no)
 qUI = input('[?] Would you like to use UI features while running this model? (yes = 1, no = 0): ');
 qPlot = input('[?] Would you like to create plots of the model? (1 = yes, 0 = no): ');
+qDur = input('[?] Do you have time2num installed? (1 = yes, 0 = no): ');
+qV = input('[?] Are you running the most recent version of MatLab? (1 = yes, 0 = no): ');
 end 
 
 if qAT == 1 || qAT == 2 || qAT == 4
@@ -22,6 +24,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         
         % Model Type ("transient", "steadystate")
         modelType = "steadystate";
+        qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
         
         % Shape of Wall:
         FoamThickness = 2.54 * 10^-2; %m
@@ -56,7 +59,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         %HdeltaP = .50; % The Percentage of Hmax you want the difference between
                           %the two to be. Given in # between 0 and 1, NOT percent.
         
-        Hmax = 1*10^-1; % Second Setting
+        Hmax = 2*10^-1; % Second Setting
         HdeltaP = .10; % Second Setting
         Hmin = Hmax*HdeltaP;
         
@@ -75,7 +78,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
             return
         end
     elseif qAT == 2
-        save('ModelSpecification.mat','qAT','qF','qUI','qPlot','-append')
+        save('ModelSpecification.mat','qAT','qF','qUI','qPlot','qDur','qV','-append')
         load ModelSpecification.mat
         disp(['[+] Model Specifications have been loaded from ', datestr(savedate)])
     end
@@ -89,7 +92,8 @@ if qAT == 1 || qAT == 2 || qAT == 4
         else
             %In the noui version, there is currently no way to choose your save
             %location
-            LogSavename = ['3DThermalData3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+            pathName = pwd;
+            LogSavename = [pathName,'/3DThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
         end
     end
     
@@ -182,20 +186,34 @@ if qAT == 1 || qAT == 2 || qAT == 4
             
             timerf = datetime('now');
             duration = timerf - timeri;
+            if qDur == 1
+                duration = time2num(duration,'seconds');
+            else
+                duration = -1;
+                disp('[!] Duration will be displayed as -1 because you do not have time2num installed!')
+            end
             
-            FAResults(i,:) = [i,time2num(duration,'seconds'),Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-            FAResultsD(i,:) = [i,time2num(duration,'seconds'),Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
+            FAResults(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
+            FAResultsD(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
         
         
-            disp(['[&] Process ',num2str(i),' has finished over duration: ',num2str(time2num(duration,'seconds')),' seconds'])
+            disp(['[&] Process ',num2str(i),' has finished over duration: ',num2str(duration),' seconds'])
         end
     end
-
-    Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
-    Specifications = array2table(Specifications,...
-        'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity'});
-    FAResults = array2table(FAResults,...
-        'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
+    
+    if qV == 1
+        Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
+        Specifications = array2table(Specifications,...
+            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity'});
+        FAResults = array2table(FAResults,...
+            'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
+    else
+        Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
+        Specifications = array2table(Specifications,...
+            'RowNames',{'Model','Hmax','HdeltaP(0-to-1)','R-wall','R-foam','Wall Thickness','Wall-Length','Wall-Height','Indoor-BC','Outdoor-BC','Interior-Temp','Thermal-Conductivity'});
+        FAResults = array2table(FAResults,...
+            'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
+    end
     
     if qS == 1
         save(LogSavename,"FAResults","FAResultsD","Specifications")
