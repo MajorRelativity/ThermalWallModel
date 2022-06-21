@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.11
+%% ThermalWallModel3D v 3D0.13
 % Updated on June 17 2022
 % Created by Jackson Kustell
 
@@ -12,6 +12,7 @@ qAT = input(['[?] What would you like to do?','\n    Save ModelSpecifications an
 if qAT == 1 || qAT == 2
 qF = input('[?] Would you like to perform foam anaylsis? (yes = 1, 0 = no): ');
 qS = 1; % Save Data? (1 = yes, 0 = no)
+qTR = 1; % Output ThermalResults (1 = yes, 0 = no)
 qUI = input('[?] Would you like to use UI features while running this model? (yes = 1, no = 0): ');
 qPlot = input('[?] Would you like to create plots of the model? (1 = yes, 0 = no): ');
 qDur = input('[?] Do you have time2num installed? (1 = yes, 0 = no): ');
@@ -150,6 +151,11 @@ if qAT == 1 || qAT == 2 || qAT == 4
         end
         
         Allocation = Fsize;
+
+        % Preallocate Columns:
+            FoamT = Foam(:,1);
+            FoamL = Foam(:,2);
+            FoamH = Foam(:,3);
         
         %Solve Models:
         parfor (i = 1:size(Foam,1),Allocation)
@@ -157,17 +163,30 @@ if qAT == 1 || qAT == 2 || qAT == 4
             timeri = datetime('now')
             disp(['[&] Starting Process ',num2str(i),' on ',datestr(timeri)])
         
-            Tf = Foam(i,1);
-            Lf = Foam(i,2);
-            Hf = Foam(i,3);
-            [pErrorT,RwM,IntersectTemp] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf)
+            Tf = FoamT(i);
+            Lf = FoamL(i);
+            Hf = FoamH(i);
+
+            if qTR == 0
+                [pErrorT,RwM,IntersectTemp] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf);
+            elseif qTR == 1
+                [pErrorT,RwM,IntersectTemp,thermalresults] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf);
+                ThermalResults{i} = thermalresults;
+            end
             
             timerf = datetime('now')
             duration = timerf - timeri
+
+            if qDur == 1
+                duration = time2num(duration,'seconds');
+            else
+                duration = -1;
+                disp('[!] Duration will be displayed as -1 because you do not have time2num installed!')
+            end
+
+            FAResults(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
+            FAResultsD(i,:) = [i,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
             
-            FAResults(i,:) = [i,time2num(duration,'seconds'),Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
-            FAResultsD(i,:) = [i,time2num(duration,'seconds'),Tf,Lf,Hf,pErrorT,RwM,IntersectTemp]
-        
         
             disp(['[&] Process ',num2str(i),' has finished over duration: ',num2str(time2num(duration,'seconds')),' seconds'])
         end
@@ -182,8 +201,14 @@ if qAT == 1 || qAT == 2 || qAT == 4
             Tf = Foam(i,1);
             Lf = Foam(i,2);
             Hf = Foam(i,3);
-            [pErrorT,RwM,IntersectTemp] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf);
-            
+
+            if qTR == 0
+                [pErrorT,RwM,IntersectTemp] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf);
+            elseif qTR == 1 % Adds thermal results if requested
+                [pErrorT,RwM,IntersectTemp,thermalresults] =  ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf);
+                ThermalResults{i} = thermalresults;
+            end
+
             timerf = datetime('now');
             duration = timerf - timeri;
             if qDur == 1
@@ -216,8 +241,13 @@ if qAT == 1 || qAT == 2 || qAT == 4
     end
     
     if qS == 1
-        save(LogSavename,"FAResults","FAResultsD","Specifications")
-        disp(['[+] Logs have been saved as ',LogSavename])
+        if qTR == 0
+            save(LogSavename,"FAResults","FAResultsD","Specifications")
+            disp(['[+] Logs have been saved as ',LogSavename])
+        elseif qTR == 1
+            save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalResults")
+            disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
+        end
     else
         disp('[-] Logs have not been saved')
     end
@@ -238,6 +268,11 @@ elseif qAT == 3
        qFL = input('[?] Would you like to freeze Length? (1 = yes, 0 = no): ');
        qFH = input('[?] Would you like to freeze Height? (1 = yes, 0 = no): ');
        qOV = input('[?] Choose the Column of FAResultsD to use as your output column: ');
+       if exist('ThermalResults','var')
+           qTRp = input('[?] Would you like to create a plot from the ThermalResults? (1 = yes, 0 = no): ');
+       else
+           qTRp = 0;
+       end
        
        Dim = 3 - qFT - qFL - qFH;
 
@@ -414,6 +449,76 @@ elseif qAT == 3
            end
        end
    end
+
+   %% Plot Thermal Results:
+   if qTRp == 1
+       gateP = 1;
+       while gateP == 1
+           qTRpa = input('[?] What row(s) would you like to plot? (-1 = all, or input row index # from FAResults): ');
+           if qTRpa == -1
+               gateP = 0;
+                for i = 1:size(ThermalResults,2)
+                    
+                    % Create Figure:
+                    disp(['[*] Plotting Process #',num2str(i)])
+                    fname = ['Results From Process #',num2str(i)];
+                    figure('Name',fname)
+                    
+                    % Pull Necessary Data for This Model:
+                    Tw = str2double(Specifications{6,1});
+                    Hw = str2double(Specifications{8,1});
+                    Tf = FAResultsD(i,3);
+        
+                    thermalresults = ThermalResults{i};
+                    
+                    % Create Mesh and Plot:
+        
+                    [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
+                    Y = 0.*ones(size(X,1),size(X,2));
+                    V = interpolateTemperature(thermalresults,X,Y,Z);
+                    V = reshape(V,size(X));
+                    surf(X,Z,V,'LineStyle','none');
+                    view(0,90)
+                    title('Colored Plot through Y (Length) = 0')
+                    xlabel('X (Thickness)')
+                    ylabel('Z (Height)')
+                    colorbar
+                end
+           else
+               i = qTRpa;
+               % Create Figure:
+                disp(['[*] Plotting Process #',num2str(i)])
+                fname = ['Results From Process #',num2str(i)];
+                figure('Name',fname)
+                
+                % Pull Necessary Data for This Model:
+                Tw = str2double(Specifications{6,1});
+                Hw = str2double(Specifications{8,1});
+                Tf = FAResultsD(i,3);
+    
+                thermalresults = ThermalResults{i};
+                
+                % Create Mesh and Plot:
+    
+                [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
+                Y = 0.*ones(size(X,1),size(X,2));
+                V = interpolateTemperature(thermalresults,X,Y,Z);
+                V = reshape(V,size(X));
+                surf(X,Z,V,'LineStyle','none');
+                view(0,90)
+                title('Colored Plot through Y (Length) = 0')
+                xlabel('X (Thickness)')
+                ylabel('Z (Height)')
+                colorbar
+                gateP = input('[?] Would you like to plot more rows? (1 = yes, 0 = no): ');
+           end
+       end
+
+   else
+
+   end
+
+disp('[+] Analysis Complete')
 
 else
     disp('[-] Quitting Program')

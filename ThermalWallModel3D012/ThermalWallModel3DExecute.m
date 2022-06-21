@@ -1,4 +1,4 @@
-function [pErrorT,RwM,IntersectTemp] = ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf)
+function [pErrorT,RwM,IntersectTemp,thermalresults] = ThermalWallModel3DExecute(i,Tw,Lw,Hw,Tf,Lf,Hf)
 % Note: i refers to the process # (to support paralell computing)
 
 %% Turn Of Warnings:
