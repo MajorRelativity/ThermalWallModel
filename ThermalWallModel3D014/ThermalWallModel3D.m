@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.13
+%% ThermalWallModel3D v 3D0.14
 % Updated on June 21 2022
 % Created by Jackson Kustell
 
@@ -105,9 +105,9 @@ if qAT == 1 || qAT == 2 || qAT == 4
     Hw = WallHeight;
     
     if qF == 1
-        Tfm = 0:FstepT:Tf;
-        Lfm = 0:FstepL:Lf;
-        Hfm = 0:FstepH:Hf;
+        Tfm = Tf:-FstepT:0;
+        Lfm = Lf:-FstepL:0;
+        Hfm = Hf:-FstepH:0;
         [Tfm, Lfm, Hfm] = meshgrid(Tfm,Lfm,Hfm);
         
         Logic = Tfm > 0 & Lfm > 0 &  Hfm > 0;
