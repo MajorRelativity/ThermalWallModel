@@ -106,7 +106,7 @@ for m = Hmax:Hstep:HmaxF
                 %In the noui version, there is currently no way to choose your save
                 %location
                 pathName = pwd;
-                LogSavename = [pathName,'/3DThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                LogSavename = [pathName,'/3DThermalData/3DMALogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
             end
         end
         
