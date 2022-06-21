@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.13
+%% ThermalWallModel3D Mesh Analysis Edition:
 % Updated on June 21 2022
 % Created by Jackson Kustell
 
