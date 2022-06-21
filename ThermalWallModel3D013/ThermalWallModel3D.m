@@ -60,7 +60,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         %HdeltaP = .50; % The Percentage of Hmax you want the difference between
                           %the two to be. Given in # between 0 and 1, NOT percent.
         
-        Hmax = 2*10^-1; % Second Setting
+        Hmax = 5*10^-3; % Second Setting
         HdeltaP = .10; % Second Setting
         Hmin = Hmax*HdeltaP;
         
