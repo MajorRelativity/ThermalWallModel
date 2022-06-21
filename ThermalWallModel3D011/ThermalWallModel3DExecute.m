@@ -41,11 +41,19 @@ elseif all(modelType=="steadystate")
 end
 
 %boundary Conditions:
-thermalBC(thermalmodel,'Face',3,'Temperature',TempwI);
+if qRM == 0
+    thermalBC(thermalmodel,'Face',3,'Temperature',TempwI);
 
-thermalBC(thermalmodel,'Face',[1,2],'Temperature',TempwO);
+    thermalBC(thermalmodel,'Face',[1,2],'Temperature',TempwO);
 
-thermalIC(thermalmodel,Tempi);
+    thermalIC(thermalmodel,Tempi);
+elseif qRM == 1
+    thermalBC(thermalmodel,'Face',1,'Temperature',TempwI);
+
+    thermalBC(thermalmodel,'Face',[3,7],'Temperature',TempwO);
+
+    thermalIC(thermalmodel,Tempi);
+end
 
 %% Generate Mesh:
 disp(['[Process ',num2str(i),'] [$] Generating Mesh'])
