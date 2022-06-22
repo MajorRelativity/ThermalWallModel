@@ -26,7 +26,7 @@ HdeltaP = .10; % Perent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
 Hstep = 1*10^-3; % Increase in Hmax each run
-HmaxF =  1 * 10^-2; % When Mesh Analysis Ends
+HmaxF =  10 * 10^-1; % When Mesh Analysis Ends
 
 countMA = 1; % Counter Variable for Mesh Analysis:
 

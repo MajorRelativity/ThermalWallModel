@@ -25,7 +25,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         
         % Model Type ("transient", "steadystate")
         modelType = "steadystate";
-        qRM = 1; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
+        qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
         
         % Shape of Wall:
         FoamThickness = 2.54 * 10^-2; %m
@@ -56,7 +56,7 @@ if qAT == 1 || qAT == 2 || qAT == 4
         timeStep = 60; %The step between when the model calculates s
         
         %Initial Mesh Specifications:
-        Hmax = 9*10^-3; % Max Mesh Length
+        Hmax = 10*10^-3; % Max Mesh Length
         HdeltaP = .10; % Perent of Hmax Hmin is
         Hmin = Hmax*HdeltaP;
         
