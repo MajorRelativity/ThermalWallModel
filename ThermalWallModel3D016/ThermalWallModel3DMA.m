@@ -21,12 +21,12 @@ end
 
 % Mesh Analysis Settings
 
-Hmax = 6*10^-3; % Max Mesh Length
-HdeltaP = .10; % Perent of Hmax Hmin is
+Hmax = 10*10^-3; % Max Mesh Length
+HdeltaP = .90; % Perent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
-Hstep = 1*10^-3; % Increase in Hmax each run
-HmaxF =  10 * 10^-1; % When Mesh Analysis Ends
+Hstep = 5*10^-3; % Increase in Hmax each run
+HmaxF =  1 * 10^-1; % When Mesh Analysis Ends
 
 countMA = 1; % Counter Variable for Mesh Analysis:
 
@@ -34,6 +34,7 @@ for m = Hmax:Hstep:HmaxF
     
     % Hmax Modification:
     Hmax = m;
+    Hmin = Hmax*HdeltaP;
 
     if qAT == 1 || qAT == 2 || qAT == 3
         if qAT == 1 || qAT == 3
@@ -83,7 +84,7 @@ for m = Hmax:Hstep:HmaxF
                 savedate = datetime('now');
                 save('ModelSpecification.mat')
             else
-                save('ModelSpecification.mat','Hmax','-append')
+                save('ModelSpecification.mat','Hmax','Hmin','-append')
             end
     
             if qAT == 3 && countMA == 1
