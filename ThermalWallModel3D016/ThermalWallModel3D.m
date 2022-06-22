@@ -1,8 +1,9 @@
-%% ThermalWallModel3D v 3D0.15
+%% ThermalWallModel3D v 3D0.16
 % Updated on June 22 2022
 % Created by Jackson Kustell
 
 clear
+w = warning('off'); %Temporary
 
 %% Preferences:
 
@@ -182,8 +183,9 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 OutdoorWF = input(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[?] Please specify the face # of the outdoor wall side: ']);
                 
                 % Run Prototype Model for Check
-                generateMesh(thermalmodel,'Hmin',0.2,'Hmax',1)
-                
+                generateMesh(thermalmodel,'Hmin',0.2,'Hmax',1);
+
+
                 figure(1)
                 
                 thermalBC(thermalmodel,'Face',IndoorF,'Temperature',TempwI);
@@ -207,12 +209,11 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 end
                 
                 % Geometry Test Results:
-                w = warning('off');
                 resultstest = solve(thermalmodel);
                 pdeplot3D(thermalmodel,"ColorMapData",resultstest.Temperature)
                 
                 drawnow
-                                w = warning('on');
+                
                 gateV = input('[?] Does this test model look close to correct? (1 = yes, 0 = no): ');
                 if gateV == 0
                     disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[!] You may have chosen the faces incorrectly, please try again'])
@@ -280,7 +281,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 Fsize = F.NumWorkers;
             end
             
-            Allocation = Fsize-6;
+            Allocation = Fsize;
     
             % Preallocate Columns:
                 FoamT = Foam(:,1);
@@ -432,27 +433,28 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 disp(['[&] Process ',num2str(i),' has finished over duration: ',num2str(duration),' seconds'])
             end
         
-            %% Final Processing and Save:
-            if qV == 1
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
-                Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity'});
-                FAResults = array2table(FAResults,...
-                    'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
-            else
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
-                Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP(0-to-1)','R-wall','R-foam','Wall Thickness','Wall-Length','Wall-Height','Indoor-BC','Outdoor-BC','Interior-Temp','Thermal-Conductivity'});
-                FAResults = array2table(FAResults,...
-                    'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
-            end
-            
-            if qS == 1
-                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults")
-                disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
-            else
-                disp('[-] Logs have not been saved')
-            end
+        end
+        
+                %% Final Processing and Save:
+        if qV == 1
+            Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
+            Specifications = array2table(Specifications,...
+                'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity'});
+            FAResults = array2table(FAResults,...
+                'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
+        else
+            Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
+            Specifications = array2table(Specifications,...
+                'RowNames',{'Model','Hmax','HdeltaP(0-to-1)','R-wall','R-foam','Wall Thickness','Wall-Length','Wall-Height','Indoor-BC','Outdoor-BC','Interior-Temp','Thermal-Conductivity'});
+            FAResults = array2table(FAResults,...
+                'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
+        end
+
+        if qS == 1
+            save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults")
+            disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
+        else
+            disp('[-] Logs have not been saved')
         end
     end
 
