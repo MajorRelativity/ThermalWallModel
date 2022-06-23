@@ -1,5 +1,5 @@
-%% ThermalWallModel3D v 3D0.16
-% Updated on June 22 2022
+%% ThermalWallModel3D v 3D0.17
+% Updated on June 23 2022
 % Created by Jackson Kustell
 
 clear
@@ -18,7 +18,11 @@ end
 
 if qAT == 3
     qUI = input('[?] Would you like to use UI features while running this model? (yes = 1, no = 0): ');
-    qPlot = input('[?] Would you like to create plots of the model? (1 = yes, 0 = no): ');
+    if qUI == 1
+        qPlot = input('[?] Would you like to create plots of the model? (1 = yes, 0 = no): ');
+    else
+        qPlot = 0;
+    end
     qDur = input('[?] Do you have time2num installed? (1 = yes, 0 = no): ');
     qV = input('[?] Are you running the most recent version of MatLab? (1 = yes, 0 = no): ');
 end
@@ -26,6 +30,7 @@ end
 if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
     MSN = input('[?] Choose a Model Specification #: ');
     MS = ['ModelSpecification',num2str(MSN),'.mat'];
+    qGM = 2; % Generate mesh at geometry selection stage or at model running stage (1 = initial stage, 2 = run model stage).
 end
 
 if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
@@ -188,11 +193,14 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
 
                 figure(1)
                 
-                thermalBC(thermalmodel,'Face',IndoorF,'Temperature',TempwI);
+                thermalBC(thermalmodel,'Face',IndoorF,'Temperature',TempwI); % These boundary conditions will be kept for the final model
                 thermalBC(thermalmodel,'Face',[OutdoorFF,OutdoorWF],'Temperature',TempwO);
-                thermalIC(thermalmodel,Tempi);
+                
                 
                 if all(modelType=="transient")
+                    
+                    thermalIC(thermalmodel,Tempi); % Inbitial Conditions only apply to tranient models
+
                     TCw = ThermalConductivity; 
                     TMw = MassDensity; 
                     TSw = SpecificHeat;
@@ -223,25 +231,28 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
     
             disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[+] Geometry Verified'])
             
-            % Generate True Mesh
-            disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Generating True Mesh'])
-            F(i) = parfeval(@generateMesh,1,thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
-            
-            F
-            
+            if qGM == 1
+                % Generate True Mesh if requested during setup
+                disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Generating True Mesh'])
+                F(i) = parfeval(@generateMesh,1,thermalmodel,'Hmin',Hmin,'Hmax',Hmax);
+                
+                F
+            end
+
             % Save Thermal Model:
             ThermalModel{i} = thermalmodel; %applies the thermal model to the cell model
     
         end
+        if qGM == 1
+            disp('[*] Waiting for Mesh Generation to complete')
         
-        disp('[*] Waiting for Mesh Generation to complete')
-    
-        wait(F)
+            wait(F)
+            
+            disp('[$] Extracting Mesh Generation')
         
-        disp('[$] Extracting Mesh Generation')
-    
-        for ii = 1:size(F,2)
-            ThermalModel{ii}.Mesh = fetchOutputs(F(ii)); % Applies the mesh created by the parallel future to the thermal model in the cell
+            for ii = 1:size(F,2)
+                ThermalModel{ii}.Mesh = fetchOutputs(F(ii)); % Applies the mesh created by the parallel future to the thermal model in the cell
+            end
         end
 
         if qS == 1
@@ -280,10 +291,20 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
             else
                 Fsize = F.NumWorkers;
             end
+
             
             Allocation = Fsize;
+
+            if qGM == 2
+                disp('[&] Generating Mesh for All Models')
+                parfor (ii = 1:ProcessNum,Allocation)
+                    disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[$] Generating True Mesh'])
+                    ThermalModel{ii}.Mesh = generateMesh(ThermalModel{ii},'Hmin',Hmin,'Hmax',Hmax)
+                    disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[+] Mesh Generated'])
+                end
+            end
     
-            % Preallocate Columns:
+            % Preallocate foam Columns:
                 FoamT = Foam(:,1);
                 FoamL = Foam(:,2);
                 FoamH = Foam(:,3);
@@ -300,7 +321,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 disp(['[&] Starting Process ',num2str(i),' on ',datestr(timeri)])
                     
                 %% Solve Model:
-                disp(['[Process ',num2str(i),'] [$] Solving Model'])
+                disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Solving Model'])
                 if all(modelType=="transient")
                 tlist = 0:timeStep:timeE;
                 thermalresults = solve(ThermalModel{i},tlist);
@@ -308,7 +329,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                     thermalresults = solve(ThermalModel{i});
                 end
                 
-                disp(['[Process ',num2str(i),'] [+] Model Solved'])
+                disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Model Solved'])
                 
                 %% Predict R Value:
                 
@@ -360,6 +381,16 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
 
         else
             %Solve Models:
+
+            if qGM == 2
+                disp('[&] Generating Mesh for All Models')
+                for ii = 1:ProcessNum
+                    disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[$] Generating True Mesh'])
+                    ThermalModel{ii}.Mesh = generateMesh(ThermalModel{ii},'Hmin',Hmin,'Hmax',Hmax);
+                    disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[+] Mesh Generated'])
+                end
+            end
+
             for i = 1:ProcessNum
                 
                 %% Import Foam Specifications:
@@ -373,7 +404,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 disp(['[&] Starting Process ',num2str(i),' on ',datestr(timeri)])
                     
                 %% Solve Model:
-                disp(['[Process ',num2str(i),'] [$] Solving Model'])
+                disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[$] Solving Model'])
                 if all(modelType=="transient")
                 tlist = 0:timeStep:timeE;
                 thermalresults = solve(ThermalModel{i},tlist);
@@ -383,7 +414,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                     w = warning('on');
                 end
                 
-                disp(['[Process ',num2str(i),'] [+] Model Solved'])
+                disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[+] Model Solved'])
                 
                 %% Predict R Value:
                 
