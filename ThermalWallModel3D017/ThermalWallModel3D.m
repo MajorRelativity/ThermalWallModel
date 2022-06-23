@@ -3,7 +3,6 @@
 % Created by Jackson Kustell
 
 clear
-w = warning('off'); %Temporary
 
 %% Preferences:
 
@@ -30,7 +29,7 @@ end
 if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
     MSN = input('[?] Choose a Model Specification #: ');
     MS = ['ModelSpecification',num2str(MSN),'.mat'];
-    qGM = 2; % Generate mesh at geometry selection stage or at model running stage (1 = initial stage, 2 = run model stage).
+    qGM = 1; % Generate mesh at geometry selection stage or at model running stage (1 = initial stage, 2 = run model stage).
 end
 
 if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
@@ -70,8 +69,8 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
         timeStep = 60; %The step between when the model calculates s
         
         %Initial Mesh Specifications:
-        Hmax = 10*10^-3; % Max Mesh Length
-        HdeltaP = .10; % Perent of Hmax Hmin is
+        Hmax = 1*10^-3; % Max Mesh Length
+        HdeltaP = .10; % Percent of Hmax Hmin is
         Hmin = Hmax*HdeltaP;
         
         % Foam Modification Settings:
