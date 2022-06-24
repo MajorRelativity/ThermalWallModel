@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D0.18.01
+%% ThermalWallModel3D v 3D0.18.02
 % Updated on June 23 2022
 % Created by Jackson Kustell
 
@@ -11,6 +11,7 @@ clear
 % 
 %   001) Generate Geometry
 %   002) Solve Model From Geometry
+%   003) Y-Slice Foam Analysis Contour Plot
 %
 % 100) PreRun
 %
@@ -28,6 +29,7 @@ clear
 %   203) Make Directory and Save ThermalModel.mat
 %   204) Load ThermalModel.mat
 %   205) Save Foam Analysis Log Data
+%   206) Load Foam Analysis Log Data
 %
 % 300) Modification
 %
@@ -52,7 +54,7 @@ clear
 %
 % 600) Analysis
 %
-%
+%   601) Create Y Slice Foam Analysis Thermal Plot (Horzontile)
 %
 
 %% Model Specifications (User Edited):
@@ -132,6 +134,13 @@ end
 
 %% Collection Selection:
 
+% Collections:
+Colstr1 = '\n    1 = Generate Single Geometry ';
+Colstr2 = '\n    2 = Run Single Model From Geometry ';
+Colstr3 = '\n    3 = Y-Slice Foam Analysis Contour Plot';
+Colstr = [Colstr1,Colstr2,Colstr3];
+
+
 % Create Variables:
 gateC = 1;
 numC = 1;
@@ -140,9 +149,9 @@ numC = 1;
 while gateC == 1
     switch numC
         case 1
-            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ','\n    1 = Generate Single Geometry ','\n    2 = Run Single Model From Geometry ']);
+            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ',Colstr]);
         otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ','\n    1 = Generate Single Geometry ','\n    2 = Run Single Model From Geometry ']);
+            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ',Colstr]);
     end
     
     switch qCollection(numC)
@@ -157,6 +166,9 @@ while gateC == 1
     end
     
 end
+
+% Clear Collection Names:
+clear -regexp Colstr
 
 % Preallocate Varaibles: 
 
@@ -376,6 +388,14 @@ for I = 1:size(P,1)
                 % Save Foam Analysis Logs
                 save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults")
                 disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
+
+            case 206
+                % Load Foam Analysis Logs
+                disp('[?] Choose the Log file you would like to load: ')
+                [filenameFAL, pathnameFAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
+                addpath(pathnameFAL)
+                load(filenameFAL)
+                disp(['[+] File ',filenameFAL,' has been loaded!'])
             case 301
                 % Select Thermal Model Number:
                 qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (-1 = no or Input #): ']);
@@ -513,6 +533,70 @@ for I = 1:size(P,1)
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
 
+            case 601
+                % Y Slice Analysis (Horzontile)
+               gateP = 1;
+               while gateP == 1
+                   qTRpa = input('[?] [601] What row(s) would you like to plot? (-1 = all, or input row index # from FAResults): ');
+                   Ypos = input('[?] [601] Please Select the Y position you wish to plot: ');
+                   if qTRpa == -1
+                       gateP = 0;
+                        for i = 1:size(ThermalResults,2)
+                            
+                            % Create Figure:
+                            disp(['[*] [601] Plotting Model #',num2str(i)])
+                            fname = ['Results From Process #',num2str(i)];
+                            figure('Name',fname)
+                            
+                            % Pull Necessary Data for This Model:
+                            Tw = str2double(Specifications{6,1});
+                            Hw = str2double(Specifications{8,1});
+                            Tf = FAResultsD(i,3);
+                
+                            thermalresults = ThermalResults{i};
+                            
+                            % Create Mesh and Plot:
+                
+                            [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
+                            Y = Ypos.*ones(size(X,1),size(X,2));
+                            V = interpolateTemperature(thermalresults,X,Y,Z);
+                            V = reshape(V,size(X));
+                            surf(X,Z,V,'LineStyle','none');
+                            view(0,90)
+                            title('Colored Plot through Y (Length) = 0')
+                            xlabel('X (Thickness)')
+                            ylabel('Z (Height)')
+                            colorbar
+                        end
+                   else
+                       i = qTRpa;
+                       % Create Figure:
+                        disp(['[*] [601] Plotting Model #',num2str(i)])
+                        fname = ['Results From Model #',num2str(i)];
+                        figure('Name',fname)
+                        
+                        % Pull Necessary Data for This Model:
+                        Tw = str2double(Specifications{6,1});
+                        Hw = str2double(Specifications{8,1});
+                        Tf = FAResultsD(i,3);
+            
+                        thermalresults = ThermalResults{i};
+                        
+                        % Create Mesh and Plot:
+            
+                        [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
+                        Y = Ypos.*ones(size(X,1),size(X,2));
+                        V = interpolateTemperature(thermalresults,X,Y,Z);
+                        V = reshape(V,size(X));
+                        surf(X,Z,V,'LineStyle','none');
+                        view(0,90)
+                        title('Colored Plot through Y (Length) = 0')
+                        xlabel('X (Thickness)')
+                        ylabel('Z (Height)')
+                        colorbar
+                        gateP = input('[?] [601] Would you like to plot more rows? (1 = yes, 0 = no): ');
+                   end
+               end
                 
         end
     end
