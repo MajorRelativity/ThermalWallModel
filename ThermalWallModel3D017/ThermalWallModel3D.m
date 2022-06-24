@@ -69,7 +69,7 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
         timeStep = 60; %The step between when the model calculates s
         
         %Initial Mesh Specifications:
-        Hmax = 1*10^-3; % Max Mesh Length
+        Hmax = 10*10^-3; % Max Mesh Length
         HdeltaP = .10; % Percent of Hmax Hmin is
         Hmin = Hmax*HdeltaP;
         
@@ -320,12 +320,16 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
                 disp(['[&] Starting Process ',num2str(i),' on ',datestr(timeri)])
                     
                 %% Solve Model:
+                
+                % Extract ThermalModel
+                thermalmodel = ThermalModel{i};
+
                 disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Solving Model'])
                 if all(modelType=="transient")
                 tlist = 0:timeStep:timeE;
-                thermalresults = solve(ThermalModel{i},tlist);
+                thermalresults = solve(thermalmodel,tlist);
                 else
-                    thermalresults = solve(ThermalModel{i});
+                    thermalresults = solve(thermalmodel);
                 end
                 
                 disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Model Solved'])
@@ -401,19 +405,20 @@ if qAT == 1 || qAT == 2 || qAT == 3 || qAT == 5
 
                 timeri = datetime('now');
                 disp(['[&] Starting Process ',num2str(i),' on ',datestr(timeri)])
+
+                % Extract ThermalModel
+                thermalmodel = ThermalModel{i};
                     
                 %% Solve Model:
-                disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[$] Solving Model'])
+                disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[$] Solving Model'])
                 if all(modelType=="transient")
                 tlist = 0:timeStep:timeE;
-                thermalresults = solve(ThermalModel{i},tlist);
+                thermalresults = solve(thermalmodel,tlist);
                 else
-                    w = warning('off'); % Turn off warnings so that a warding about no subscipts specified is not sent
-                    thermalresults = solve(ThermalModel{i});
-                    w = warning('on');
+                    thermalresults = solve(thermalmodel);
                 end
                 
-                disp(['[Process ',num2str(ii),'/',num2str(ProcessNum),'] ','[+] Model Solved'])
+                disp(['[Process ',num2str(i),'/',num2str(ProcessNum),'] ','[+] Model Solved'])
                 
                 %% Predict R Value:
                 
