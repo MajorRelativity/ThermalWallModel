@@ -1,5 +1,5 @@
-%% ThermalWallModel3D v 3D0.18.01
-% Updated on June 23 2022
+%% ThermalWallModel3D v 3D1.00
+% Updated on June 24 2022
 % Created by Jackson Kustell
 
 clear
@@ -9,9 +9,10 @@ clear
 % Process ID:
 % 000) Collection
 % 
-%   001) Generate Geometry
-%   002) Solve Model From Geometry
-%   003) Y-Slice Foam Analysis Contour Plot
+%   001) Generate Single Geometry
+%   002) Solve Single Model From Geometry
+%   003) Create Contour Plot Slices
+%   004) Get Temperature at Point
 %
 % 100) PreRun
 %
@@ -54,8 +55,10 @@ clear
 %
 % 600) Analysis
 %
-%   601) Create Y Slice Foam Analysis Thermal Plot (Horzontile)
-%
+%   601) Create Y Slice Foam Analysis Thermal Plot (Vertical Y)
+%   602) Create Z Slice Foam Analysis Thermal Plot (Horzontal Z)
+%   603) Create X Slice Foam Analysis Thermal Plot (Vertical X)
+%   604) Get Temperature at Point
 
 %% Model Specifications (User Edited):
 
@@ -131,14 +134,27 @@ switch qMS
 
 end
 
+%% Reset Overrides:
+
+% 100:
+run104 = 1;
+
+% 200:
+run206 = 1;
+
+% 300
+run301 = 1;
 
 %% Collection Selection:
 
 % Collections:
+ColstrInput = '\n    Input: ';
 Colstr1 = '\n    1 = Generate Single Geometry ';
 Colstr2 = '\n    2 = Run Single Model From Geometry ';
-Colstr3 = '\n    3 = Y-Slice Foam Analysis Contour Plot';
-Colstr = [Col1,Col2,Col3];
+Colstr3 = '\n    3 = Create Contour Plot Slices';
+Colstr4 = '\n    4 = Get Temperature at Point';
+Colstr = [Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr = [Colstr,ColstrInput];
 
 
 % Create Variables:
@@ -149,14 +165,17 @@ numC = 1;
 while gateC == 1
     switch numC
         case 1
-            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ',Col]);
+            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ',Colstr]);
         otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ',Col]);
+            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ',Colstr]);
     end
     
     switch qCollection(numC)
         case -1
             disp('[~] Quitting Script')
+
+            % Clear Collection Names:
+            clear -regexp Colstr
             return
         case 0
             gateC = 0;
@@ -168,7 +187,7 @@ while gateC == 1
 end
 
 % Clear Collection Names:
-clear -regexp Col
+clear -regexp Colstr
 
 % Preallocate Varaibles: 
 
@@ -184,6 +203,7 @@ for C = qCollection
         case 0
             % Ignore
             numC = numC - 1;
+            break
         case 1            
             % Program #1 - Generate Geometry
             prePline = [101 103 104 1]; %prePrograms always end with their program ID #
@@ -207,6 +227,46 @@ for C = qCollection
        case 2          
             % Program #2 - Run Model From Geometry
             prePline = [104 105 106 2]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+       case 3          
+            % Program #3 - Contour Slices
+            prePline = [3]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+        case 4
+            % Program #4 - Get Temperature at Point
+            prePline = [4]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -288,10 +348,10 @@ for preI = 1:size(preP,1)
                 disp('[+] [103] Foam Vector Created')
                 
             case 104
-                if ~exist('ran104','var')
+                if run104 == 1
                     MN = input('[?] [104] Choose a Thermal Model File ID Number #: ');
                     MNstr = num2str(MN);
-                    ran104 = 1;
+                    run104 = 0;
                     disp(['[#] [104] Script Will Pull From and Save To Model: ',MN])
                 end
             case 105
@@ -345,6 +405,46 @@ for preI = 1:size(preP,1)
                 else
                     P = Pline;
                 end
+            case 3
+                % Program #3 - Plot Contour Slices
+                Pline = [3 206 301 601 602 603]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 4 
+                % Program #4 - Get Temperature at Point
+                Pline = [4 206 301 604]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
                 
         end
     end
@@ -360,12 +460,23 @@ for I = 1:size(P,1)
         switch p
             case 0
                 % Ignore
+                break
             case 1
-                % Collection #1 - Generate Geometry
+                % Collection #1 - Generate Single Geometry
                 disp('[&] Starting Collection #1 - Generate Geometry')
+
+                % Overrides:
+                run301 = 0;
             case 2
-                % Collection #2 - Solve Thermal Model
+                % Collection #2 - Solve Single Thermal Model
                 disp('[&] Starting Collection #2 - Solve Thermal Model')
+
+                % Overrides
+                run206 = 0;
+                run301 = 0;
+            case 3
+                % Collection #3 - Creating Slices
+                disp('[&] Starting Collection #3 - Creating Contour Slices')
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -376,6 +487,7 @@ for I = 1:size(P,1)
                 % Save Thermal Model to Mat File
                 save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN')
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
+
             case 204
                 % Load Thermal Model from Mat File:
                 load(['ThermalModels/ThermalModel',MNstr,'.mat'])
@@ -386,25 +498,30 @@ for I = 1:size(P,1)
                 disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',MS])
             case 205
                 % Save Foam Analysis Logs
-                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults")
+                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults","numM")
                 disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
 
             case 206
-                % Load Foam Analysis Logs
-                disp('[?] Choose the Log file you would like to load: ')
-                [filenameFAL, pathnameFAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
-                addpath(pathnameFAL)
-                load(filenameFAL)
-                disp(['[+] File ',filenameFAL,' has been loaded!'])
+                if run206 == 1
+                    % Load Foam Analysis Logs
+                    disp('[?] Choose the Log file you would like to load: ')
+                    [filenameFAL, pathnameFAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
+                    addpath(pathnameFAL)
+                    load(filenameFAL)
+                    disp(['[+] File ',filenameFAL,' has been loaded!'])
+                end
             case 301
                 % Select Thermal Model Number:
-                qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (-1 = no or Input #): ']);
-                if qnumM <= 0
-                    disp(['[-] [301] [Model ',numMstr,'] ','Model Number Not Modified'])
-                else
-                    numM = qnumM;
+                if run301 == 1
                     numMstr = num2str(numM);
-                    disp(['[+] [301] [Model ',numMstr,'] ','New Model Number Chosen: ',numMstr])
+                    qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (-1 = no or Input #): ']);
+                    if qnumM <= 0
+                        disp(['[-] [301] [Model ',numMstr,'] ','Model Number Not Modified'])
+                    else
+                        numM = qnumM;
+                        numMstr = num2str(numM);
+                        disp(['[+] [301] [Model ',numMstr,'] ','New Model Number Chosen: ',numMstr])
+                    end
                 end
             case 401
                 % Create Single New Thermal Model
@@ -534,23 +651,29 @@ for I = 1:size(P,1)
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
 
             case 601
-                % Y Slice Analysis (Horzontile)
+               % Y Slice Analysis (Vertical Y)
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [601] What row(s) would you like to plot? (-1 = all, or input row index # from FAResults): ');
-                   Ypos = input('[?] [601] Please Select the Y position you wish to plot: ');
+                   qTRpa = input('[?] [601] What model # would you like to Yslice? (-1 = all, or row index # from FAResults): ');
+                   
+                   % Pull Model Specifications:
+                   Tw = str2double(Specifications{6,1});
+                   Hw = str2double(Specifications{8,1});
+                   Lw = str2double(Specifications{7,1});
+                   
+                   % Choose Slices:
+                   Yslice = input('[?] [601] Please Select the Y position you wish to plot: ');
+
                    if qTRpa == -1
                        gateP = 0;
                         for i = 1:size(ThermalResults,2)
                             
                             % Create Figure:
                             disp(['[*] [601] Plotting Model #',num2str(i)])
-                            fname = ['Results From Process #',num2str(i)];
+                            fname = ['Yslice Results From Process #',num2str(i)];
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tw = str2double(Specifications{6,1});
-                            Hw = str2double(Specifications{8,1});
                             Tf = FAResultsD(i,3);
                 
                             thermalresults = ThermalResults{i};
@@ -558,12 +681,12 @@ for I = 1:size(P,1)
                             % Create Mesh and Plot:
                 
                             [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
-                            Y = Ypos.*ones(size(X,1),size(X,2));
+                            Y = Yslice.*ones(size(X,1),size(X,2));
                             V = interpolateTemperature(thermalresults,X,Y,Z);
                             V = reshape(V,size(X));
                             surf(X,Z,V,'LineStyle','none');
                             view(0,90)
-                            title('Colored Plot through Y (Length) = 0')
+                            title(['Colored Plot through Y (Length) = ',num2str(Yslice)])
                             xlabel('X (Thickness)')
                             ylabel('Z (Height)')
                             colorbar
@@ -572,12 +695,10 @@ for I = 1:size(P,1)
                        i = qTRpa;
                        % Create Figure:
                         disp(['[*] [601] Plotting Model #',num2str(i)])
-                        fname = ['Results From Model #',num2str(i)];
+                        fname = ['Yslice Results From Model #',num2str(i)];
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tw = str2double(Specifications{6,1});
-                        Hw = str2double(Specifications{8,1});
                         Tf = FAResultsD(i,3);
             
                         thermalresults = ThermalResults{i};
@@ -585,27 +706,200 @@ for I = 1:size(P,1)
                         % Create Mesh and Plot:
             
                         [X,Z] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Hw/2,Hw/2));
-                        Y = Ypos.*ones(size(X,1),size(X,2));
+                        Y = Yslice.*ones(size(X,1),size(X,2));
                         V = interpolateTemperature(thermalresults,X,Y,Z);
                         V = reshape(V,size(X));
                         surf(X,Z,V,'LineStyle','none');
                         view(0,90)
-                        title('Colored Plot through Y (Length) = 0')
+                        title(['Colored Plot through Y (Length) = ',num2str(Yslice)])
                         xlabel('X (Thickness)')
                         ylabel('Z (Height)')
                         colorbar
                         gateP = input('[?] [601] Would you like to plot more rows? (1 = yes, 0 = no): ');
                    end
                end
+            case 602
+               % Z Slice Analysis (Horzontal Z)
+               gateP = 1;
+               while gateP == 1
+                   qTRpa = input('[?] [602] What model # do you want to Zslice? (-1 = all, or row index # from FAResults): ');
+                   
+                   % Pull Model Specifications:
+                   Tw = str2double(Specifications{6,1});
+                   Hw = str2double(Specifications{8,1});
+                   Lw = str2double(Specifications{7,1});
+                   
+                   % Choose Slice:
+                   Zslice = input('[?] [602] Please Select the Z position you wish to plot: ');
+                   if qTRpa == -1
+                       gateP = 0;
+                        for i = 1:size(ThermalResults,2)
+                            
+                            % Create Figure:
+                            disp(['[*] [602] Plotting Model #',num2str(i)])
+                            fname = ['Zslice Results From Process #',num2str(i)];
+                            figure('Name',fname)
+                            
+                            % Pull Necessary Data for This Model:
+                            Tf = FAResultsD(i,3);
                 
+                            thermalresults = ThermalResults{i};
+                            
+                            % Create Mesh and Plot:
+                
+                            [X,Y] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Lw/2,Lw/2));
+                            Z = Zslice.*ones(size(X,1),size(X,2));
+                            V = interpolateTemperature(thermalresults,X,Y,Z);
+                            V = reshape(V,size(X));
+                            surf(X,Y,V,'LineStyle','none');
+                            view(0,90)
+                            title(['Colored Plot through Z (Height) = ',num2str(Zslice)])
+                            xlabel('X (Thickness)')
+                            ylabel('Y (Length)')
+                            colorbar
+                        end
+                   else
+                       i = qTRpa;
+                       % Create Figure:
+                        disp(['[*] [602] Plotting Model #',num2str(i)])
+                        fname = ['Zslice Results From Model #',num2str(i)];
+                        figure('Name',fname)
+                        
+                        % Pull Necessary Data for This Model:
+                        Tf = FAResultsD(i,3);
+            
+                        thermalresults = ThermalResults{i};
+                        
+                        % Create Mesh and Plot:
+            
+                        [X,Y] = meshgrid(linspace(0,(Tw+Tf)),linspace(-Lw/2,Lw/2));
+                        Z = Zslice.*ones(size(X,1),size(X,2));
+                        V = interpolateTemperature(thermalresults,X,Y,Z);
+                        V = reshape(V,size(X));
+                        surf(X,Y,V,'LineStyle','none');
+                        view(0,90)
+                        title(['Colored Plot through Z (Height) = ',num2str(Zslice)])
+                        xlabel('X (Thickness)')
+                        ylabel('Y (Length)')
+                        colorbar
+                        gateP = input('[?] [602] Would you like to plot more rows? (1 = yes, 0 = no): ');
+                   end
+               end
+            case 603
+               % X Slice Analysis (Vertical X)
+               gateP = 1;
+               while gateP == 1
+                   qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from FAResults): ');
+                   
+                   % Pull Model Specifications:
+                   Tw = str2double(Specifications{6,1});
+                   Hw = str2double(Specifications{8,1});
+                   Lw = str2double(Specifications{7,1});
+                   
+                   % Choose Slice:
+                   Xslice = Tw; % The only useful x slice is at the wall/foam intersection
+
+                   if qTRpa == -1
+                       gateP = 0;
+                        for i = 1:size(ThermalResults,2)
+                            
+                            % Create Figure:
+                            disp(['[*] [603] Plotting Model #',num2str(i)])
+                            fname = ['Xslice Results From Process #',num2str(i)];
+                            figure('Name',fname)
+                            
+                            % Pull Necessary Data for This Model:
+                            Tf = FAResultsD(i,3);
+                
+                            thermalresults = ThermalResults{i};
+                            
+                            % Create Mesh and Plot:
+                
+                            [Z,Y] = meshgrid(linspace(Hw/2,-Hw/2),linspace(-Lw/2,Lw/2));
+                            X = Xslice.*ones(size(Z,1),size(Z,2));
+                            V = interpolateTemperature(thermalresults,X,Y,Z);
+                            V = reshape(V,size(Z));
+                            surf(Z,Y,V,'LineStyle','none');
+                            view(0,90)
+                            title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
+                            xlabel('Z (Height)')
+                            ylabel('Y (Length)')
+                            colorbar
+                        end
+                   else
+                       i = qTRpa;
+                       % Create Figure:
+                        disp(['[*] [603] Plotting Model #',num2str(i)])
+                        fname = ['Xslice Results From Model #',num2str(i)];
+                        figure('Name',fname)
+                        
+                        % Pull Necessary Data for This Model:
+                        Tf = FAResultsD(i,3);
+            
+                        thermalresults = ThermalResults{i};
+                        
+                        % Create Mesh and Plot:
+            
+                        [Z,Y] = meshgrid(linspace(Hw/2,-Hw/2),linspace(-Lw/2,Lw/2));
+                        X = Xslice.*ones(size(Z,1),size(Z,2));
+                        V = interpolateTemperature(thermalresults,X,Y,Z);
+                        V = reshape(V,size(Z));
+                        surf(Z,Y,V,'LineStyle','none');
+                        view(0,90)
+                        title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
+                        xlabel('Z (Height)')
+                        ylabel('Y (Length)')
+                        colorbar
+                        gateP = input('[?] [603] Would you like to plot more rows? (1 = yes, 0 = no): ');
+                   end
+               end
+            case 604
+                % Get Temperature at a Point
+                
+                % Load Important Information:
+                Tw = str2double(Specifications{6,1});
+                Hw = str2double(Specifications{8,1});
+                Lw = str2double(Specifications{7,1});
+
+                Tf = FAResultsD(numM,3);
+                Tl = FAResultsD(numM,4);
+                Th = FAResultsD(numM,5);
+
+                gateTAP = 1;
+                while gateTAP == 1
+                    % Count Number of Points
+                    if ~exist('numTAP','var')
+                        numTAP = 1;
+                    else
+                        numTAP = numTAP + 1;
+                    end
+                    
+                    % Get Point
+                    disp(['[?] [604] [Model ',numMstr,'] ','What point would you like to use?','\n[#] Origin is in center of indoor wall'])
+                    x = input('    Thickness = ');
+                    y = input('    Length = ');
+                    z = input('    Height = ');
+                    
+                    % Creat Array and Table
+                    TempAtPointP = interpolateTemperature(ThermalResults{numM},x,y,z);
+                    TempAtPointD(numTAP,:) = [numTAP,numM,x,y,z,TempAtPointP];
+                    TempAtPoint = array2table(TempAtPointD,...
+                        'VariableNames',{'Point','Model #','X','Y','Z','Temperature'});
+                    disp(TempAtPoint)
+                    
+                    % Clear Old Values:
+                    clear x
+                    clear y
+                    clear z
+                    clear TempAtPointP
+    
+                    % Another?
+                    gateTAP = input(['[?] [604] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
+                end
         end
     end
     % Finish Collection:
     disp(['[=] Collection #',num2str(P(I,1)),' Finished'])
-end
-        
-        
-        
-        
-        
-        
+end      
+
+
