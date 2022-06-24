@@ -1,4 +1,4 @@
-%% ThermalWallModel Version R1.01
+%% ThermalWallModel3D Version 3D0.02
 % Updated on June 14 2022
 % Description: Thermal model used to analyze lab conditions
 % Code taken from MatLab demonstration on how to model a wall with a crack
@@ -69,7 +69,7 @@ qSM = 0; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMp = 10; %Show Mesh Pause Length (s)
 qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
 qIT = 0; %Readjust time? (1 = yes, 0 = no)
-qFM = 1; % Foam Measurement Analysis? (1 = yes, 0 = no)
+qFM = 0; % Foam Measurement Analysis? (1 = yes, 0 = no)
 qP = 0; % Pause in between Models? (1 = yes, 0 = no)
 qC = 0; % Cancel if time max is hit? (1 = yes, 0 = no). Only applies if qIT == 1
 
@@ -85,8 +85,10 @@ modelType = "steadystate";
 % Shape of Wall:
 FoamThickness = 2.54 * 10^-2; %m
 FoamLength = 45.6 * 10^-2; %m
+FoamHeight = FoamLength; 
 WallThickness = 5.08 * 10^-2; %m
 WallLength = 126 * 10^-2; %m 
+WallHeight = WallLength;
 
 % Wall Thermal Properties:
 ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
@@ -146,10 +148,12 @@ FLc = 0;
 
 %Initial Model
 close
-tf = FoamThickness;
-lf = FoamLength;
+Tf = FoamThickness;
+Lf = FoamLength;
+Hf = FoamHeight;
 Tw = WallThickness;
 Lw = WallLength;
+Hw = WallHeight;
 
 Hmax = Hmaxg; %Imports the Guess
 ModelOTc = 0; %Overtime Count
@@ -184,10 +188,14 @@ modOTr4 = 1.10;
 modOTr5 = 1.05;
 modOTr6 = 1.01;
 
+%% 3D Model Generation:
+
+
+
 %% While Statements:
 while pErrorT <= 10 %Foam Size Analysis
 
-wallGeometry(Lw,Tw,lf,tf); %Ensures new geometry is loaded
+wallGeometry(Lw,Tw,Lf,Tf,Hw,Hf); %Ensures new geometry is loaded
 
 while ModelIT == 0 || qIT == 0 % Time Analysis
 Tries = ModelUTc + ModelOTc;
@@ -352,7 +360,7 @@ Tries = ModelUTc + ModelOTc;
 
     disp(['[&] Starting Model Attempt # ',num2str(Tries)])
     disp(['[#] Hmax = ',num2str(Hmax),', Hdelta = ',num2str(Hdelta),', Hmin = ',num2str(Hmin)])
-    disp(['[#] Foam Length = ',num2str(lf)])
+    disp(['[#] Foam Length = ',num2str(Lf)])
 
     if qP == 1
         pause(2)
@@ -363,11 +371,11 @@ Tries = ModelUTc + ModelOTc;
     
     %% Importing and Ploting Geometry
     disp('[$] Importing Geomerty and Applying Conditions')
-    geometryFromEdges(thermalmodel,@modelshapew);
+    geometryFromEdges(thermalmodel,@modelshapew3D);
     Fwg = figure('Name','Wall Geometry');
     Fwg.Visible = "off";
     pdegplot(thermalmodel,'EdgeLabels','on')
-    xaxis = [0,Tw+tf+Tw];
+    xaxis = [0,Tw+Tf+Tw];
     yaxis = [-3*Lw/4,3*Lw/4];
     axis([xaxis,yaxis])
     hold on
@@ -511,7 +519,7 @@ Fmgz = figure('Name','Mesh Geomerty Zoom');
 Fmgz.Visible = "off";
 pdemesh(thermalmodel)
 hold on
-axis([-tf,Tw+tf+tf,(-lf/10),(lf/10)])
+axis([-Tf,Tw+Tf+Tf,(-Lf/10),(Lf/10)])
 title('Zoomed Mesh with Quadratic Triangular Elements (Zoomed About Center)')
 movegui(Fmgz,'east');
 hold off
@@ -567,7 +575,7 @@ if qPss == 1 && all(modelType == "transient")
                          'Contour','on',...
                          'FlowData',[qx(:,n),qy(:,n)], ...
                          'ColorMap','hot')
-        xaxis = [0,Tw+tf+Tw];
+        xaxis = [0,Tw+Tf+Tw];
         yaxis = [-3*Lw/4,3*Lw/4];
         axis([xaxis,yaxis])
         title(Fname)
@@ -602,7 +610,7 @@ elseif qPss == 1 && all(modelType == "steadystate")
                      'Contour','on',...
                      'FlowData',[qx(:,1),qy(:,1)], ...
                      'ColorMap','hot')
-    xaxis = [0,Tw+tf+Tw];
+    xaxis = [0,Tw+Tf+Tw];
     yaxis = [-3*Lw/4,3*Lw/4];
     axis([xaxis,yaxis])
     title(Fname)
@@ -614,7 +622,7 @@ end
 %% Find Temperature at Point Between Foam Using interpolateTemperature:
 disp('[$] Finding Temperatures in Between the Foam and Wall')
 if all(modelType == "transient")
-    Y = linspace(-lf/2,lf/2,11);
+    Y = linspace(-Lf/2,Lf/2,11);
     cI = 1;
     for n = Y
     TempAtIntersect(cI) = interpolateTemperature(thermalresults,Tw,n,...
@@ -622,7 +630,7 @@ if all(modelType == "transient")
     cI = cI+1;
     end
 elseif all(modelType == "steadystate")
-    Y = linspace(-lf/2,lf/2,11);
+    Y = linspace(-Lf/2,Lf/2,11);
     cI = 1;
     for n = Y
     TempAtIntersect(cI) = interpolateTemperature(thermalresults,Tw,n); %interpolates temperature at (Tw,Y)
@@ -648,7 +656,7 @@ else
     FLc = FLc + 1;
 
     FLog(FLc,1) = TriesF;
-    FLog(FLc,2) = lf;
+    FLog(FLc,2) = Lf;
     FLog(FLc,3) = dTempRatio;
     FLog(FLc,4) = RwM;
     FLog(FLc,5) = pErrorT;
@@ -656,7 +664,7 @@ else
     % ReAdjust Foam
     if pErrorT <= 10
         TriesF = TriesF + 1;
-        lf = lf - FMas;
+        Lf = Lf - FMas;
     end
 end
     
