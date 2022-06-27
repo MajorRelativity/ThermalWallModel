@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.00
+%% ThermalWallModel v2.01
 % Updated on June 27 2022
 % Created by Jackson Kustell
 
@@ -505,7 +505,7 @@ for preI = 1:size(preP,1)
 
                 disp('[+] [111] Foam Vector Created')
             case 1
-                % Program #1 - Generate Geometry
+                % Collection #1 - Generate Geometry
                 Pline = [1 401 402 403 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -526,7 +526,7 @@ for preI = 1:size(preP,1)
                 end
 
             case 2
-                % Program #2 - Run Model From Geometry
+                % Collection #2 - Run Model From Geometry
                 Pline = [2 204 301 501 404 405 502 503 504 505 506 203 205]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -546,7 +546,7 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 3
-                % Program #3 - Plot Contour Slices
+                % Collection #3 - Plot Contour Slices
                 Pline = [3 206 301 601 602 603]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -566,7 +566,7 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 4 
-                % Program #4 - Get Temperature at Point
+                % Collection #4 - Get Temperature at Point
                 Pline = [4 206 301 604]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -586,7 +586,7 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 51
-                % Program #51 - 2D Generate Geometry
+                % Collection #51 - 2D Generate Geometry
                 Pline = [51 401 406 407 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -607,7 +607,7 @@ for preI = 1:size(preP,1)
                 end
 
             case 52
-                % Program #52 - Run Model From Geometry
+                % Collection #52 - Run Model From Geometry
                 Pline = [52 204 301 501 404 405 502 503 504 505 506 203 205]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -627,7 +627,7 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 53
-                % Program #53 - 2D Contour Plot
+                % Collection #53 - 2D Contour Plot
                 Pline = [53 206 301 605]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -647,7 +647,7 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 54 
-                % Program #4 - Get Temperature at Point
+                % Collection #4 - Get Temperature at Point
                 Pline = [4 206 301 606]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -727,8 +727,12 @@ for I = 1:size(P,1)
                     disp('[+] [203] ThermaModels Directory Created')
                 end
 
+                % Keep Savedate of ModelSpecifications file
+                savedateMS = savedate;
+
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN')
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw")
+                clear savedateMS
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
             case 204
@@ -736,13 +740,39 @@ for I = 1:size(P,1)
                 load(['ThermalModels/ThermalModel',MNstr,'.mat'])
                 disp(['[+] [204] [Model ',numMstr,'] ','Loading from Model Number ',MNstr])
 
-                % Force Model Specification:
-                load(MS)
+                % Force and Check Model Specification:
+                if ~exist(MS,'file')
+                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that the Model Specifications associated with this model have been deleted or are not present in the correct folder.'])
+                    qContinue = input(['[?] [204] [Model ',numMstr,'] ','This could seriously mess with your results, are you sure you want to continue? (1 = y, 0 = n): ']);
+                    
+                    if qContinue == 0
+                        disp(['[-] [204] [Model ',numMstr,'] ','Quitting Script'])
+                        return
+                    end
+
+                    disp(['[*] [204] [Model ',numMstr,'] ','Bold Move. Continuing...'])
+                    pause(3) % Pause so this can be read
+                else
+                    load(MS)
+                end
+
+                if savedateMS ~= savedate
+                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that the ModelSpecifications file associated with this model has been overwritten.'])
+                    qContinue = input(['[?] [204] [Model ',numMstr,'] ','This could seriously mess with your results, are you sure you want to continue? (1 = y, 0 = n): ']);
+                    
+                    if qContinue == 0
+                        disp(['[-] [204] [Model ',numMstr,'] ','Quitting Script'])
+                        return
+                    end
+
+                    disp(['[*] [204] [Model ',numMstr,'] ','Bold Move. Continuing...'])
+                    pause(3) % Pause so this can be read
+                end
                 disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',MS])
             case 205
                 % Save Foam Analysis Logs
                 save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults","numM")
-                disp(['[+] Logs have been saved with thermalresults as ',LogSavename])
+                disp(['[+] [205] Logs have been saved with thermalresults as ',LogSavename])
 
             case 206
                 if run206 == 1
@@ -907,7 +937,11 @@ for I = 1:size(P,1)
                 % Find Predicted R Value:
                 disp(['[$] [503] [Model ',numMstr,'] ','Finding Predicted R Value'])
                 % Find Temperature at Intersection:
-                IntersectTemp = interpolateTemperature(ThermalResults{numM},Tw,0);
+                if all(modelStyle == '3D')
+                    IntersectTemp = interpolateTemperature(ThermalResults{numM},Tw,0,0);
+                elseif all(modelStyle == '2D')
+                    IntersectTemp = interpolateTemperature(ThermalResults{numM},Tw,0);
+                end
                 
                 % Find R Value and Percent Error:
                 dTempRatio = ((TempwI-TempwO)/(IntersectTemp-TempwO)); %Whole Wall dT / Foam dT
@@ -1161,7 +1195,8 @@ for I = 1:size(P,1)
                     end
                     
                     % Get Point
-                    disp(['[?] [604] [Model ',numMstr,'] ','What point would you like to use?','\n[#] Origin is in center of indoor wall'])
+                    disp(['[?] [604] [Model ',numMstr,'] ','What point would you like to use?'])
+                    disp('[#] Origin is in center of indoor wall')
                     x = input('    Thickness = ');
                     y = input('    Length = ');
                     z = input('    Height = ');
@@ -1192,9 +1227,6 @@ for I = 1:size(P,1)
                 pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
                                  'Contour','on', ...
                                  'ColorMap','hot')
-%                 xaxis = [0,Tw+tf+Tw];
-%                 yaxis = [-3*Lw/4,3*Lw/4];
-%                 axis([xaxis,yaxis])
                 title(fname)
                 xlabel('Thickness (m)')
                 ylabel('Length (m)')
@@ -1218,7 +1250,8 @@ for I = 1:size(P,1)
                     end
                     
                     % Get Point
-                    disp(['[?] [606] [Model ',numMstr,'] ','What point would you like to use?','\n[#] Origin is in center of indoor wall'])
+                    disp(['[?] [606] [Model ',numMstr,'] ','What point would you like to use?'])
+                    disp('[#] Origin is in center of indoor wall')
                     x = input('    Thickness = ');
                     y = input('    Length = ');
                     
