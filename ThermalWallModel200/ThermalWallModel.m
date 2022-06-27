@@ -1,5 +1,5 @@
-%% ThermalWallModel3D v 3D1.01
-% Updated on June 24 2022
+%% ThermalWallModel v2.00
+% Updated on June 27 2022
 % Created by Jackson Kustell
 
 clear
