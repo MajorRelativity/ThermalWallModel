@@ -1,4 +1,4 @@
-%% ThermalWallModel3D v 3D1.00
+%% ThermalWallModel3D v 3D1.01
 % Updated on June 24 2022
 % Created by Jackson Kustell
 
@@ -8,20 +8,32 @@ clear
 
 % Process ID:
 % 000) Collection
-% 
+%   
+%   001 - 050 = 3D Model:
 %   001) Generate Single Geometry
 %   002) Solve Single Model From Geometry
 %   003) Create Contour Plot Slices
 %   004) Get Temperature at Point
 %
+%   051 - 099 = 2D Model:
+%   051) Generate Single Geometry
+%   052) Solve Single Model From Geometry
+%   053) Create Contour Plot Slices
+%   054) Get Temperature at Point
+%
 % 100) PreRun
 %
 %   101) Foam Name Translation
-%   102) Foam Analysis - Matrix Creation
-%   103) Foam Matrix if no Foam Analysis
+%   102) 3D Foam Analysis - Matrix Creation
+%   103) 3D Foam Matrix if no Foam Analysis
 %   104) Specify Thermal Model File Identification Number
 %   105) Create Log Directory
-%   106) Automatically Create LogSavename
+%   106) 3D Automatically Create LogSavename
+%   107) 3D Model Style
+%   108) 2D Model Style
+%   109) 2D Automatically Create LogSavename
+%   110) 2D Foam Analysis - Matrix Creation
+%   111) 2D Foam Matrix if no Foam Analysis
 %
 % 200) Load / Save / Store
 %
@@ -39,10 +51,11 @@ clear
 % 400) Operation
 %
 %   401) Create Single New Thermal Model
-%   402) Generate Single Geometry
-%   403) User Verify Single Geometry and Apply Initial Conditions
+%   402) 3D Generate Single Geometry
+%   403) 3D User Verify Single Geometry and Apply Initial Conditions
 %   404) Generate Single Mesh
 %   405) Solve Single Model
+%   406) 2D Generate Single Geometry
 %
 % 500) Post Processing
 %
@@ -55,10 +68,12 @@ clear
 %
 % 600) Analysis
 %
-%   601) Create Y Slice Foam Analysis Thermal Plot (Vertical Y)
-%   602) Create Z Slice Foam Analysis Thermal Plot (Horzontal Z)
-%   603) Create X Slice Foam Analysis Thermal Plot (Vertical X)
-%   604) Get Temperature at Point
+%   601) 3D Create Y Slice Foam Analysis Thermal Plot (Vertical Y)
+%   602) 3D Create Z Slice Foam Analysis Thermal Plot (Horzontal Z)
+%   603) 3D Create X Slice Foam Analysis Thermal Plot (Vertical X)
+%   604) 3D Get Temperature at Point
+%   605) 2D Contour Plot
+%   606) 2D Get Temperature at Point
 
 %% Model Specifications (User Edited):
 
@@ -149,12 +164,22 @@ run301 = 1;
 
 % Collections:
 ColstrInput = '\n    Input: ';
+Colstr3DTitle = '\n  1 - 50: 3D Model';
 Colstr1 = '\n    1 = Generate Single Geometry ';
 Colstr2 = '\n    2 = Run Single Model From Geometry ';
 Colstr3 = '\n    3 = Create Contour Plot Slices';
 Colstr4 = '\n    4 = Get Temperature at Point';
-Colstr = [Colstr1,Colstr2,Colstr3,Colstr4];
-Colstr = [Colstr,ColstrInput];
+
+Colstr2DTitle = '\n  51 - 100: 2D Model';
+Colstr51 = '\n    51 = Generate Single Geometry ';
+Colstr52 = '\n    52 = Run Single Model From Geometry ';
+Colstr53 = '\n    53 = Create Contour Plot Slices';
+Colstr54 = '\n    54 = Get Temperature at Point';
+
+
+Colstr3D = [Colstr3DTitle,Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr2D = [Colstr2DTitle,Colstr51,Colstr52,Colstr53,Colstr54];
+Colstr = [Colstr3D,Colstr2D,ColstrInput];
 
 
 % Create Variables:
@@ -191,7 +216,7 @@ clear -regexp Colstr
 
 % Preallocate Varaibles: 
 
-maxpreP = 4;
+maxpreP = 5;
 preP = zeros(numC,maxpreP); % Second digit must be maximum size of program line
 numC = 1;
 
@@ -206,7 +231,7 @@ for C = qCollection
             break
         case 1            
             % Program #1 - Generate Geometry
-            prePline = [101 103 104 1]; %prePrograms always end with their program ID #
+            prePline = [101 103 104 107 1]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -226,7 +251,7 @@ for C = qCollection
             end
        case 2          
             % Program #2 - Run Model From Geometry
-            prePline = [104 105 106 2]; %prePrograms always end with their program ID #
+            prePline = [104 105 106 107 2]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -246,7 +271,7 @@ for C = qCollection
             end
        case 3          
             % Program #3 - Contour Slices
-            prePline = [3]; %prePrograms always end with their program ID #
+            prePline = [107 3]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -266,7 +291,87 @@ for C = qCollection
             end
         case 4
             % Program #4 - Get Temperature at Point
-            prePline = [4]; %prePrograms always end with their program ID #
+            prePline = [107 4]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+       case 51            
+            % Program #51 - 2D Generate Geometry
+            prePline = [101 111 104 108 51]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+       case 52          
+            % Program #2 - 2D Run Model From Geometry
+            prePline = [104 105 109 108 52]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+       case 53          
+            % Program #3 - 2D Contour Plot
+            prePline = [108 53]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+        case 54
+            % Program #4 - 2D Get Temperature at Point
+            prePline = [108 54]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -313,7 +418,7 @@ for preI = 1:size(preP,1)
                 disp('[+] [101] Foam Names Translated')
 
             case 102
-                % Foam Analysis - Matrix Creation
+                % 3D Foam Analysis - Matrix Creation
 
                 Tfm = Tf:-FstepT:0;
                 Lfm = Lf:-FstepL:0;
@@ -341,7 +446,7 @@ for preI = 1:size(preP,1)
                 disp('[+] [102] Foam Matrix Created')
 
             case 103
-                % Foam Matrix if no Foam Analysis
+                % 3D Foam Matrix if no Foam Analysis
 
                 Foam = [Tf,Lf,Hf];
 
@@ -361,9 +466,44 @@ for preI = 1:size(preP,1)
                     disp('[+] [105] ThermaData Directory Created')
                 end
             case 106
-                % Automaticall Create LogSavename
+                % 3D Automatically Create LogSavename
                 LogSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
                 disp(['[+] [106] Logs will be saved to',LogSavename])
+            case 107
+                % 3D Model Style
+                modelStyle = '3D';
+                disp(['[+] [107] Model Style set to: ',modelStyle])
+            case 108
+                % 2D Model Style
+                modelStyle = '2D';
+                disp(['[+] [108] Model Style set to: ',modelStyle])
+            case 109
+                % 2D Automatically Create LogSavename
+                LogSavename = ['ThermalData/2DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                disp(['[+] [109] Logs will be saved to',LogSavename]) 
+            case 110
+                % 2D Foam Analysis - Matrix Creation
+
+                Tfm = Tf:-FstepT:0;
+                Lfm = Lf:-FstepL:0;
+                [Tfm, Lfm] = meshgrid(Tfm,Lfm);
+
+                Logic = Tfm > 0 & Lfm > 0;
+                Tfm = Tfm(Logic);
+                Lfm = Lfm(Logic);
+
+                Foam = [Tfm, Lfm]; % Full foam matrix
+
+                Tf = Foam(:,1); % All thicknesses
+                Lf = Foam(:,2); % All lengths
+
+                disp('[+] [110] Foam Matrix Created')
+            case 111
+                % 3D Foam Matrix if no Foam Analysis
+
+                Foam = [Tf,Lf];
+
+                disp('[+] [111] Foam Vector Created')
             case 1
                 % Program #1 - Generate Geometry
                 Pline = [1 401 402 403 203]; % All collections must start with their collection #
@@ -445,6 +585,87 @@ for preI = 1:size(preP,1)
                 else
                     P = Pline;
                 end
+            case 51
+                % Program #51 - 2D Generate Geometry
+                Pline = [51 401 406 407 203]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+
+            case 52
+                % Program #52 - Run Model From Geometry
+                Pline = [52 204 301 501 404 405 502 503 504 505 506 203 205]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 53
+                % Program #53 - 2D Contour Plot
+                Pline = [53 206 301 605]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 54 
+                % Program #4 - Get Temperature at Point
+                Pline = [4 206 301 606]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
                 
         end
     end
@@ -477,6 +698,28 @@ for I = 1:size(P,1)
             case 3
                 % Collection #3 - Creating Slices
                 disp('[&] Starting Collection #3 - Creating Contour Slices')
+            case 4
+                % Collection #3 - Creating Slices
+                disp('[&] Starting Collection #4 - Plotting Temperature at Point')
+            case 51
+                % Collection #1 - Generate Single Geometry
+                disp('[&] Starting Collection #51 - Generate Geometry')
+
+                % Overrides:
+                run301 = 0;
+            case 52
+                % Collection #2 - Solve Single Thermal Model
+                disp('[&] Starting Collection #52 - Solve Thermal Model')
+
+                % Overrides
+                run206 = 0;
+                run301 = 0;
+            case 53
+                % Collection #3 - Creating Slices
+                disp('[&] Starting Collection #53 - Create Contour Plot')
+            case 54
+                % Collection #3 - Creating Slices
+                disp('[&] Starting Collection #54 - Plotting Temperature at Point')
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -536,13 +779,13 @@ for I = 1:size(P,1)
                 ThermalModel{numM} = thermalmodel;
                 disp(['[+] [401] [Model ',numMstr,'] ','New Thermal Model Created'])
             case 402
-                % Generate Single Geometry
+                % 3D Generate Single Geometry
                 disp(['[$] [402] [Model ',numMstr,'] ','Generating Geometry'])
                 ThermalModel{numM}.Geometry = modelshapew3D(thermalmodel,qRM,Lw,Hw,Tw,Lf,Hf,Tf);
                 disp(['[+] [402] [Model ',numMstr,'] ','Geometry Generated'])
                 
             case 403
-                % User Verify Single Geometry and Apply Initial Conditions
+                % 3D User Verify Single Geometry and Apply Initial Conditions
                 disp(['[$] [403] [Model ',numMstr,'] ','Verifying Geometry'])
                 
                 % Create Variables
@@ -614,6 +857,43 @@ for I = 1:size(P,1)
                 ThermalResults{numM} = solve(ThermalModel{numM});
                 disp(['[+] [405] [Model ',numMstr,'] ','Model Solved'])
 
+            case 406
+                % 2D Generate Single Geometry:
+                disp(['[$] [406] [Model ',numMstr,'] ','Generating 2D Geometry'])
+                wallGeometry2D(Lw,Tw,Lf,Tf); %Ensures new geometry is loaded
+                geometryFromEdges(ThermalModel{numM},@modelshapew); % Uses Geometry
+                disp(['[+] [406] [Model ',numMstr,'] ','2D Geometry Generated'])
+            case 407 
+                disp(['[$] [407] [Model ',numMstr,'] ','Applying Conditions'])
+                % 2D Apply Thermal Properties:
+                
+                thermalmodel = ThermalModel{numM}; % Import Thermal Model from Cell
+
+                if all(modelType=="transient")
+                    TCw = ThermalConductivity; 
+                    TMw = MassDensity; 
+                    TSw = SpecificHeat;
+                    
+                    thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
+                                                   'MassDensity',TMw,...
+                                                   'SpecificHeat',TSw);
+            
+                    thermalIC(thermalmodel,Tempi); % Apply Initial Condition
+            
+                    disp('[~] Model Type = Transient')
+            
+                elseif all(modelType=="steadystate")
+                    TCw = ThermalConductivity; 
+                    thermalProperties(thermalmodel,'ThermalConductivity',TCw);
+                    disp('[~] Model Type = Steady State')
+                end
+
+                % Apply Boundary Conditions
+                thermalBC(thermalmodel,'Edge',1,'Temperature',TempwI);
+                thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',TempwO);   
+
+                ThermalModel{numM} = thermalmodel; % Re Apply to Cell
+                disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
             case 501
                 % Start Timer
                 timeri = datetime('now');
@@ -627,7 +907,7 @@ for I = 1:size(P,1)
                 % Find Predicted R Value:
                 disp(['[$] [503] [Model ',numMstr,'] ','Finding Predicted R Value'])
                 % Find Temperature at Intersection:
-                IntersectTemp = interpolateTemperature(ThermalResults{numM},Tw,0,0);
+                IntersectTemp = interpolateTemperature(ThermalResults{numM},Tw,0);
                 
                 % Find R Value and Percent Error:
                 dTempRatio = ((TempwI-TempwO)/(IntersectTemp-TempwO)); %Whole Wall dT / Foam dT
@@ -640,18 +920,24 @@ for I = 1:size(P,1)
                 duration = time2num(duration,'seconds');
             case 505
                 % Collect Foam Analysis Result Variables
+
+                if all(modelStyle=='2D')
+                    Hf = -1;
+                end
+
                 FAResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity]';
+                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
+
                 Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity'});
+                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity','Model Style'});
                 FAResults = array2table(FAResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
 
             case 601
-               % Y Slice Analysis (Vertical Y)
+               % 3D Y Slice Analysis (Vertical Y)
                gateP = 1;
                while gateP == 1
                    qTRpa = input('[?] [601] What model # would you like to Yslice? (-1 = all, or row index # from FAResults): ');
@@ -719,7 +1005,7 @@ for I = 1:size(P,1)
                    end
                end
             case 602
-               % Z Slice Analysis (Horzontal Z)
+               % 3D Z Slice Analysis (Horzontal Z)
                gateP = 1;
                while gateP == 1
                    qTRpa = input('[?] [602] What model # do you want to Zslice? (-1 = all, or row index # from FAResults): ');
@@ -786,7 +1072,7 @@ for I = 1:size(P,1)
                    end
                end
             case 603
-               % X Slice Analysis (Vertical X)
+               % 3D X Slice Analysis (Vertical X)
                gateP = 1;
                while gateP == 1
                    qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from FAResults): ');
@@ -854,7 +1140,7 @@ for I = 1:size(P,1)
                    end
                end
             case 604
-                % Get Temperature at a Point
+                % 3D Get Temperature at a Point
                 
                 % Load Important Information:
                 Tw = str2double(Specifications{6,1});
@@ -862,8 +1148,8 @@ for I = 1:size(P,1)
                 Lw = str2double(Specifications{7,1});
 
                 Tf = FAResultsD(numM,3);
-                Tl = FAResultsD(numM,4);
-                Th = FAResultsD(numM,5);
+                Lf = FAResultsD(numM,4);
+                Hf = FAResultsD(numM,5);
 
                 gateTAP = 1;
                 while gateTAP == 1
@@ -895,6 +1181,61 @@ for I = 1:size(P,1)
     
                     % Another?
                     gateTAP = input(['[?] [604] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
+                end
+            case 605
+                % 2D Contour Plot:
+                
+                disp(['[$] [605] Plotting Model #',num2str(numM)])
+                fname = ['Results from 2D Model #',num2str(numM)];
+                figure('Name',fname)
+
+                pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
+                                 'Contour','on', ...
+                                 'ColorMap','hot')
+%                 xaxis = [0,Tw+tf+Tw];
+%                 yaxis = [-3*Lw/4,3*Lw/4];
+%                 axis([xaxis,yaxis])
+                title(fname)
+                xlabel('Thickness (m)')
+                ylabel('Length (m)')
+            case 606
+                % 2D Temperature at Point
+                
+                % Load Important Information:
+                Tw = str2double(Specifications{6,1});
+                Lw = str2double(Specifications{7,1});
+
+                Tf = FAResultsD(numM,3);
+                Lf = FAResultsD(numM,4);
+
+                gateTAP = 1;
+                while gateTAP == 1
+                    % Count Number of Points
+                    if ~exist('numTAP','var')
+                        numTAP = 1;
+                    else
+                        numTAP = numTAP + 1;
+                    end
+                    
+                    % Get Point
+                    disp(['[?] [606] [Model ',numMstr,'] ','What point would you like to use?','\n[#] Origin is in center of indoor wall'])
+                    x = input('    Thickness = ');
+                    y = input('    Length = ');
+                    
+                    % Creat Array and Table
+                    TempAtPointP = interpolateTemperature(ThermalResults{numM},x,y);
+                    TempAtPointD(numTAP,:) = [numTAP,numM,x,y,TempAtPointP];
+                    TempAtPoint = array2table(TempAtPointD,...
+                        'VariableNames',{'Point','Model #','X','Y','Temperature'});
+                    disp(TempAtPoint)
+                    
+                    % Clear Old Values:
+                    clear x
+                    clear y
+                    clear TempAtPointP
+    
+                    % Another?
+                    gateTAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
                 end
         end
     end

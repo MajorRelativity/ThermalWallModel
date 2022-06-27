@@ -385,6 +385,9 @@ Tries = ModelUTc + ModelOTc;
         thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
                                        'MassDensity',TMw,...
                                        'SpecificHeat',TSw);
+
+        thermalIC(thermalmodel,Tempi);
+
         disp('[~] Model Type = Transient')
 
     elseif all(modelType=="steadystate")
@@ -397,10 +400,7 @@ Tries = ModelUTc + ModelOTc;
     
     thermalBC(thermalmodel,'Edge',1,'Temperature',TempwI);
     
-    thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',TempwO);
-    
-    %thermalIC(thermalmodel, TempwO,'Edge',[3,5,7])
-    thermalIC(thermalmodel,Tempi);
+    thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',TempwO);    
     
     disp('[+] Geomerty Imported and Conditions Applied')
 
