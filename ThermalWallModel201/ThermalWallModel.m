@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.01
-% Updated on June 27 2022
+%% ThermalWallModel v2.A04
+% Updated on June 28 2022
 % Created by Jackson Kustell
 
 clear
@@ -67,6 +67,7 @@ clear
 %   404) Generate Single Mesh
 %   405) Solve Single Model
 %   406) 2D Generate Single Geometry
+%   407) 2D Apply Thermal Properties
 %
 % 500) Post Processing
 %
@@ -105,7 +106,8 @@ WallHeight = WallLength;
 
 % Wall Thermal Properties:
 ThermalConductivityWall = .03; % Thermal Conductivity for the Wall W/(m*K)
-ThermalConductivityStuds = .08; % If Applicable
+%ThermalConductivityStud = .08; % If Applicable
+ThermalConductivityStud = .1; % If Applicable
 StudLocation = 0; % Location of the center of the stud on the diagram
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
@@ -237,8 +239,7 @@ clear -regexp Colstr
 
 % Preallocate Varaibles: 
 
-maxpreP = 5;
-preP = zeros(numC,maxpreP); % Second digit must be maximum size of program line
+maxpreP = 9;
 numC = 1;
 
 % Create Pre-Run Process Index:
@@ -252,7 +253,7 @@ for C = qCollection
             break
         case 1            
             % Program #1 - Generate Geometry
-            prePline = [101 103 104 107 114 1]; %prePrograms always end with their program ID #
+            prePline = [101 103 104 107 112 114 1]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -412,7 +413,7 @@ for C = qCollection
             end
         case 55
             % Program #55 - 2D Generate Single Geometry with Stud
-            prePline = [101 111 104 108 113 55]; %prePrograms always end with their program ID #
+            prePline = [101 111 104 108 112 113 55]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -448,6 +449,9 @@ maxP = 13;
 for preI = 1:size(preP,1)
     for prep = preP(preI,:)
         switch prep
+            case 0
+                % Ignore
+                break
             case 101
                 % Foam Name Translation:
                 Tf = FoamThickness;
@@ -549,14 +553,14 @@ for preI = 1:size(preP,1)
             case 112
                 % Thermal Property Translation
                 TCw = ThermalConductivityWall;
-                TCs = ThermalConductivityStuds;
+                TCs = ThermalConductivityStud;
                 SL = StudLocation;
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
                 % Thermal Properties if Studs
                 SLu = SL + .05; % Stud Upper Bound
                 SLl = SL - .05; % Stud Lower Bound
-                ThermalConductivity = @(location,state) (location.y>=SLu || location.y<SLl).*TCw + (SLl<=location.y && location.y<SLu).*TCs;
+                TC = @(location,state) (location.y>SLu | location.y<SLl).*TCw + (location.y>=SLl & location.y<=SLu).*TCs;
                 disp('[+] [113] Stud Location Defined')
             case 114
                 % Thermal Property if No Stud
@@ -727,7 +731,7 @@ for preI = 1:size(preP,1)
                 end
             case 55 
                 % Collection #55 - 2D Generate Single Geomtry with Stud
-                Pline = [55 401 402 403 203]; % All collections must start with their collection #
+                Pline = [55 401 406 407 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -781,24 +785,27 @@ for I = 1:size(P,1)
                 % Collection #3 - Creating Slices
                 disp('[&] Starting Collection #4 - Plotting Temperature at Point')
             case 51
-                % Collection #1 - Generate Single Geometry
+                % Collection #51 - Generate Single Geometry
                 disp('[&] Starting Collection #51 - Generate Geometry')
 
                 % Overrides:
                 run301 = 0;
             case 52
-                % Collection #2 - Solve Single Thermal Model
+                % Collection #52 - Solve Single Thermal Model
                 disp('[&] Starting Collection #52 - Solve Thermal Model')
 
                 % Overrides
                 run206 = 0;
                 run301 = 0;
             case 53
-                % Collection #3 - Creating Slices
+                % Collection #53 - Creating Slices
                 disp('[&] Starting Collection #53 - Create Contour Plot')
             case 54
-                % Collection #3 - Creating Slices
+                % Collection #54 - Plotting Temperature at Point
                 disp('[&] Starting Collection #54 - Plotting Temperature at Point')
+            case 55
+                % Collection #55 - Generating Single Geometry with Stud
+                disp('[&] Starting Collection #55 - Generating Single Geometry with Stud')
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -935,7 +942,6 @@ for I = 1:size(P,1)
                                                        'SpecificHeat',TSw);
 
                     elseif all(modelType=="steadystate")
-                        TC = ThermalConductivity; 
                         thermalProperties(thermalmodel,'ThermalConductivity',TC);
                     end
 
@@ -992,8 +998,7 @@ for I = 1:size(P,1)
                     disp('[~] Model Type = Transient')
             
                 elseif all(modelType=="steadystate")
-                    TCw = ThermalConductivity; 
-                    thermalProperties(thermalmodel,'ThermalConductivity',TCw);
+                    thermalProperties(thermalmodel,'ThermalConductivity',TC);
                     disp('[~] Model Type = Steady State')
                 end
 
@@ -1039,12 +1044,12 @@ for I = 1:size(P,1)
                 end
 
                 FAResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivity,modelStyle]';
+                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
 
                 Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Thermal Conductivity','Model Style'});
+                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                 FAResults = array2table(FAResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
@@ -1306,9 +1311,15 @@ for I = 1:size(P,1)
                 pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
                                  'Contour','on', ...
                                  'ColorMap','hot')
+                hold on
+                xaxis = [0,Tw+Tf+Tw];
+                yaxis = [-3*Lw/4,3*Lw/4];
+                axis([xaxis,yaxis])
+                axis square
                 title(fname)
                 xlabel('Thickness (m)')
                 ylabel('Length (m)')
+                hold off
             case 606
                 % 2D Temperature at Point
                 
