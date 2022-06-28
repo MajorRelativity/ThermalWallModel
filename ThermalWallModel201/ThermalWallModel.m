@@ -33,7 +33,11 @@ clear
 %   108) 2D Model Style
 %   109) 2D Automatically Create LogSavename
 %   110) 2D Foam Analysis - Matrix Creation
+%
 %   111) 2D Foam Matrix if no Foam Analysis
+%   112) Thermal Property Translation
+%   113) Thermal Property if Studs
+%   114) Thermal Property if No Studs
 %
 % 200) Load / Save / Store
 %
@@ -94,6 +98,7 @@ WallHeight = WallLength;
 
 % Wall Thermal Properties:
 ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
+%ThermalConductivity = @(location,state) (location.x>=Tw).*5 + (location.x<Tw).*10;
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
 
@@ -856,8 +861,8 @@ for I = 1:size(P,1)
                                                        'SpecificHeat',TSw);
 
                     elseif all(modelType=="steadystate")
-                        TCw = ThermalConductivity; 
-                        thermalProperties(thermalmodel,'ThermalConductivity',TCw);
+                        TC = ThermalConductivity; 
+                        thermalProperties(thermalmodel,'ThermalConductivity',TC);
                     end
 
                     % Geometry Test Results:
