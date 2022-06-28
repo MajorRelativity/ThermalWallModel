@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A04
+%% ThermalWallModel v2.A05
 % Updated on June 28 2022
 % Created by Jackson Kustell
 
@@ -26,6 +26,8 @@ clear
 %           054) Get Temperature at Point
 %       Generate Geometry: 
 %           055) Generate Single Geometry with Stud
+%       Analysis:
+%           056) Plot Current Thermal Properties
 % 
 %
 % 100) PreRun
@@ -43,9 +45,8 @@ clear
 %
 %   111) 2D Foam Matrix if no Foam Analysis
 %   112) Thermal Property Translation
-%   113) Thermal Property if Studs
-%   114) Thermal Property if No Studs
-%
+%   113) Thermal Property if Specific Thermal Properties
+%   114) Thermal Property if Simple Thermal Properties
 % 200) Load / Save / Store
 %
 %   201) Make Directory and Save ModelSpecification.mat
@@ -86,6 +87,7 @@ clear
 %   604) 3D Get Temperature at Point
 %   605) 2D Contour Plot
 %   606) 2D Get Temperature at Point
+%   607) 2D Plot Current Thermal Properties
 
 %% Model Specifications (User Edited):
 
@@ -100,27 +102,37 @@ qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left qu
 FoamThickness = 2.54 * 10^-2; %m
 FoamLength = 45.6 * 10^-2; %m
 FoamHeight = FoamLength; 
-WallThickness = 5.08 * 10^-2; %m
+
+
+%WallThickness = 5.08 * 10^-2; %m Generic Setting
+WallThickness = 0.0635; %m Time Machine setting
 WallLength = 90 * 10^-2; %m 
 WallHeight = WallLength;
 
 % Wall Thermal Properties:
-ThermalConductivityWall = .03; % Thermal Conductivity for the Wall W/(m*K)
-%ThermalConductivityStud = .08; % If Applicable
-ThermalConductivityStud = .1; % If Applicable
+ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
+
+ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
 StudLocation = 0; % Location of the center of the stud on the diagram
+
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
+
+% Choose How Thermal Properties generate
+propertyStyle = 'TimeMachine'; 
+    % 'GenericStud' = Traditional stud style
+    % 'TimeMachine' = Recreates the bottem seciton of time machine. Stud
+    % through middle with difference for plywood section
 
 % Wall and Foam R Values. Foam Adjustment Settings:
 Rw = 10; 
 Rf = 5;
 
 % Indoor Boundary Conditions (BC stays constant in time):
-TempwI = 303; %Interior Wall Temperature K
+TempwI = 309; %Interior Wall Temperature K
 
 % Outdoor Initial Conditions (IC are flexable with time):
-TempwO = 297; %Outdoor Wall Temperature K
+TempwO = 295; %Outdoor Wall Temperature K
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
@@ -132,7 +144,7 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-Hmax = 20*10^-3; % Max Mesh Length
+Hmax = 5*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -180,6 +192,7 @@ run301 = 1;
 % Collections:
 ColstrT1 = '\n    Standard:';
 ColstrT2 = '\n    Generate Geometry:';
+ColstrT3 = '\n    Analysis:';
 
 ColstrInput = '\n    Input: ';
 Colstr3DT = '\n  1 - 50: 3D Model';
@@ -198,10 +211,13 @@ Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
 
+Colstr56 = '\n      56 = Plot Current Thermal Properties';
+
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55];
+    ColstrT2,Colstr55,...
+    ColstrT3,Colstr56];
 Colstr = [Colstr3D,Colstr2D,ColstrInput];
 
 
@@ -273,7 +289,7 @@ for C = qCollection
             end
        case 2          
             % Program #2 - Run Model From Geometry
-            prePline = [104 105 106 107 2]; %prePrograms always end with their program ID #
+            prePline = [101 104 105 106 107 2]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -293,7 +309,7 @@ for C = qCollection
             end
        case 3          
             % Program #3 - Contour Slices
-            prePline = [107 3]; %prePrograms always end with their program ID #
+            prePline = [101 107 3]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -313,7 +329,7 @@ for C = qCollection
             end
         case 4
             % Program #4 - Get Temperature at Point
-            prePline = [107 4]; %prePrograms always end with their program ID #
+            prePline = [101 107 4]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -353,7 +369,7 @@ for C = qCollection
             end
        case 52          
             % Program #52 - 2D Run Model From Geometry
-            prePline = [104 105 109 108 52]; %prePrograms always end with their program ID #
+            prePline = [101 104 105 109 108 52]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -373,7 +389,7 @@ for C = qCollection
             end
        case 53          
             % Program #53 - 2D Contour Plot
-            prePline = [108 53]; %prePrograms always end with their program ID #
+            prePline = [101 108 53]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -393,7 +409,7 @@ for C = qCollection
             end
         case 54
             % Program #54 - 2D Get Temperature at Point
-            prePline = [108 54]; %prePrograms always end with their program ID #
+            prePline = [101 108 54]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -414,6 +430,26 @@ for C = qCollection
         case 55
             % Program #55 - 2D Generate Single Geometry with Stud
             prePline = [101 111 104 108 112 113 55]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+        case 56
+            % Program #56 - 2D Plot Current Thermal Properties
+            prePline = [101 108 112 113 56]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -558,9 +594,10 @@ for preI = 1:size(preP,1)
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
                 % Thermal Properties if Studs
-                SLu = SL + .05; % Stud Upper Bound
-                SLl = SL - .05; % Stud Lower Bound
-                TC = @(location,state) (location.y>SLu | location.y<SLl).*TCw + (location.y>=SLl & location.y<=SLu).*TCs;
+                % Note: 0.0381 m is the width of a 2 by 4
+                SLu = SL + 0.01905; % Stud Size Upper Bound
+                SLl = SL - 0.01905; % Stud Size Lower Bound
+                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SLl,SLu,Tw,propertyStyle);
                 disp('[+] [113] Stud Location Defined')
             case 114
                 % Thermal Property if No Stud
@@ -729,9 +766,30 @@ for preI = 1:size(preP,1)
                 else
                     P = Pline;
                 end
-            case 55 
-                % Collection #55 - 2D Generate Single Geomtry with Stud
+            case 55
+                % Collection #55 - Generate Single Geometry with Stud
                 Pline = [55 401 406 407 203]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+                
+            case 56
+                % Collection #56 - 2D Plot Current Thermal Properties
+                Pline = [56 607]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -806,6 +864,9 @@ for I = 1:size(P,1)
             case 55
                 % Collection #55 - Generating Single Geometry with Stud
                 disp('[&] Starting Collection #55 - Generating Single Geometry with Stud')
+            case 56
+                % Collection #56 - Plot Current Thermal Properties
+                disp('[&] Starting Collection #56 - 2D Plot Current Termal Properties')
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -1345,7 +1406,7 @@ for I = 1:size(P,1)
                     x = input('    Thickness = ');
                     y = input('    Length = ');
                     
-                    % Creat Array and Table
+                    % Create Array and Table
                     TempAtPointP = interpolateTemperature(ThermalResults{numM},x,y);
                     TempAtPointD(numTAP,:) = [numTAP,numM,x,y,TempAtPointP];
                     TempAtPoint = array2table(TempAtPointD,...
@@ -1360,6 +1421,26 @@ for I = 1:size(P,1)
                     % Another?
                     gateTAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
                 end
+            case 607
+                % Create Figure:
+                disp(['[$] [607] Plotting Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
+                fname = ['Thermal Properties for propertyStyle: "',propertyStyle,'"'];
+                figure('Name',fname)
+
+                % Create Mesh and Plot:
+
+                [location.x,location.y] = meshgrid(linspace(0,Tw + Tf),linspace(-Lw/2,Lw/2));
+                X = location.x;
+                Y = location.y;
+                V = thermalProperties(location,-1,TCw,TCs,SLl,SLu,Tw,propertyStyle);
+                surf(X,Y,V,'LineStyle','none');
+                view(0,90)
+                title(fname)
+                xlabel('Z (Height)')
+                ylabel('Y (Length)')
+                colorbar
+                disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
+                disp('[#] [607] Note: The exact shape of the geometry is NOT shown, only the thermal properties')
         end
     end
     % Finish Collection:
