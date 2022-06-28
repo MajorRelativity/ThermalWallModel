@@ -10,16 +10,23 @@ clear
 % 000) Collection
 %   
 %   001 - 050 = 3D Model:
-%   001) Generate Single Geometry
-%   002) Solve Single Model From Geometry
-%   003) Create Contour Plot Slices
-%   004) Get Temperature at Point
+%       Standard:
+%           001) Generate Single Geometry
+%           002) Solve Single Model From Geometry
+%           003) Create Contour Plot Slices
+%           004) Get Temperature at Point
+%       Generate Geometry:
+%           
 %
 %   051 - 099 = 2D Model:
-%   051) Generate Single Geometry
-%   052) Solve Single Model From Geometry
-%   053) Create Contour Plot Slices
-%   054) Get Temperature at Point
+%       Standard:
+%           051) Generate Single Geometry
+%           052) Solve Single Model From Geometry
+%           053) Create Contour Plot Slices
+%           054) Get Temperature at Point
+%       Generate Geometry: 
+%           055) Generate Single Geometry with Stud
+% 
 %
 % 100) PreRun
 %
@@ -97,8 +104,9 @@ WallLength = 90 * 10^-2; %m
 WallHeight = WallLength;
 
 % Wall Thermal Properties:
-ThermalConductivity = .03; % Thermal Conductivity for the Wall W/(m*K)
-%ThermalConductivity = @(location,state) (location.x>=Tw).*5 + (location.x<Tw).*10;
+ThermalConductivityWall = .03; % Thermal Conductivity for the Wall W/(m*K)
+ThermalConductivityStuds = .08; % If Applicable
+StudLocation = 0; % Location of the center of the stud on the diagram
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
 
@@ -168,22 +176,30 @@ run301 = 1;
 %% Collection Selection:
 
 % Collections:
+ColstrT1 = '\n    Standard:';
+ColstrT2 = '\n    Generate Geometry:';
+
 ColstrInput = '\n    Input: ';
-Colstr3DTitle = '\n  1 - 50: 3D Model';
-Colstr1 = '\n    1 = Generate Single Geometry ';
-Colstr2 = '\n    2 = Run Single Model From Geometry ';
-Colstr3 = '\n    3 = Create Contour Plot Slices';
-Colstr4 = '\n    4 = Get Temperature at Point';
+Colstr3DT = '\n  1 - 50: 3D Model';
 
-Colstr2DTitle = '\n  51 - 100: 2D Model';
-Colstr51 = '\n    51 = Generate Single Geometry ';
-Colstr52 = '\n    52 = Run Single Model From Geometry ';
-Colstr53 = '\n    53 = Create Contour Plot Slices';
-Colstr54 = '\n    54 = Get Temperature at Point';
+Colstr1 = '\n      1 = Generate Single Geometry ';
+Colstr2 = '\n      2 = Run Single Model From Geometry ';
+Colstr3 = '\n      3 = Create Contour Plot Slices';
+Colstr4 = '\n      4 = Get Temperature at Point';
+
+Colstr2DT = '\n  51 - 100: 2D Model';
+
+Colstr51 = '\n      51 = Generate Single Geometry ';
+Colstr52 = '\n      52 = Run Single Model From Geometry ';
+Colstr53 = '\n      53 = Create Contour Plot Slices';
+Colstr54 = '\n      54 = Get Temperature at Point';
+
+Colstr55 = '\n      55 = Generate Single Geometry with Stud';
 
 
-Colstr3D = [Colstr3DTitle,Colstr1,Colstr2,Colstr3,Colstr4];
-Colstr2D = [Colstr2DTitle,Colstr51,Colstr52,Colstr53,Colstr54];
+Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
+    ColstrT2,Colstr55];
 Colstr = [Colstr3D,Colstr2D,ColstrInput];
 
 
@@ -236,7 +252,7 @@ for C = qCollection
             break
         case 1            
             % Program #1 - Generate Geometry
-            prePline = [101 103 104 107 1]; %prePrograms always end with their program ID #
+            prePline = [101 103 104 107 114 1]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -316,7 +332,7 @@ for C = qCollection
             end
        case 51            
             % Program #51 - 2D Generate Geometry
-            prePline = [101 111 104 108 51]; %prePrograms always end with their program ID #
+            prePline = [101 111 104 108 114 51]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -335,7 +351,7 @@ for C = qCollection
                 preP = prePline;
             end
        case 52          
-            % Program #2 - 2D Run Model From Geometry
+            % Program #52 - 2D Run Model From Geometry
             prePline = [104 105 109 108 52]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
@@ -355,7 +371,7 @@ for C = qCollection
                 preP = prePline;
             end
        case 53          
-            % Program #3 - 2D Contour Plot
+            % Program #53 - 2D Contour Plot
             prePline = [108 53]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
@@ -375,7 +391,7 @@ for C = qCollection
                 preP = prePline;
             end
         case 54
-            % Program #4 - 2D Get Temperature at Point
+            % Program #54 - 2D Get Temperature at Point
             prePline = [108 54]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
@@ -394,6 +410,27 @@ for C = qCollection
             else
                 preP = prePline;
             end
+        case 55
+            % Program #55 - 2D Generate Single Geometry with Stud
+            prePline = [101 111 104 108 113 55]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+
     end
     
     numC = numC + 1;
@@ -509,6 +546,23 @@ for preI = 1:size(preP,1)
                 Foam = [Tf,Lf];
 
                 disp('[+] [111] Foam Vector Created')
+            case 112
+                % Thermal Property Translation
+                TCw = ThermalConductivityWall;
+                TCs = ThermalConductivityStuds;
+                SL = StudLocation;
+                disp('[+] [112] Thermal Property Names Translated')
+            case 113
+                % Thermal Properties if Studs
+                SLu = SL + .05; % Stud Upper Bound
+                SLl = SL - .05; % Stud Lower Bound
+                ThermalConductivity = @(location,state) (location.y>=SLu || location.y<SLl).*TCw + (SLl<=location.y && location.y<SLu).*TCs;
+                disp('[+] [113] Stud Location Defined')
+            case 114
+                % Thermal Property if No Stud
+                TC = TCw;
+                disp('[+] [114] Thermal Properties Defined')
+
             case 1
                 % Collection #1 - Generate Geometry
                 Pline = [1 401 402 403 203]; % All collections must start with their collection #
@@ -652,8 +706,28 @@ for preI = 1:size(preP,1)
                     P = Pline;
                 end
             case 54 
-                % Collection #4 - Get Temperature at Point
-                Pline = [4 206 301 606]; % All collections must start with their collection #
+                % Collection #54 - 2D Get Temperature at Point
+                Pline = [54 206 301 606]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 55 
+                % Collection #55 - 2D Generate Single Geomtry with Stud
+                Pline = [55 401 402 403 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
