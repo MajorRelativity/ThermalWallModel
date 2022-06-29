@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A07
-% Updated on June 28 2022
+%% ThermalWallModel v2.A08
+% Updated on June 29 2022
 % Created by Jackson Kustell
 
 clear
@@ -114,7 +114,8 @@ modelType = "steadystate";
 qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
 
 % Shape of Wall:
-FoamThickness = 2.54 * 10^-2; %m
+%FoamThickness = 2.54 * 10^-2; %m
+FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
 FoamLength = 45.6 * 10^-2; %m
 FoamHeight = FoamLength; 
 
@@ -160,7 +161,7 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-Hmax = 5*10^-3; % Max Mesh Length
+Hmax = 5*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -1666,7 +1667,7 @@ for I = 1:size(P,1)
                 surf(X,Y,V,'LineStyle','none');
                 view(0,90)
                 title(fname)
-                xlabel('Z (Height)')
+                xlabel('X (Thickness)')
                 ylabel('Y (Length)')
                 colorbar
                 disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
