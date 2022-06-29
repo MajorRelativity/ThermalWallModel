@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A08
+%% ThermalWallModel v2.09
 % Updated on June 29 2022
 % Created by Jackson Kustell
 
@@ -1021,7 +1021,7 @@ for I = 1:size(P,1)
                 savedateMS = savedate;
 
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw")
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
                 clear savedateMS
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
@@ -1061,7 +1061,7 @@ for I = 1:size(P,1)
                 disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',MS])
             case 205
                 % Save Foam Analysis Logs
-                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults","numM")
+                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults","numM",'-v7.3')
                 disp(['[+] [205] Logs have been saved with thermalresults as ',LogSavename])
 
             case 206
@@ -1344,7 +1344,7 @@ for I = 1:size(P,1)
                 FAResults = array2table(FAResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
                     'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
-                disp(['[+] [508]','Foam Analysis Results Tables Created'])
+                disp(['[+] [508] ','Foam Analysis Results Tables Created'])
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
