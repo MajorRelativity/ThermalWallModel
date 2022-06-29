@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A05
+%% ThermalWallModel v2.A07
 % Updated on June 28 2022
 % Created by Jackson Kustell
 
@@ -26,6 +26,9 @@ clear
 %           054) Get Temperature at Point
 %       Generate Geometry: 
 %           055) Generate Single Geometry with Stud
+%           057) Generate All Geometries with Studs
+%       Solve Models:
+%           058) Solve All Stud Analysis Models
 %       Analysis:
 %           056) Plot Current Thermal Properties
 % 
@@ -61,6 +64,7 @@ clear
 % 300) Modification
 %
 %   301) Select Model Number
+%   302) Stud Analysis Modification
 %
 % 400) Operation
 %
@@ -71,6 +75,8 @@ clear
 %   405) Solve Single Model
 %   406) 2D Generate Single Geometry
 %   407) 2D Apply Thermal Properties
+%   408) Generate All Meshes
+%   409) Solve All Models
 %
 % 500) Post Processing
 %
@@ -80,6 +86,8 @@ clear
 %   504) Duration with time2num
 %   505) Collect Foam Analysis Result Variables
 %   506) Create Foam Analysis Table
+%   507) Find Predicted R Value and Percent Error for Stud Analysis
+%   508) Create Foam Analysis Table for Stud Analysis
 %
 % 600) Analysis
 %
@@ -90,6 +98,11 @@ clear
 %   605) 2D Contour Plot
 %   606) 2D Get Temperature at Point
 %   607) 2D Plot Current Thermal Properties
+%
+% 700) Conditions
+%
+%   701) Evaluate Condition
+%   702) Repeat Stud Analysis
 
 %% Model Specifications (User Edited):
 
@@ -147,7 +160,7 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-Hmax = 5*10^-4; % Max Mesh Length
+Hmax = 5*10^-3; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -181,6 +194,9 @@ end
 
 %% Reset Overrides:
 
+% 000
+run57 = 1;
+
 % 100:
 run104 = 1;
 
@@ -196,6 +212,7 @@ run301 = 1;
 ColstrT1 = '\n    Standard:';
 ColstrT2 = '\n    Generate Geometry:';
 ColstrT3 = '\n    Analysis:';
+ColstrT4 = '\n    Solve Models';
 
 ColstrInput = '\n    Input: ';
 Colstr3DT = '\n  1 - 50: 3D Model';
@@ -213,14 +230,18 @@ Colstr53 = '\n      53 = Create Contour Plot Slices';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
+Colstr57 = '\n      57 = Generate All Geometries with Studs';
+
+Colstr58 = '\n      58 = Solve All Stud Analysis Models';
 
 Colstr56 = '\n      56 = Plot Current Thermal Properties';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55,...
-    ColstrT3,Colstr56];
+    ColstrT2,Colstr55,Colstr57...
+    ColstrT3,Colstr56,...
+    ColstrT4,Colstr58];
 Colstr = [Colstr3D,Colstr2D,ColstrInput];
 
 
@@ -470,6 +491,46 @@ for C = qCollection
             else
                 preP = prePline;
             end
+        case 57      
+            % Program #57 - 2D Generate All Geometries with Stud
+            prePline = [101 111 104 108 112 115 57]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
+        case 58          
+            % Program #58 - 2D Solve All Stud Analysis Models
+            prePline = [101 104 105 109 108 58]; %prePrograms always end with their program ID #
+
+            % Add zeros if program size is less than max size
+
+            if size(prePline,2) < maxpreP
+                prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
+            elseif size(prePline,2) > maxpreP
+                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
+                return
+            end
+
+            % Concatonate to P
+
+            if exist('preP','var')
+                preP = [preP;prePline];
+            else
+                preP = prePline;
+            end
 
     end
     
@@ -613,7 +674,7 @@ for preI = 1:size(preP,1)
                 qSA = 0;
 
                 while qSA == 0
-                    qSA = input('[?] [115] Choose the number of stud analysis models you would like to run');
+                    qSA = input('[?] [115] Choose the number of stud analysis models you would like to run: ');
                     switch qSA
                         case qSA <= 0
                             disp("[!] [115] That doesn't make sense, try again!")
@@ -624,7 +685,7 @@ for preI = 1:size(preP,1)
                     end
                 end
       
-                SP = [linspace(-Lw/2,Lw/2,qSA)]';
+                SP = [linspace(-Lw/2,Lw/2,qSA-1)]';
                 SP = [-Lw;SP]; % Adding extra evaluation location where there is no stud
                 disp('[+] [115] Stud Matrix Created')
 
@@ -831,6 +892,46 @@ for preI = 1:size(preP,1)
                 else
                     P = Pline;
                 end
+            case 57
+                % Collection #57 - 2D Generate All Geometries with Studs
+                Pline = [57 401 302 406 407 702 701 203]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 58
+                % Collection #58 - 2D Solve All Stud Analysis Models
+                Pline = [58 204 408 409 507 504 508 203 205]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                    return
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
                 
         end
     end
@@ -842,6 +943,11 @@ disp('[=] Collections Initialized')
 %% Run:
 
 for I = 1:size(P,1)
+    
+    dummyCondition = 1; % Makes it so that the while loop can only be exited with a "break"
+
+    while dummyCondition == 1 % Start Loop
+
     for p = P(I,:)
         switch p
             case 0
@@ -891,6 +997,18 @@ for I = 1:size(P,1)
             case 56
                 % Collection #56 - Plot Current Thermal Properties
                 disp('[&] Starting Collection #56 - 2D Plot Current Termal Properties')
+            case 57
+                % Collection #57 - Generate All Geometries with Stud
+                if run57 == 1
+                    disp('[&] Starting Collection #57 - 2D Generate All Geometries with Stud')
+                    run57 = 0;
+                end
+            case 58
+                % Collection #58 - Solve All Stud Analysis Models
+                disp('[&] Starting Collection #58 - Solve All Stud Analysis Models')
+
+                % Overrides
+                run206 = 0;
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -967,6 +1085,14 @@ for I = 1:size(P,1)
                         disp(['[+] [301] [Model ',numMstr,'] ','New Model Number Chosen: ',numMstr])
                     end
                 end
+            case 302
+                % Stud Analysis Modification
+                SPc = SP(numM);
+                SPu = SPc + SL/2; % Stud Size Upper Bound
+                SPl = SPc - SL/2; % Stud Size Lower Bound
+                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,propertyStyle);
+                disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(SPc)])
+
             case 401
                 % Create Single New Thermal Model
                 if exist('numM','var') % Model #
@@ -1080,11 +1206,10 @@ for I = 1:size(P,1)
             
                     thermalIC(thermalmodel,Tempi); % Apply Initial Condition
             
-                    disp('[~] Model Type = Transient')
-            
+                    disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Transient'])            
                 elseif all(modelType=="steadystate")
                     thermalProperties(thermalmodel,'ThermalConductivity',TC);
-                    disp('[~] Model Type = Steady State')
+                    disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Steady State'])
                 end
 
                 % Apply Boundary Conditions
@@ -1093,6 +1218,32 @@ for I = 1:size(P,1)
 
                 ThermalModel{numM} = thermalmodel; % Re Apply to Cell
                 disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
+
+            case 408
+            % Generate All Meshes
+            disp('[$] [408] Generating All Meshes')
+            parfor numM = 1:size(ThermalModel,2)
+                numMstr = num2str(numM);
+                disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
+                ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
+                disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])
+            end
+            disp('[+] [408] All Meshes generated')
+
+            case 409
+                % Solve All Thermal Models
+                disp('[$] [408] Solving All Models')
+                parfor numM = 1:size(ThermalModel,2)
+                    timeri(numM) = datetime('now')
+
+                    numMstr = num2str(numM);
+                    disp(['[$] [409] [Model ',numMstr,'] ','Solving Model'])
+                    ThermalResults{numM} = solve(ThermalModel{numM});
+                    disp(['[+] [409] [Model ',numMstr,'] ','Model Solved'])
+
+                    timerf(numM) = datetime('now')
+                end
+                disp('[$] [408] All Models Solved')
             case 501
                 % Start Timer
                 timeri = datetime('now');
@@ -1119,8 +1270,8 @@ for I = 1:size(P,1)
                 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
             case 504
                 % Duration with time2num
-                duration = timerf - timeri;
-                duration = time2num(duration,'seconds');
+                duration = timerf(:) - timeri(:);
+                duration = time2num(duration(:),'seconds');
             case 505
                 % Collect Foam Analysis Result Variables
 
@@ -1134,10 +1285,65 @@ for I = 1:size(P,1)
                 % Create Foam Analysis Result Tables
 
                 Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
+                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
+                    'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                 FAResults = array2table(FAResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
+            case 507
+                % Find Predicted R Value and Percent Error for Stud Analysis           
+                parfor numM = 1:size(ThermalResults,2)
+                    numMstr = num2str(numM);
+                    disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
+                    % Find Temperature at Intersection:
+                    if all(modelStyle == '3D')
+                        intersecttemp = interpolateTemperature(ThermalResults{numM},Tw,0,0);
+                    elseif all(modelStyle == '2D')
+                        intersecttemp = interpolateTemperature(ThermalResults{numM},Tw,0);
+                    end
+                    
+                    % Find R Value and Percent Error:
+                    dTempRatio = ((TempwI-TempwO)/(intersecttemp-TempwO)); %Whole Wall dT / Foam dT
+                    RwM(numM,1) = Rf * dTempRatio;
+                    RwM(numM,1) = RwM(numM,1) - Rf;
+                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error
+
+                    % Save Intersect Temp
+                    IntersectTemp(numM,1) = intersecttemp
+                end
+                disp('[+] [507] Predicted R Values Found')
+            case 508
+                % Create Foam Analysis Table for Stud Analysis
+                numM = size(ThermalResults,2);
+                numMstr = num2str(numM);
+
+                % Create Tf, Lf, Hf
+                Tfc = Tf * ones(numM,1);
+                Lfc = Lf * ones(numM,1);
+                switch modelStyle
+                    case '3D'
+                        Hfc = Hf * ones(numM,1);
+                    case '2D'
+                        Hfc = -1 * ones(numM,1);
+                end
+                
+                % Recreate numM 
+                i = (1:numM)';
+
+                % Create Double Arrays:
+                FAResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
+                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
+                    ThermalConductivityWall,ThermalConductivityStud,modelStyle,propertyStyle]';
+                
+                % Create Foam Analysis Result Tables
+
+                Specifications = array2table(Specifications,...
+                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                    'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
+                FAResults = array2table(FAResultsD,...
+                    'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
+                    'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
+                disp(['[+] [508]','Foam Analysis Results Tables Created'])
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
@@ -1465,8 +1671,35 @@ for I = 1:size(P,1)
                 colorbar
                 disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
                 disp('[#] [607] Note: The exact shape of the geometry is NOT shown, only the thermal properties')
+                
+            case 701
+                % Evaluate Condition
+                if Condition == 1
+                    break % If the condition is 1, exit before we can run case 0
+                end
+            case 702
+                % Stud Analysis Condition
+                if SPc == SP(end)
+                    Condition = 0;
+                else
+                    Condition = 1;
+                end
+
         end
     end
+    
+    if exist('Condition','var') % Determines if the loop should be repeated
+        if Condition == 1
+            disp('[*] Repeating Collection')
+        else
+            break % Exits Loop
+        end
+    else
+        break % Exits loop
+    end
+
+    end % End Loop
+
     % Finish Collection:
     disp(['[=] Collection #',num2str(P(I,1)),' Finished'])
 end      
