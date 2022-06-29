@@ -47,6 +47,8 @@ clear
 %   112) Thermal Property Translation
 %   113) Thermal Property if Specific Thermal Properties
 %   114) Thermal Property if Simple Thermal Properties
+%   115) Create Stud Analysis Matrix
+%
 % 200) Load / Save / Store
 %
 %   201) Make Directory and Save ModelSpecification.mat
@@ -113,7 +115,8 @@ WallHeight = WallLength;
 ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
 ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
-StudLocation = 0; % Location of the center of the stud on the diagram
+StudPosition = 0; % Location of the center of the stud on the diagram
+StudLength = 0.0381; % Length of the stud along the y directoin in meters
 
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
@@ -125,7 +128,7 @@ propertyStyle = 'TimeMachine';
     % through middle with difference for plywood section
 
 % Wall and Foam R Values. Foam Adjustment Settings:
-Rw = 10; 
+Rw = 10  + .63; 
 Rf = 5;
 
 % Indoor Boundary Conditions (BC stays constant in time):
@@ -590,19 +593,40 @@ for preI = 1:size(preP,1)
                 % Thermal Property Translation
                 TCw = ThermalConductivityWall;
                 TCs = ThermalConductivityStud;
-                SL = StudLocation;
+                SP = StudPosition;
+                SL = StudLength;
+
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
                 % Thermal Properties if Studs
                 % Note: 0.0381 m is the width of a 2 by 4
-                SLu = SL + 0.01905; % Stud Size Upper Bound
-                SLl = SL - 0.01905; % Stud Size Lower Bound
-                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SLl,SLu,Tw,propertyStyle);
+                SPu = SP + SL/2; % Stud Size Upper Bound
+                SPl = SP - SL/2; % Stud Size Lower Bound
+                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,propertyStyle);
                 disp('[+] [113] Stud Location Defined')
             case 114
                 % Thermal Property if No Stud
                 TC = TCw;
                 disp('[+] [114] Thermal Properties Defined')
+            case 115
+                % Create Stud Analysis Matrix
+                qSA = 0;
+
+                while qSA == 0
+                    qSA = input('[?] [115] Choose the number of stud analysis models you would like to run');
+                    switch qSA
+                        case qSA <= 0
+                            disp("[!] [115] That doesn't make sense, try again!")
+                            qSA = 0;
+                        otherwise
+                            disp(['[$] [115] Creating Stud matrix with ',num2str(qSA),' elements'])
+                            break
+                    end
+                end
+      
+                SP = [linspace(-Lw/2,Lw/2,qSA)]';
+                SP = [-Lw;SP]; % Adding extra evaluation location where there is no stud
+                disp('[+] [115] Stud Matrix Created')
 
             case 1
                 % Collection #1 - Generate Geometry
@@ -821,7 +845,7 @@ for I = 1:size(P,1)
     for p = P(I,:)
         switch p
             case 0
-                % Ignore
+                % Ignore and Finish Collection
                 break
             case 1
                 % Collection #1 - Generate Single Geometry
@@ -1432,7 +1456,7 @@ for I = 1:size(P,1)
                 [location.x,location.y] = meshgrid(linspace(0,Tw + Tf),linspace(-Lw/2,Lw/2));
                 X = location.x;
                 Y = location.y;
-                V = thermalProperties(location,-1,TCw,TCs,SLl,SLu,Tw,propertyStyle);
+                V = thermalProperties(location,-1,TCw,TCs,SPl,SPu,Tw,propertyStyle);
                 surf(X,Y,V,'LineStyle','none');
                 view(0,90)
                 title(fname)
