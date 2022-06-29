@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.09
+%% ThermalWallModel v2.10
 % Updated on June 29 2022
 % Created by Jackson Kustell
 
