@@ -1,16 +1,18 @@
 function [x,y]=modelshapew(bs,s)
-%CRACKG Gives geometry data for the crackg PDE model
+%% modelshapew
+% Based off of the file CRACKG by MatLab
+% modelshapew Gives geometry data for the ThermalWallModel 2D PDE model
 %
-%   NE=CRACKG gives the number of boundary segment
+%   NE=modelshapew gives the number of boundary segment
 %
-%   D=CRACKG(BS) gives a matrix with one column for each boundary segment
+%   D=modelshapew(BS) gives a matrix with one column for each boundary segment
 %   specified in BS.
 %   Row 1 contains the start parameter value.
 %   Row 2 contains the end parameter value.
 %   Row 3 contains the number of the left hand region.
 %   Row 4 contains the number of the right hand region.
 %
-%   [X,Y]=CRACKG(BS,S) gives coordinates of boundary points. BS specifies the
+%   [X,Y]=modelshapew(BS,S) gives coordinates of boundary points. BS specifies the
 %   boundary segments and S the corresponding parameter values. BS may be
 %   a scalar.
 
