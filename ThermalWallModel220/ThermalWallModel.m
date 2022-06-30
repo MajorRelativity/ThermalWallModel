@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A16
+%% ThermalWallModel v2.20
 % Updated on June 29 2022
 
 clear
@@ -121,7 +121,7 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 202; % 201 = save, 202 = load
+qMS = 201; % 201 = save, 202 = load
 
 % Model Type ("transient", "steadystate")
 modelType = "steadystate";
@@ -159,11 +159,13 @@ propertyStyle = 'TimeMachine';
 Rw = 10  + .63; 
 Rf = 5;
 
-% Indoor Boundary Conditions (BC stays constant in time):
+% Indoor Boundary Conditions: (BC stays constant in time):
 TempwI = 309; %Interior Wall Temperature K
 
-% Outdoor Initial Conditions (IC are flexable with time):
+% Outdoor Boundary Conditions :
 TempwO = 295; %Outdoor Wall Temperature K
+
+% Inside Wall Temperature Initial Condition: (Only applies to transient. IC are flexable with time)
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
@@ -185,7 +187,6 @@ FstepT = 1; % Step size between foam trials for thickness
 FstepH = .1;% Step size between foam trials for thickness
 FstepL = .1; % Step size between foam trials for length
 qSF = 1; %Only analyze square foam sizes?
-qPar = 0; % Use Parallel Processing
 
 %% Save or Load Model Specifications
 
@@ -256,7 +257,7 @@ Colstr2DT = '\n  51 - 100: 2D Model';
 
 Colstr51 = '\n      51 = Generate Single Geometry ';
 Colstr52 = '\n      52 = Run Single Model From Geometry ';
-Colstr53 = '\n      53 = Create Contour Plot Slices';
+Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
@@ -1369,7 +1370,8 @@ for I = 1:size(P,1)
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
             case 507
-                % Find Predicted R Value and Percent Error for Stud Analysis           
+                % Find Predicted R Value and Percent Error for Stud Analysis     
+                warning off
                 parfor numM = 1:size(ThermalResults,2)
                     numMstr = num2str(numM);
                     disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
@@ -1389,6 +1391,7 @@ for I = 1:size(P,1)
                     % Save Intersect Temp
                     IntersectTemp(numM,1) = intersecttemp
                 end
+                warning on
                 disp('[+] [507] Predicted R Values Found')
             case 508
                 % Create Foam Analysis Table for Stud Analysis
@@ -1675,7 +1678,7 @@ for I = 1:size(P,1)
                 
                 gateP = 1;
                 while gateP == 1
-                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from FAResults): ');
+                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from AResults): ');
     
                     if qTRpa == -1
                         % Create plot for all table values
