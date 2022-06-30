@@ -1,108 +1,122 @@
-%% ThermalWallModel v2.10
+%% ThermalWallModel v2.20
 % Updated on June 29 2022
-% Created by Jackson Kustell
 
 clear
+addpath("Functions")
 
 %% Documentation:
 
-% Process ID:
-% 000) Collection
-%   
-%   001 - 050 = 3D Model:
-%       Standard:
-%           001) Generate Single Geometry
-%           002) Solve Single Model From Geometry
-%           003) Create Contour Plot Slices
-%           004) Get Temperature at Point
-%       Generate Geometry:
-%           
-%
-%   051 - 099 = 2D Model:
-%       Standard:
-%           051) Generate Single Geometry
-%           052) Solve Single Model From Geometry
-%           053) Create Contour Plot Slices
-%           054) Get Temperature at Point
-%       Generate Geometry: 
-%           055) Generate Single Geometry with Stud
-%           057) Generate All Geometries with Studs
-%       Solve Models:
-%           058) Solve All Stud Analysis Models
-%       Analysis:
-%           056) Plot Current Thermal Properties
-% 
-%
-% 100) PreRun
-%
-%   101) Foam Name Translation
-%   102) 3D Foam Analysis - Matrix Creation
-%   103) 3D Foam Matrix if no Foam Analysis
-%   104) Specify Thermal Model File Identification Number
-%   105) Create Log Directory
-%   106) 3D Automatically Create LogSavename
-%   107) 3D Model Style
-%   108) 2D Model Style
-%   109) 2D Automatically Create LogSavename
-%   110) 2D Foam Analysis - Matrix Creation
-%
-%   111) 2D Foam Matrix if no Foam Analysis
-%   112) Thermal Property Translation
-%   113) Thermal Property if Specific Thermal Properties
-%   114) Thermal Property if Simple Thermal Properties
-%   115) Create Stud Analysis Matrix
-%
-% 200) Load / Save / Store
-%
-%   201) Make Directory and Save ModelSpecification.mat
-%   202) Load ModelSpecification.mat
-%   203) Make Directory and Save ThermalModel.mat
-%   204) Load ThermalModel.mat
-%   205) Save Foam Analysis Log Data
-%   206) Load Foam Analysis Log Data
-%
-% 300) Modification
-%
-%   301) Select Model Number
-%   302) Stud Analysis Modification
-%
-% 400) Operation
-%
-%   401) Create Single New Thermal Model
-%   402) 3D Generate Single Geometry
-%   403) 3D User Verify Single Geometry and Apply Initial Conditions
-%   404) Generate Single Mesh
-%   405) Solve Single Model
-%   406) 2D Generate Single Geometry
-%   407) 2D Apply Thermal Properties
-%   408) Generate All Meshes
-%   409) Solve All Models
-%
-% 500) Post Processing
-%
-%   501) Start Timer
-%   502) End Timer
-%   503) Find Predicted R Value and Percent Error
-%   504) Duration with time2num
-%   505) Collect Foam Analysis Result Variables
-%   506) Create Foam Analysis Table
-%   507) Find Predicted R Value and Percent Error for Stud Analysis
-%   508) Create Foam Analysis Table for Stud Analysis
-%
-% 600) Analysis
-%
-%   601) 3D Create Y Slice Foam Analysis Thermal Plot (Vertical Y)
-%   602) 3D Create Z Slice Foam Analysis Thermal Plot (Horzontal Z)
-%   603) 3D Create X Slice Foam Analysis Thermal Plot (Vertical X)
-%   604) 3D Get Temperature at Point
-%   605) 2D Contour Plot
-%   606) 2D Get Temperature at Point
-%   607) 2D Plot Current Thermal Properties
-%
-% 700) Conditions
-%
-%   701) Evaluate Condition
-%   702) Repeat Stud Analysis
+%{
+
+Process ID:
+000) Collection
+  
+    001 - 050 = 3D Model:
+        Standard:
+            001) Generate Single Geometry
+            002) Solve Single Model From Geometry
+            003) Create Contour Plot Slices
+            004) Get Temperature at Point
+        Generate Geometry:
+          
+
+    051 - 099 = 2D Model:
+        Standard:
+            051) Generate Single Geometry
+            052) Solve Single Model From Geometry
+            053) Create Contour Plot Slices
+            054) Get Temperature at Point
+        Generate Geometry: 
+            055) Generate Single Geometry with Stud
+            057) Generate All Geometries with Studs
+        Solve Models:
+            058) Solve All Stud Analysis Models
+        Analysis:
+            056) Plot Current Thermal Properties
+
+
+100) PreRun
+
+    101) Foam Name Translation
+    102) 3D Foam Analysis - Matrix Creation
+    103) 3D Foam Matrix if no Foam Analysis
+    104) Specify Thermal Model File Identification Number
+    107) 3D Model Style
+    108) 2D Model Style
+    110) 2D Foam Analysis - Matrix Creation
+
+    111) 2D Foam Matrix if no Foam Analysis
+    112) Thermal Property Translation
+    113) Thermal Property if Specific Thermal Properties
+    114) Thermal Property if Simple Thermal Properties
+    115) Create Stud Analysis Matrix
+
+    Save Files:
+        105) Create Log Directory
+        106) Automatically Create ResultsSavename
+        109) Automatically Create LogSavename
+        116) Create 2D Data Save File
+        117) Create 3D Data Save File
+        118) Automatically Create ModelSavename
+
+200) Load / Save / Store
+
+    201) Make Directory and Save ModelSpecification.mat
+    202) Load ModelSpecification.mat
+    203) Make Directory and Save ThermalModel.mat
+    204) Load ThermalModel.mat
+    205) Save Analysis Log Data
+    206) Load Analysis Log Data
+    207) Save Meshed Thermal Model Log Data
+    208) Load Meshed Thermal Model Log Data
+    209) Save Thermal Results Log Data
+    210) Load Thermal Results Log Data
+    211) Make Log Data Directory
+
+300) Modification
+
+    301) Select Model Number
+    302) Stud Analysis Modification
+
+400) Operation
+
+    401) Create Single New Thermal Model
+    402) 3D Generate Single Geometry
+    403) 3D User Verify Single Geometry and Apply Initial Conditions
+    404) Generate Single Mesh
+    405) Solve Single Model
+    406) 2D Generate Single Geometry
+    407) 2D Apply Thermal Properties
+    408) Generate All Meshes
+    409) Solve All Models
+
+500) Post Processing
+
+    501) Start Timer
+    502) End Timer
+    503) Find Predicted R Value and Percent Error
+    504) Duration with time2num
+    505) Collect Foam Analysis Result Variables
+    506) Create Foam Analysis Table
+    507) Find Predicted R Value and Percent Error for Stud Analysis
+    508) Create Stud Analysis Table
+
+600) Analysis
+
+    601) 3D Create Y Slice Foam Analysis Thermal Plot (Vertical Y)
+    602) 3D Create Z Slice Foam Analysis Thermal Plot (Horzontal Z)
+    603) 3D Create X Slice Foam Analysis Thermal Plot (Vertical X)
+    604) 3D Get Temperature at Point
+    605) 2D Contour Plot
+    606) 2D Get Temperature at Point
+    607) 2D Plot Current Thermal Properties
+
+700) Conditions
+
+    701) Evaluate Condition
+    702) Repeat Stud Analysis
+
+%}
 
 %% Model Specifications (User Edited):
 
@@ -145,11 +159,13 @@ propertyStyle = 'TimeMachine';
 Rw = 10  + .63; 
 Rf = 5;
 
-% Indoor Boundary Conditions (BC stays constant in time):
+% Indoor Boundary Conditions: (BC stays constant in time):
 TempwI = 309; %Interior Wall Temperature K
 
-% Outdoor Initial Conditions (IC are flexable with time):
+% Outdoor Boundary Conditions :
 TempwO = 295; %Outdoor Wall Temperature K
+
+% Inside Wall Temperature Initial Condition: (Only applies to transient. IC are flexable with time)
 Tempi = 300; %Interior Temperature K
 
 %Time Conditions:
@@ -161,6 +177,7 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
+%Hmax = 20*10^-3;
 Hmax = 5*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
@@ -170,14 +187,23 @@ FstepT = 1; % Step size between foam trials for thickness
 FstepH = .1;% Step size between foam trials for thickness
 FstepL = .1; % Step size between foam trials for length
 qSF = 1; %Only analyze square foam sizes?
-qPar = 0; % Use Parallel Processing
 
 %% Save or Load Model Specifications
 
+% Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
     mkdir ModelSpecifications
 end
 
+% Tells user current mode:
+switch qMS
+    case 201
+        disp('[#] ModelSpecifications are currently in mode: SAVE')
+    case 202
+        disp('[#] ModelSpecifications are currently in mode: LOAD')
+end
+
+% Specify current model specifications
 MSN = input('[?] Choose a Model Specification #: ');
 MS = ['ModelSpecifications/ModelSpecification',num2str(MSN),'.mat'];
 
@@ -203,6 +229,8 @@ run104 = 1;
 
 % 200:
 run206 = 1;
+run208 = 1;
+run210 = 1;
 
 % 300
 run301 = 1;
@@ -215,7 +243,9 @@ ColstrT2 = '\n    Generate Geometry:';
 ColstrT3 = '\n    Analysis:';
 ColstrT4 = '\n    Solve Models';
 
-ColstrInput = '\n    Input: ';
+ColstrInput = '\n  Input: ';
+ColstrQuit = '\n -1 = Quit ';
+ColstrRun = '\n  0 = Run with Nothing Else ';
 Colstr3DT = '\n  1 - 50: 3D Model';
 
 Colstr1 = '\n      1 = Generate Single Geometry ';
@@ -227,7 +257,7 @@ Colstr2DT = '\n  51 - 100: 2D Model';
 
 Colstr51 = '\n      51 = Generate Single Geometry ';
 Colstr52 = '\n      52 = Run Single Model From Geometry ';
-Colstr53 = '\n      53 = Create Contour Plot Slices';
+Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
@@ -243,7 +273,7 @@ Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57...
     ColstrT3,Colstr56,...
     ColstrT4,Colstr58];
-Colstr = [Colstr3D,Colstr2D,ColstrInput];
+Colstr = [Colstr3D,Colstr2D];
 
 
 % Create Variables:
@@ -254,9 +284,9 @@ numC = 1;
 while gateC == 1
     switch numC
         case 1
-            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ',Colstr]);
+            qCollection(numC) = input(['[?] What would you like to do?',Colstr,ColstrQuit,ColstrInput]);
         otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ',Colstr]);
+            qCollection(numC) = input(['[?] What else would you like to do?',Colstr,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
     switch qCollection(numC)
@@ -314,7 +344,7 @@ for C = qCollection
             end
        case 2          
             % Program #2 - Run Model From Geometry
-            prePline = [101 104 105 106 107 2]; %prePrograms always end with their program ID #
+            prePline = [101 104 105 117 106 109 118 107 2]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -374,7 +404,7 @@ for C = qCollection
             end
        case 51            
             % Program #51 - 2D Generate Geometry
-            prePline = [101 111 104 108 114 51]; %prePrograms always end with their program ID #
+            prePline = [101 112 111 104 108 114 51]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -394,7 +424,7 @@ for C = qCollection
             end
        case 52          
             % Program #52 - 2D Run Model From Geometry
-            prePline = [101 104 105 109 108 52]; %prePrograms always end with their program ID #
+            prePline = [101 104 105 116 106 109 118 108 52]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -514,7 +544,7 @@ for C = qCollection
             end
         case 58          
             % Program #58 - 2D Solve All Stud Analysis Models
-            prePline = [101 104 105 109 108 58]; %prePrograms always end with their program ID #
+            prePline = [101 104 105 116 106 109 118 108 58]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -544,7 +574,7 @@ end
 disp('[&] Initializing Collections')
 
 % Max Program Size:
-maxP = 13;
+maxP = 15;
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -613,9 +643,9 @@ for preI = 1:size(preP,1)
                     disp('[+] [105] ThermaData Directory Created')
                 end
             case 106
-                % 3D Automatically Create LogSavename
-                LogSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
-                disp(['[+] [106] Logs will be saved to',LogSavename])
+                % Automatically Create ResultsSavename
+                ResultsSavename = [DataSavename,'/ThermalResults ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                disp(['[+] [106] Thermal Results will be saved to',ResultsSavename])
             case 107
                 % 3D Model Style
                 modelStyle = '3D';
@@ -625,8 +655,8 @@ for preI = 1:size(preP,1)
                 modelStyle = '2D';
                 disp(['[+] [108] Model Style set to: ',modelStyle])
             case 109
-                % 2D Automatically Create LogSavename
-                LogSavename = ['ThermalData/2DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                % Create LogSavename
+                LogSavename = [DataSavename,'/AnalysisResults ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
                 disp(['[+] [109] Logs will be saved to',LogSavename]) 
             case 110
                 % 2D Foam Analysis - Matrix Creation
@@ -686,10 +716,21 @@ for preI = 1:size(preP,1)
                     end
                 end
       
-                SP = [linspace(-Lw/2,Lw/2,qSA-1)]';
+                SP = (linspace(-Lw/2,Lw/2,qSA-1))';
                 SP = [-Lw;SP]; % Adding extra evaluation location where there is no stud
                 disp('[+] [115] Stud Matrix Created')
-
+            case 116
+                % Create 2D Data Save File:
+                DataSavename = ['ThermalData/2DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss')];
+                disp('[+] [116] Current Data Directory Created')
+            case 117
+                % Create 3D Data Save File:
+                DataSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss')];
+                disp('[+] [117] Current Data Directory Created')
+            case 118
+                % Automatically Create ModelSavename
+                ModelSavename = [DataSavename,'/MeshedModels ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                disp(['[+] [109] Meshed Models will be saved to',ModelSavename]) 
             case 1
                 % Collection #1 - Generate Geometry
                 Pline = [1 401 402 403 203]; % All collections must start with their collection #
@@ -713,7 +754,7 @@ for preI = 1:size(preP,1)
 
             case 2
                 % Collection #2 - Run Model From Geometry
-                Pline = [2 204 301 501 404 405 502 503 504 505 506 203 205]; % All collections must start with their collection #
+                Pline = [2 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -733,7 +774,7 @@ for preI = 1:size(preP,1)
                 end
             case 3
                 % Collection #3 - Plot Contour Slices
-                Pline = [3 206 301 601 602 603]; % All collections must start with their collection #
+                Pline = [3 206 210 601 602 603]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -753,7 +794,7 @@ for preI = 1:size(preP,1)
                 end
             case 4 
                 % Collection #4 - Get Temperature at Point
-                Pline = [4 206 301 604]; % All collections must start with their collection #
+                Pline = [4 206 210 301 604]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -794,7 +835,7 @@ for preI = 1:size(preP,1)
 
             case 52
                 % Collection #52 - Run Model From Geometry
-                Pline = [52 204 301 501 404 405 502 503 504 505 506 203 205]; % All collections must start with their collection #
+                Pline = [52 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -814,7 +855,7 @@ for preI = 1:size(preP,1)
                 end
             case 53
                 % Collection #53 - 2D Contour Plot
-                Pline = [53 206 301 605]; % All collections must start with their collection #
+                Pline = [53 206 210 605]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -834,7 +875,7 @@ for preI = 1:size(preP,1)
                 end
             case 54 
                 % Collection #54 - 2D Get Temperature at Point
-                Pline = [54 206 301 606]; % All collections must start with their collection #
+                Pline = [54 206 210 301 606]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -915,7 +956,7 @@ for preI = 1:size(preP,1)
                 end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 408 409 507 504 508 203 205]; % All collections must start with their collection #
+                Pline = [58 204 408 409 507 504 508 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -966,6 +1007,8 @@ for I = 1:size(P,1)
 
                 % Overrides
                 run206 = 0;
+                run208 = 0;
+                run210 = 0;
                 run301 = 0;
             case 3
                 % Collection #3 - Creating Slices
@@ -985,6 +1028,8 @@ for I = 1:size(P,1)
 
                 % Overrides
                 run206 = 0;
+                run208 = 0;
+                run210 = 0;
                 run301 = 0;
             case 53
                 % Collection #53 - Creating Slices
@@ -1010,6 +1055,8 @@ for I = 1:size(P,1)
 
                 % Overrides
                 run206 = 0;
+                run208 = 0;
+                run210 = 0;
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -1060,18 +1107,49 @@ for I = 1:size(P,1)
                 end
                 disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',MS])
             case 205
-                % Save Foam Analysis Logs
-                save(LogSavename,"FAResults","FAResultsD","Specifications","ThermalModel","ThermalResults","numM",'-v7.3')
-                disp(['[+] [205] Logs have been saved with thermalresults as ',LogSavename])
+                % Save Analysis Logs
+                save(LogSavename,"AResults","AResultsD","Specifications","numM",'-v7.3')
+                disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
                 if run206 == 1
                     % Load Foam Analysis Logs
                     disp('[?] Choose the Log file you would like to load: ')
-                    [filenameFAL, pathnameFAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
-                    addpath(pathnameFAL)
-                    load(filenameFAL)
-                    disp(['[+] File ',filenameFAL,' has been loaded!'])
+                    [filenameAL, pathnameAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
+                    addpath(pathnameAL)
+                    load(filenameAL)
+                    disp(['[+] [206] File ',filenameAL,' has been loaded!'])
+                end
+            case 207
+                % Save Thermal Model Logs
+                save(ModelSavename,"ThermalModel","numM",'-v7.3')
+                disp(['[+] [207] Mesh Thermal Models have been saved as ',LogSavename])
+            case 208
+                if run208 == 1
+                    % Load Thermal Model Logs
+                    disp('[?] Choose the Meshed Thermal Model file you would like to load: ')
+                    [filenameTML, pathnameTML] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
+                    addpath(pathnameTML)
+                    load(filenameTML)
+                    disp(['[+] [208] File ',filenameTML,' has been loaded!'])
+                end
+            case 209
+                % Save Thermal Results Logs
+                save(ResultsSavename,"ThermalResults","numM",'-v7.3')
+                disp(['[+] [209] Thermal Results have been saved as ',ResultsSavename])
+            case 210
+                if run210 == 1
+                    % Load Thermal Results Logs
+                    disp('[?] Choose the Thermal Results file you would like to load: ')
+                    [filenameTRL, pathnameTRL] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
+                    addpath(pathnameTML)
+                    load(filenameTRL)
+                    disp(['[+] [210] File ',filenameTRL,' has been loaded!'])
+                end
+            case 211
+                % Create DataLog Folder:
+                if ~exist(DataSavename,'dir')
+                    mkdir(DataSavename)
                 end
             case 301
                 % Select Thermal Model Number:
@@ -1238,9 +1316,9 @@ for I = 1:size(P,1)
                     timeri(numM) = datetime('now')
 
                     numMstr = num2str(numM);
-                    disp(['[$] [409] [Model ',numMstr,'] ','Solving Model'])
+                    disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
                     ThermalResults{numM} = solve(ThermalModel{numM});
-                    disp(['[+] [409] [Model ',numMstr,'] ','Model Solved'])
+                    disp(['[*] [409] [Model ',numMstr,'] ','Model Solved'])
 
                     timerf(numM) = datetime('now')
                 end
@@ -1280,7 +1358,7 @@ for I = 1:size(P,1)
                     Hf = -1;
                 end
 
-                FAResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
+                AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
                 Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
@@ -1288,11 +1366,12 @@ for I = 1:size(P,1)
                 Specifications = array2table(Specifications,...
                     'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
                     'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
-                FAResults = array2table(FAResultsD,...
+                AResults = array2table(AResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                 disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
             case 507
-                % Find Predicted R Value and Percent Error for Stud Analysis           
+                % Find Predicted R Value and Percent Error for Stud Analysis     
+                warning off
                 parfor numM = 1:size(ThermalResults,2)
                     numMstr = num2str(numM);
                     disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
@@ -1312,6 +1391,7 @@ for I = 1:size(P,1)
                     % Save Intersect Temp
                     IntersectTemp(numM,1) = intersecttemp
                 end
+                warning on
                 disp('[+] [507] Predicted R Values Found')
             case 508
                 % Create Foam Analysis Table for Stud Analysis
@@ -1332,7 +1412,7 @@ for I = 1:size(P,1)
                 i = (1:numM)';
 
                 % Create Double Arrays:
-                FAResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
+                AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
                 Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
                     ThermalConductivityWall,ThermalConductivityStud,modelStyle,propertyStyle]';
                 
@@ -1341,7 +1421,7 @@ for I = 1:size(P,1)
                 Specifications = array2table(Specifications,...
                     'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
                     'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
-                FAResults = array2table(FAResultsD,...
+                AResults = array2table(AResultsD,...
                     'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
                     'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
                 disp(['[+] [508] ','Foam Analysis Results Tables Created'])
@@ -1350,7 +1430,7 @@ for I = 1:size(P,1)
                % 3D Y Slice Analysis (Vertical Y)
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [601] What model # would you like to Yslice? (-1 = all, or row index # from FAResults): ');
+                   qTRpa = input('[?] [601] What model # would you like to Yslice? (-1 = all, or row index # from AResults): ');
                    
                    % Pull Model Specifications:
                    Tw = str2double(Specifications{6,1});
@@ -1370,7 +1450,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = FAResultsD(i,3);
+                            Tf = AResultsD(i,3);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1395,7 +1475,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = FAResultsD(i,3);
+                        Tf = AResultsD(i,3);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1418,7 +1498,7 @@ for I = 1:size(P,1)
                % 3D Z Slice Analysis (Horzontal Z)
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [602] What model # do you want to Zslice? (-1 = all, or row index # from FAResults): ');
+                   qTRpa = input('[?] [602] What model # do you want to Zslice? (-1 = all, or row index # from AResults): ');
                    
                    % Pull Model Specifications:
                    Tw = str2double(Specifications{6,1});
@@ -1437,7 +1517,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = FAResultsD(i,3);
+                            Tf = AResultsD(i,3);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1462,7 +1542,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = FAResultsD(i,3);
+                        Tf = AResultsD(i,3);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1485,7 +1565,7 @@ for I = 1:size(P,1)
                % 3D X Slice Analysis (Vertical X)
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from FAResults): ');
+                   qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from AResults): ');
                    
                    % Pull Model Specifications:
                    Tw = str2double(Specifications{6,1});
@@ -1505,7 +1585,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = FAResultsD(i,3);
+                            Tf = AResultsD(i,3);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1530,7 +1610,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = FAResultsD(i,3);
+                        Tf = AResultsD(i,3);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1557,9 +1637,9 @@ for I = 1:size(P,1)
                 Hw = str2double(Specifications{8,1});
                 Lw = str2double(Specifications{7,1});
 
-                Tf = FAResultsD(numM,3);
-                Lf = FAResultsD(numM,4);
-                Hf = FAResultsD(numM,5);
+                Tf = AResultsD(numM,3);
+                Lf = AResultsD(numM,4);
+                Hf = AResultsD(numM,5);
 
                 gateTAP = 1;
                 while gateTAP == 1
@@ -1596,22 +1676,55 @@ for I = 1:size(P,1)
             case 605
                 % 2D Contour Plot:
                 
-                disp(['[$] [605] Plotting Model #',num2str(numM)])
-                fname = ['Results from 2D Model #',num2str(numM)];
-                figure('Name',fname)
-
-                pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
-                                 'Contour','on', ...
-                                 'ColorMap','hot')
-                hold on
-                xaxis = [0,Tw+Tf+Tw];
-                yaxis = [-3*Lw/4,3*Lw/4];
-                axis([xaxis,yaxis])
-                axis square
-                title(fname)
-                xlabel('Thickness (m)')
-                ylabel('Length (m)')
-                hold off
+                gateP = 1;
+                while gateP == 1
+                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from AResults): ');
+    
+                    if qTRpa == -1
+                        % Create plot for all table values
+                        for numM = 1:size(ThermalResults,2)
+                        numMstr = num2str(numM);
+                        disp(['[$] [605] Plotting Model #',num2str(numM)])
+                        fname = ['Results from 2D Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
+                                         'Contour','on', ...
+                                         'ColorMap','hot')
+                        hold on
+                        xaxis = [0,Tw+Tf+Tw];
+                        yaxis = [-3*Lw/4,3*Lw/4];
+                        axis([xaxis,yaxis])
+                        axis square
+                        title(fname)
+                        xlabel('Thickness (m)')
+                        ylabel('Length (m)')
+                        hold off
+                        end
+                        gateP = 0;
+                    else
+                        % Create plot for specific value
+                        numM = qTRpa;
+                        numMstr = num2str(numM);
+                        disp(['[$] [605] Plotting Model #',num2str(numM)])
+                        fname = ['Results from 2D Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
+                                         'Contour','on', ...
+                                         'ColorMap','hot')
+                        hold on
+                        xaxis = [0,Tw+Tf+Tw];
+                        yaxis = [-3*Lw/4,3*Lw/4];
+                        axis([xaxis,yaxis])
+                        axis square
+                        title(fname)
+                        xlabel('Thickness (m)')
+                        ylabel('Length (m)')
+                        hold off
+                        gateP = input('[?] [605] Would you like to plot anything else? (1 = y, 0 = n): ');
+                    end
+                end
             case 606
                 % 2D Temperature at Point
                 
@@ -1619,8 +1732,8 @@ for I = 1:size(P,1)
                 Tw = str2double(Specifications{6,1});
                 Lw = str2double(Specifications{7,1});
 
-                Tf = FAResultsD(numM,3);
-                Lf = FAResultsD(numM,4);
+                Tf = AResultsD(numM,3);
+                Lf = AResultsD(numM,4);
 
                 gateTAP = 1;
                 while gateTAP == 1
