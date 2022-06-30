@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A14
+%% ThermalWallModel v2.A15
 % Updated on June 29 2022
 % Created by Jackson Kustell
 
@@ -1125,7 +1125,7 @@ for I = 1:size(P,1)
                 end
             case 209
                 % Save Thermal Results Logs
-                save(ModelSavename,"ThermalResults","numM",'-v7.3')
+                save(ResultsSavename,"ThermalResults","numM",'-v7.3')
                 disp(['[+] [209] Thermal Results have been saved as ',ResultsSavename])
             case 210
                 if run210 == 1
