@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.10
+%% ThermalWallModel v2.A13
 % Updated on June 29 2022
 % Created by Jackson Kustell
 
@@ -1661,22 +1661,53 @@ for I = 1:size(P,1)
             case 605
                 % 2D Contour Plot:
                 
-                disp(['[$] [605] Plotting Model #',num2str(numM)])
-                fname = ['Results from 2D Model #',num2str(numM)];
-                figure('Name',fname)
-
-                pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
-                                 'Contour','on', ...
-                                 'ColorMap','hot')
-                hold on
-                xaxis = [0,Tw+Tf+Tw];
-                yaxis = [-3*Lw/4,3*Lw/4];
-                axis([xaxis,yaxis])
-                axis square
-                title(fname)
-                xlabel('Thickness (m)')
-                ylabel('Length (m)')
-                hold off
+                gateP = 1;
+                while gateP == 1
+                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from FAResults): ');
+    
+                    if qTRpa == -1
+                        for numM = 1:size(ThermalResults,2)
+                        numMstr = num2str(numM);
+                        disp(['[$] [605] Plotting Model #',num2str(numM)])
+                        fname = ['Results from 2D Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
+                                         'Contour','on', ...
+                                         'ColorMap','hot')
+                        hold on
+                        xaxis = [0,Tw+Tf+Tw];
+                        yaxis = [-3*Lw/4,3*Lw/4];
+                        axis([xaxis,yaxis])
+                        axis square
+                        title(fname)
+                        xlabel('Thickness (m)')
+                        ylabel('Length (m)')
+                        hold off
+                        end
+                        gateP = 0;
+                    else
+                        numM = qTRpa;
+                        numMstr = num2str(numM);
+                        disp(['[$] [605] Plotting Model #',num2str(numM)])
+                        fname = ['Results from 2D Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        pdeplot(ThermalModel{numM},'XYData',ThermalResults{numM}.Temperature(:), ...
+                                         'Contour','on', ...
+                                         'ColorMap','hot')
+                        hold on
+                        xaxis = [0,Tw+Tf+Tw];
+                        yaxis = [-3*Lw/4,3*Lw/4];
+                        axis([xaxis,yaxis])
+                        axis square
+                        title(fname)
+                        xlabel('Thickness (m)')
+                        ylabel('Length (m)')
+                        hold off
+                        gateP = input('[?] [605] Would you like to plot anything else? (1 = y, 0 = n): ');
+                    end
+                end
             case 606
                 % 2D Temperature at Point
                 
