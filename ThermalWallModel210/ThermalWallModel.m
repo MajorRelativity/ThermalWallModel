@@ -215,7 +215,9 @@ ColstrT2 = '\n    Generate Geometry:';
 ColstrT3 = '\n    Analysis:';
 ColstrT4 = '\n    Solve Models';
 
-ColstrInput = '\n    Input: ';
+ColstrInput = '\n  Input: ';
+ColstrQuit = '\n -1 = Quit ';
+ColstrRun = '\n  0 = Run with Nothing Else ';
 Colstr3DT = '\n  1 - 50: 3D Model';
 
 Colstr1 = '\n      1 = Generate Single Geometry ';
@@ -243,7 +245,7 @@ Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57...
     ColstrT3,Colstr56,...
     ColstrT4,Colstr58];
-Colstr = [Colstr3D,Colstr2D,ColstrInput];
+Colstr = [Colstr3D,Colstr2D];
 
 
 % Create Variables:
@@ -254,9 +256,9 @@ numC = 1;
 while gateC == 1
     switch numC
         case 1
-            qCollection(numC) = input(['[?] What would you like to do?','\n   -1 = Quit ',Colstr]);
+            qCollection(numC) = input(['[?] What would you like to do?',Colstr,ColstrQuit,ColstrInput]);
         otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?','\n   -1 = Quit ','\n    0 = Run with Nothing Else ',Colstr]);
+            qCollection(numC) = input(['[?] What else would you like to do?',Colstr,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
     switch qCollection(numC)
