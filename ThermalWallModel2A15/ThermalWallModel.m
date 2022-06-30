@@ -1,6 +1,5 @@
-%% ThermalWallModel v2.A15
+%% ThermalWallModel v2.A16
 % Updated on June 29 2022
-% Created by Jackson Kustell
 
 clear
 addpath("Functions")
@@ -122,7 +121,7 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 201; % 201 = save, 202 = load
+qMS = 202; % 201 = save, 202 = load
 
 % Model Type ("transient", "steadystate")
 modelType = "steadystate";
@@ -176,6 +175,7 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
+%Hmax = 20*10^-3;
 Hmax = 5*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
@@ -189,10 +189,20 @@ qPar = 0; % Use Parallel Processing
 
 %% Save or Load Model Specifications
 
+% Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
     mkdir ModelSpecifications
 end
 
+% Tells user current mode:
+switch qMS
+    case 201
+        disp('[#] ModelSpecifications are currently in mode: SAVE')
+    case 202
+        disp('[#] ModelSpecifications are currently in mode: LOAD')
+end
+
+% Specify current model specifications
 MSN = input('[?] Choose a Model Specification #: ');
 MS = ['ModelSpecifications/ModelSpecification',num2str(MSN),'.mat'];
 
@@ -393,7 +403,7 @@ for C = qCollection
             end
        case 51            
             % Program #51 - 2D Generate Geometry
-            prePline = [101 111 104 108 114 51]; %prePrograms always end with their program ID #
+            prePline = [101 112 111 104 108 114 51]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -563,7 +573,7 @@ end
 disp('[&] Initializing Collections')
 
 % Max Program Size:
-maxP = 13;
+maxP = 15;
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -715,7 +725,6 @@ for preI = 1:size(preP,1)
             case 117
                 % Create 3D Data Save File:
                 DataSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss')];
-                mkdir(DataSavename)
                 disp('[+] [117] Current Data Directory Created')
             case 118
                 % Automatically Create ModelSavename
