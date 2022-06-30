@@ -17,7 +17,7 @@ elseif nargin == 4
     Lf = Lfs;
     Tf = Tfs;
 
-    save wallGeometry.mat
+    save("Functions/wallGeometry.mat")
 else
     disp('[!] Invalid number of arguments in wallGeometry.m')
 end

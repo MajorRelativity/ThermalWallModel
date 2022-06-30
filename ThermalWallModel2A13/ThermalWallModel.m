@@ -1,8 +1,9 @@
-%% ThermalWallModel v2.A13
+%% ThermalWallModel v2.A14
 % Updated on June 29 2022
 % Created by Jackson Kustell
 
 clear
+addpath("Functions")
 
 %% Documentation:
 
@@ -743,7 +744,7 @@ for preI = 1:size(preP,1)
 
             case 2
                 % Collection #2 - Run Model From Geometry
-                Pline = [2 204 301 501 404 405 502 503 504 505 506 205 207 209 211]; % All collections must start with their collection #
+                Pline = [2 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -824,7 +825,7 @@ for preI = 1:size(preP,1)
 
             case 52
                 % Collection #52 - Run Model From Geometry
-                Pline = [52 204 301 501 404 405 502 503 504 505 506 205 207 209 211]; % All collections must start with their collection #
+                Pline = [52 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -945,7 +946,7 @@ for preI = 1:size(preP,1)
                 end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 408 409 507 504 508 205 207 209 211]; % All collections must start with their collection #
+                Pline = [58 204 408 409 507 504 508 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -1137,7 +1138,9 @@ for I = 1:size(P,1)
                 end
             case 211
                 % Create DataLog Folder:
-                mkdir(DataSavename)
+                if ~exist(DataSavename,'dir')
+                    mkdir(DataSavename)
+                end
             case 301
                 % Select Thermal Model Number:
                 if run301 == 1
@@ -1303,9 +1306,9 @@ for I = 1:size(P,1)
                     timeri(numM) = datetime('now')
 
                     numMstr = num2str(numM);
-                    disp(['[$] [409] [Model ',numMstr,'] ','Solving Model'])
+                    disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
                     ThermalResults{numM} = solve(ThermalModel{numM});
-                    disp(['[+] [409] [Model ',numMstr,'] ','Model Solved'])
+                    disp(['[*] [409] [Model ',numMstr,'] ','Model Solved'])
 
                     timerf(numM) = datetime('now')
                 end
@@ -1666,6 +1669,7 @@ for I = 1:size(P,1)
                     qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from FAResults): ');
     
                     if qTRpa == -1
+                        % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
                         numMstr = num2str(numM);
                         disp(['[$] [605] Plotting Model #',num2str(numM)])
@@ -1687,6 +1691,7 @@ for I = 1:size(P,1)
                         end
                         gateP = 0;
                     else
+                        % Create plot for specific value
                         numM = qTRpa;
                         numMstr = num2str(numM);
                         disp(['[$] [605] Plotting Model #',num2str(numM)])
