@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A21
+%% ThermalWallModel v2.22
 % Updated on June 29 2022
 
 clear
@@ -121,15 +121,15 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 201; % 201 = save, 202 = load
+qMS = 202; % 201 = save, 202 = load
 
 % Model Type ("transient", "steadystate")
 modelType = "steadystate";
 qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
 
 % Shape of Wall:
-%FoamThickness = 2.54 * 10^-2; %m
-FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
+FoamThickness = 2.54 * 10^-2; %m
+%FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
 FoamLength = 45.6 * 10^-2; %m
 FoamHeight = FoamLength; 
 
@@ -143,7 +143,7 @@ WallHeight = WallLength;
 ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
 ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
-StudPosition = 90; % Location of the center of the stud on the diagram
+StudPosition = 0; % Location of the center of the stud on the diagram
 StudLength = 0.0381; % Length of the stud along the y directoin in meters
 
 MassDensity = 24; % Mass Density for the Wall kg/m^3
@@ -177,8 +177,8 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-%Hmax = 20*10^-3;
-Hmax = 2*10^-4; % Max Mesh Length
+Hmax = 20*10^-3;
+%Hmax = 2*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
