@@ -8,8 +8,9 @@ switch propertyStyle
         % Variables:
         Lp = .302; %Plate Length
         Tp = 0.0015875; % Plate Thickness
-        TCp = 236; %Plate Thermal Conductivity
-        
+        %TCp = 236; %Plate Thermal Conductivity
+        TCp = 1;
+
         % Pieces:
         Plate = (Tw<=location.x & Tw+Tp>=location.x).*((Lp/2>location.y & -Lp/2<location.y).*TCp + (Lp/2<=location.y | -Lp/2>=location.y).*TCw);
         Stud = ((location.y>SPu | location.y<SPl).*TCw + (location.y>=SPl & location.y<=SPu).*TCs);

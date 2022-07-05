@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.20
+%% ThermalWallModel v2.A21
 % Updated on June 29 2022
 
 clear
@@ -143,7 +143,7 @@ WallHeight = WallLength;
 ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
 ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
-StudPosition = 0; % Location of the center of the stud on the diagram
+StudPosition = 90; % Location of the center of the stud on the diagram
 StudLength = 0.0381; % Length of the stud along the y directoin in meters
 
 MassDensity = 24; % Mass Density for the Wall kg/m^3
@@ -178,7 +178,7 @@ timeStep = 60; %The step between when the model calculates s
 %Hmin = Hmax*HdeltaP;
 
 %Hmax = 20*10^-3;
-Hmax = 5*10^-4; % Max Mesh Length
+Hmax = 2*10^-4; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -1116,8 +1116,7 @@ for I = 1:size(P,1)
                     % Load Foam Analysis Logs
                     disp('[?] Choose the Log file you would like to load: ')
                     [filenameAL, pathnameAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
-                    addpath(pathnameAL)
-                    load(filenameAL)
+                    load([pathnameAL,filenameAL])
                     disp(['[+] [206] File ',filenameAL,' has been loaded!'])
                 end
             case 207
@@ -1129,8 +1128,7 @@ for I = 1:size(P,1)
                     % Load Thermal Model Logs
                     disp('[?] Choose the Meshed Thermal Model file you would like to load: ')
                     [filenameTML, pathnameTML] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
-                    addpath(pathnameTML)
-                    load(filenameTML)
+                    load([pathnameTML,filenameTML])
                     disp(['[+] [208] File ',filenameTML,' has been loaded!'])
                 end
             case 209
@@ -1142,8 +1140,7 @@ for I = 1:size(P,1)
                     % Load Thermal Results Logs
                     disp('[?] Choose the Thermal Results file you would like to load: ')
                     [filenameTRL, pathnameTRL] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
-                    addpath(pathnameTML)
-                    load(filenameTRL)
+                    load([pathnameTRL,filenameTRL])
                     disp(['[+] [210] File ',filenameTRL,' has been loaded!'])
                 end
             case 211
@@ -1259,7 +1256,9 @@ for I = 1:size(P,1)
             case 405
                 % Solve Single Thermal Model
                 disp(['[$] [405] [Model ',numMstr,'] ','Solving Model'])
-                ThermalResults{numM} = solve(ThermalModel{numM});
+                thermalmodel = ThermalModel{numM};
+                thermalresults = solve(thermalmodel);
+                ThermalResults{numM} = thermalresults;
                 disp(['[+] [405] [Model ',numMstr,'] ','Model Solved'])
 
             case 406
