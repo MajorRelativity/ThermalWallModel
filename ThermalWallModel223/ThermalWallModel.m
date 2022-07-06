@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.22
-% Updated on July 5 2022
+%% ThermalWallModel v2.23
+% Updated on July 6 2022
 
 clear
 addpath("Functions")
@@ -121,10 +121,14 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 202; % 201 = save, 202 = load
+qMS = 201; % 201 = save, 202 = load
+
+% Overrides:
+run504 = 0; % Change to 0 if time2num is not installed on your machine
+OldVersion = 1; % Choose if you are running an old version of matlab
 
 % Model Type ("transient", "steadystate")
-modelType = "steadystate";
+modelType = 'steadystate';
 qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
 
 % Shape of Wall:
@@ -1348,26 +1352,40 @@ for I = 1:size(P,1)
                 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
             case 504
                 % Duration with time2num
-                duration = timerf(:) - timeri(:);
-                duration = time2num(duration(:),'seconds');
+                duration = -1*ones(size(timerf,1),1);
+                if run504 == 1
+                    duration = timerf(:) - timeri(:);
+                    duration = time2num(duration(:),'seconds');
+                end
             case 505
                 % Collect Foam Analysis Result Variables
 
                 if all(modelStyle=='2D')
                     Hf = -1;
                 end
-
+                
+                modelTypeSTR = string(modelType);
+                
                 AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
+                Specifications = [modelTypeSTR,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
-
-                Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
-                    'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
-                AResults = array2table(AResultsD,...
-                    'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
-                disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
+                switch OldVersion
+                    case 0
+                        Specifications = array2table(Specifications,...
+                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
+                            'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
+                        AResults = array2table(AResultsD,...
+                            'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
+                        disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
+                    case 1
+                        Specifications = array2table(Specifications,...
+                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
+                            'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
+                        AResults = array2table(AResultsD,...
+                            'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
+                        disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
+                end
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
@@ -1411,19 +1429,32 @@ for I = 1:size(P,1)
                 i = (1:numM)';
 
                 % Create Double Arrays:
+                
+                modelTypeSTR = string(modelType);
+                
                 AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
                 Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
                     ThermalConductivityWall,ThermalConductivityStud,modelStyle,propertyStyle]';
                 
                 % Create Foam Analysis Result Tables
-
-                Specifications = array2table(Specifications,...
-                    'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
-                    'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
-                AResults = array2table(AResultsD,...
-                    'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
-                    'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
-                disp(['[+] [508] ','Foam Analysis Results Tables Created'])
+                switch OldVersion
+                    case 0
+                        Specifications = array2table(Specifications,...
+                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                            'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
+                        AResults = array2table(AResultsD,...
+                            'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
+                            'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
+                        disp(['[+] [508] ','Foam Analysis Results Tables Created'])
+                    case 1
+                        Specifications = array2table(Specifications,...
+                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                            'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
+                        AResults = array2table(AResultsD,...
+                            'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall',...
+                            'TempAtIntersection','YPosInMeters'});
+                        disp(['[+] [508] ','Foam Analysis Results Tables Created'])
+                end
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
