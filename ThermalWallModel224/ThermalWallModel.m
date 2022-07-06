@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.24
+%% ThermalWallModel v2.25
 % Updated on July 6 2022
 
 clear
@@ -121,7 +121,7 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 202; % 201 = save, 202 = load
+qMS = 201; % 201 = save, 202 = load
 
 % Overrides:
 run504 = 0; % Change to 0 if time2num is not installed on your machine
@@ -148,7 +148,7 @@ ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
 ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
 StudPosition = 0; % Location of the center of the stud on the diagram
-StudLength = 0.0381; % Length of the stud along the y directoin in meters
+StudLength = 0.0381; % Length of the stud along the y direction in meters
 
 MassDensity = 24; % Mass Density for the Wall kg/m^3
 SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
@@ -181,8 +181,8 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-%Hmax = 20*10^-3;
-Hmax = 2.1*10^-3; % Max Mesh Length
+Hmax = 20*10^-3;
+%Hmax = 2.1*10^-3; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -638,7 +638,7 @@ for preI = 1:size(preP,1)
                     MN = input('[?] [104] Choose a Thermal Model File ID Number #: ');
                     MNstr = num2str(MN);
                     run104 = 0;
-                    disp(['[#] [104] Script Will Pull From and Save To Model: ',MN])
+                    disp(['[#] [104] Script Will Pull From and Save To Model: ',num2str(MN)])
                 end
             case 105
                 % Create Log Directory
@@ -859,7 +859,7 @@ for preI = 1:size(preP,1)
                 end
             case 53
                 % Collection #53 - 2D Contour Plot
-                Pline = [53 206 210 605]; % All collections must start with their collection #
+                Pline = [53 206 208 210 605]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -1244,7 +1244,7 @@ for I = 1:size(P,1)
 
                     gateV = input(['[?] [403] [Model ',numMstr,'] ','Does this model look correct? (1 = y, 0 = n): ']);
                     if gateV == 0
-                        disp(['[!] [403] [Model ',numMstr,'] ',"You likely didn't assign the sides correctly, try again!"])
+                        disp(['[!] [403] [Model ',numMstr,'] ','You likely did not choose the faces correctly, try again!'])
                     else
                         ThermalModel{numM} = thermalmodel;
                         disp(['[+] [403] [Model ',numMstr,'] ','Geometry Verified'])
