@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.23
+%% ThermalWallModel v2.24
 % Updated on July 6 2022
 
 clear
@@ -121,7 +121,7 @@ Process ID:
 %% Model Specifications (User Edited):
 
 % Specification Mode:
-qMS = 201; % 201 = save, 202 = load
+qMS = 202; % 201 = save, 202 = load
 
 % Overrides:
 run504 = 0; % Change to 0 if time2num is not installed on your machine
@@ -181,8 +181,8 @@ timeStep = 60; %The step between when the model calculates s
 %HdeltaP = .10; % Percent of Hmax Hmin is
 %Hmin = Hmax*HdeltaP;
 
-Hmax = 20*10^-3;
-%Hmax = 2*10^-4; % Max Mesh Length
+%Hmax = 20*10^-3;
+Hmax = 2.1*10^-3; % Max Mesh Length
 HdeltaP = .10; % Percent of Hmax Hmin is
 Hmin = Hmax*HdeltaP;
 
@@ -648,7 +648,7 @@ for preI = 1:size(preP,1)
                 end
             case 106
                 % Automatically Create ResultsSavename
-                ResultsSavename = [DataSavename,'/ThermalResults ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                ResultsSavename = [DataSavename,'/ThermalResults ',datestr(now,'yyyy-mm-dd HH-MM-ss'),'.mat'];
                 disp(['[+] [106] Thermal Results will be saved to',ResultsSavename])
             case 107
                 % 3D Model Style
@@ -660,7 +660,7 @@ for preI = 1:size(preP,1)
                 disp(['[+] [108] Model Style set to: ',modelStyle])
             case 109
                 % Create LogSavename
-                LogSavename = [DataSavename,'/AnalysisResults ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                LogSavename = [DataSavename,'/AnalysisResults ',datestr(now,'yyyy-mm-dd HH-MM-ss'),'.mat'];
                 disp(['[+] [109] Logs will be saved to',LogSavename]) 
             case 110
                 % 2D Foam Analysis - Matrix Creation
@@ -725,15 +725,15 @@ for preI = 1:size(preP,1)
                 disp('[+] [115] Stud Matrix Created')
             case 116
                 % Create 2D Data Save File:
-                DataSavename = ['ThermalData/2DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss')];
+                DataSavename = ['ThermalData/2DLogData ',datestr(now,'yyyy-mm-dd HH-MM-ss')];
                 disp('[+] [116] Current Data Directory Created')
             case 117
                 % Create 3D Data Save File:
-                DataSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH:MM:ss')];
+                DataSavename = ['ThermalData/3DLogData ',datestr(now,'yyyy-mm-dd HH-MM-ss')];
                 disp('[+] [117] Current Data Directory Created')
             case 118
                 % Automatically Create ModelSavename
-                ModelSavename = [DataSavename,'/MeshedModels ',datestr(now,'yyyy-mm-dd HH:MM:ss'),'.mat'];
+                ModelSavename = [DataSavename,'/MeshedModels ',datestr(now,'yyyy-mm-dd HH-MM-ss'),'.mat'];
                 disp(['[+] [109] Meshed Models will be saved to',ModelSavename]) 
             case 1
                 % Collection #1 - Generate Geometry
