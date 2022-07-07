@@ -118,7 +118,8 @@ Process ID:
 
 %}
 
-%% Model Specifications (User Edited):
+%% General Model Specifications (User Edited):
+% These will NOT be overwritten by the preset
 
 % Specification Mode:
 qMS = 201; % 201 = save, 202 = load
@@ -131,12 +132,39 @@ OldVersion = 1; % Choose if you are running an old version of matlab
 modelType = 'steadystate';
 qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
 
+% Indoor Boundary Conditions: (BC stays constant in time):
+TempwI = 309; %Interior Wall Temperature K
+
+% Outdoor Boundary Conditions :
+TempwO = 295; %Outdoor Wall Temperature K
+
+% Mesh Settings
+Hmax = 2.1*10^-3; % Max Mesh Length
+Hdelta = .10; % Percent of Hmax Hmin is
+Hmin = Hmax*Hdelta;
+
+% Foam Modification Settings:
+FstepT = 1; % Step size between foam trials for thickness
+FstepH = .1;% Step size between foam trials for thickness
+FstepL = .1; % Step size between foam trials for length
+qSF = 1; %Only analyze square foam sizes?
+
+%% Specific Model Specifications (User Edited):
+
+% Property Style:
+%{ 
+- 'GenericStud' = Traditional stud style
+- 'TimeMachine' = Recreates the bottem seciton of time machine. Stud 
+    through middle with difference for plywood section
+
+%}
+propertyStyle = 'TimeMachine'; 
+
 % Shape of Wall:
 FoamThickness = 2.54 * 10^-2; %m
 %FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
 FoamLength = 45.6 * 10^-2; %m
 FoamHeight = FoamLength; 
-
 
 %WallThickness = 5.08 * 10^-2; %m Generic Setting
 WallThickness = 0.0635; %m Time Machine setting
@@ -150,49 +178,23 @@ ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
 StudPosition = 0; % Location of the center of the stud on the diagram
 StudLength = 0.0381; % Length of the stud along the y direction in meters
 
-MassDensity = 24; % Mass Density for the Wall kg/m^3
-SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
-
-% Choose How Thermal Properties generate
-propertyStyle = 'TimeMachine'; 
-    % 'GenericStud' = Traditional stud style
-    % 'TimeMachine' = Recreates the bottem seciton of time machine. Stud
-    % through middle with difference for plywood section
-
 % Wall and Foam R Values. Foam Adjustment Settings:
 Rw = 10  + .63; 
 Rf = 5;
 
-% Indoor Boundary Conditions: (BC stays constant in time):
-TempwI = 309; %Interior Wall Temperature K
+%% Model Specification Preset (User Edited):
+% If a preset is applied, then it will overwrite all of the above settings
+%{
+'None' - No Preset, Above Specifications are used
+'Generic' - Generic Wall with No Studs
 
-% Outdoor Boundary Conditions :
-TempwO = 295; %Outdoor Wall Temperature K
-
-% Inside Wall Temperature Initial Condition: (Only applies to transient. IC are flexable with time)
-Tempi = 300; %Interior Temperature K
-
-%Time Conditions:
-timeE = 60*30; %End Time s
-timeStep = 60; %The step between when the model calculates s
-
-%Initial Mesh Specifications:
-%Hmax = 2.1*10^-3; % Max Mesh Length
-%HdeltaP = .10; % Percent of Hmax Hmin is
-%Hmin = Hmax*HdeltaP;
-
-Hmax = 20*10^-3;
-%Hmax = 2.1*10^-3; % Max Mesh Length
-HdeltaP = .10; % Percent of Hmax Hmin is
-Hmin = Hmax*HdeltaP;
-
-% Foam Modification Settings:
-FstepT = 1; % Step size between foam trials for thickness
-FstepH = .1;% Step size between foam trials for thickness
-FstepL = .1; % Step size between foam trials for length
-qSF = 1; %Only analyze square foam sizes?
+%}
+Preset = 'None';
 
 %% Save or Load Model Specifications
+
+% Apply Presets:
+msPreset(Preset)
 
 % Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
@@ -1367,20 +1369,20 @@ for I = 1:size(P,1)
                 modelTypeSTR = string(modelType);
                 
                 AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [modelTypeSTR,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
+                Specifications = [modelTypeSTR,Hmax,Hdelta,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
                 switch OldVersion
                     case 0
                         Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
+                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
                             'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
                         disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
                     case 1
                         Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
+                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
                             'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
@@ -1433,14 +1435,14 @@ for I = 1:size(P,1)
                 modelTypeSTR = string(modelType);
                 
                 AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
-                Specifications = [modelType,Hmax,HdeltaP,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
+                Specifications = [modelTypeSTR,Hmax,Hdelta,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
                     ThermalConductivityWall,ThermalConductivityStud,modelStyle,propertyStyle]';
                 
                 % Create Foam Analysis Result Tables
                 switch OldVersion
                     case 0
                         Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
                             'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
@@ -1448,7 +1450,7 @@ for I = 1:size(P,1)
                         disp(['[+] [508] ','Foam Analysis Results Tables Created'])
                     case 1
                         Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','HdeltaP (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
                             'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall',...
@@ -1847,5 +1849,43 @@ for I = 1:size(P,1)
     % Finish Collection:
     disp(['[=] Collection #',num2str(P(I,1)),' Finished'])
 end      
+
+%% Model Specification Presets: 
+
+function [] = msPreset(Preset)
+    switch Preset
+        case 'None'
+            disp('[~] No MSPreset has been applied')
+        case 'TimeMachine'
+            
+            % Property Style:
+            propertyStyle = 'TimeMachine'; 
+
+            % Shape of Wall:
+            FoamThickness = 2.54 * 10^-2; %m
+            %FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
+            FoamLength = 45.6 * 10^-2; %m
+            FoamHeight = FoamLength; 
+
+            %WallThickness = 5.08 * 10^-2; %m Generic Setting
+            WallThickness = 0.0635; %m Time Machine setting
+            WallLength = 90 * 10^-2; %m 
+            WallHeight = WallLength;
+
+            % Wall Thermal Properties:
+            ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
+
+            ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
+            StudPosition = 0; % Location of the center of the stud on the diagram
+            StudLength = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            Rw = 10  + .63; 
+            Rf = 5;
+            
+    end
+
+
+end
 
 
