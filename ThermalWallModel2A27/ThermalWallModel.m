@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.25
-% Updated on July 6 2022
+%% ThermalWallModel v2.A27
+% Updated on July 7 2022
 
 clear
 addpath("Functions")
@@ -37,7 +37,7 @@ Process ID:
 
 100) PreRun
 
-    101) Foam Name Translation
+    101) Name Translation
     102) 3D Foam Analysis - Matrix Creation
     103) 3D Foam Matrix if no Foam Analysis
     104) Specify Thermal Model File Identification Number
@@ -122,32 +122,32 @@ Process ID:
 % These will NOT be overwritten by the preset
 
 % Specification Mode:
-qMS = 201; % 201 = save, 202 = load
+MSD.msMode = 201; % 201 = save, 202 = load
 
 % Overrides:
-run504 = 0; % Change to 0 if time2num is not installed on your machine
-OldVersion = 1; % Choose if you are running an old version of matlab
+MSD.Overrides.run504 = 0; % Change to 0 if time2num is not installed on your machine
+MSD.Overrides.OldVersion = 1; % Choose if you are running an old version of matlab
 
 % Model Type ("transient", "steadystate")
-modelType = 'steadystate';
-qRM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
+MSD.modelType = 'steadystate';
+MSD.q.RM = 0; % Use reduced size mode? (1 = yes, 0 = no). Uses only the upper left quadrant
 
 % Indoor Boundary Conditions: (BC stays constant in time):
-TempwI = 309; %Interior Wall Temperature K
+MSD.BC.TempwI = 309; %Interior Wall Temperature K
 
 % Outdoor Boundary Conditions :
-TempwO = 295; %Outdoor Wall Temperature K
+MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-Hmax = 2.1*10^-3; % Max Mesh Length
-Hdelta = .10; % Percent of Hmax Hmin is
-Hmin = Hmax*Hdelta;
+MSD.Mesh.Hmax = 2.1*10^-3; % Max Mesh Length
+MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
+MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
 % Foam Modification Settings:
-FstepT = 1; % Step size between foam trials for thickness
-FstepH = .1;% Step size between foam trials for thickness
-FstepL = .1; % Step size between foam trials for length
-qSF = 1; %Only analyze square foam sizes?
+MSD.FMod.FstepT = 1; % Step size between foam trials for thickness
+MSD.FMod.FstepH = .1;% Step size between foam trials for thickness
+MSD.FMod.FstepL = .1; % Step size between foam trials for length
+MSD.q.SF = 1; %Only analyze square foam sizes?
 
 %% Specific Model Specifications (User Edited):
 
@@ -158,43 +158,43 @@ qSF = 1; %Only analyze square foam sizes?
     through middle with difference for plywood section
 
 %}
-propertyStyle = 'TimeMachine'; 
+MSD.propertyStyle = 'TimeMachine'; 
 
 % Shape of Wall:
-FoamThickness = 2.54 * 10^-2; %m
-%FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
-FoamLength = 45.6 * 10^-2; %m
-FoamHeight = FoamLength; 
+MSD.Foam.Thickness = 2.54 * 10^-2; %m
+MSD.Foam.Length = 45.6 * 10^-2; %m
+MSD.Foam.Height = MSD.Foam.Length; 
 
-%WallThickness = 5.08 * 10^-2; %m Generic Setting
-WallThickness = 0.0635; %m Time Machine setting
-WallLength = 90 * 10^-2; %m 
-WallHeight = WallLength;
+MSD.Wall.Thickness = 5.08 * 10^-2; %m Generic Setting
+MSD.Wall.Length = 90 * 10^-2; %m 
+MSD.Wall.Height = MSD.Wall.Length;
 
 % Wall Thermal Properties:
-ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
+MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
-ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
-StudPosition = 0; % Location of the center of the stud on the diagram
-StudLength = 0.0381; % Length of the stud along the y direction in meters
+% Stud:
+MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
 % Wall and Foam R Values. Foam Adjustment Settings:
-Rw = 10  + .63; 
-Rf = 5;
+MSD.Wall.R = 10  + .63; 
+MSD.Foam.R = 5;
 
 %% Model Specification Preset (User Edited):
 % If a preset is applied, then it will overwrite all of the above settings
 %{
 'None' - No Preset, Above Specifications are used
-'Generic' - Generic Wall with No Studs
+'Generic' - Generic Wall with Generic Stud Positioning if Needed
+'TimeMachine' - Time Machine Wall with Plate
 
 %}
-Preset = 'None';
+MSD.Preset = 'None';
 
 %% Save or Load Model Specifications
 
 % Apply Presets:
-msPreset(Preset)
+msPreset(MSD)
 
 % Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
@@ -202,7 +202,7 @@ if ~exist('ModelSpecifications','dir')
 end
 
 % Tells user current mode:
-switch qMS
+switch MSD.msMode
     case 201
         disp('[#] ModelSpecifications are currently in mode: SAVE')
     case 202
@@ -210,18 +210,18 @@ switch qMS
 end
 
 % Specify current model specifications
-MSN = input('[?] Choose a Model Specification #: ');
-MS = ['ModelSpecifications/ModelSpecification',num2str(MSN),'.mat'];
+MSD.MSN = input('[?] Choose a Model Specification #: ');
+MS = ['ModelSpecifications/ModelSpecification',num2str(MSD.MSN),'.mat'];
 
-switch qMS
+switch MSD.msMode
     
     case 201
-        savedate = datetime('now');
-        save(MS)
-        disp(['[+] Model Specifications have been saved to ',MS,' at ',datestr(savedate)])
+        MSD.savedate = datetime('now');
+        save(MS,'MSD')
+        disp(['[+] Model Specifications have been saved to ',MS,' at ',datestr(MSD.savedate)])
     case 202
         load(MS)
-        disp(['[+] Model Specifications have been loaded from ',MS,' from ',datestr(savedate)])
+        disp(['[+] Model Specifications have been loaded from ',MS,' from ',datestr(MSD.savedate)])
 
 end
 
@@ -590,22 +590,31 @@ for preI = 1:size(preP,1)
                 % Ignore
                 break
             case 101
-                % Foam Name Translation:
-                Tf = FoamThickness;
-                Lf = FoamLength;
-                Hf = FoamHeight;
-                Tw = WallThickness;
-                Lw = WallLength;
-                Hw = WallHeight;
+                % Name Translation
+                % Foam and Wall Name Translation:
+                Tf = MSD.Foam.Thickness;
+                Lf = MSD.Foam.Length;
+                Hf = MSD.Foam.Height;
+                Tw = MSD.Wall.Thickness;
+                Lw = MSD.Wall.Length;
+                Hw = MSD.Wall.Height;
 
-                disp('[+] [101] Foam Names Translated')
+                % R Value Name Translation:
+                Rw = MSD.Wall.R;
+                Rf = MSD.Foam.R;
+
+                % Mesh Name Translation
+                Hmax = MSD.Mesh.Hmax;
+                Hmin = MSD.Mesh.Hmin;
+
+                disp('[+] [101] Names Translated')
 
             case 102
                 % 3D Foam Analysis - Matrix Creation
 
-                Tfm = Tf:-FstepT:0;
-                Lfm = Lf:-FstepL:0;
-                Hfm = Hf:-FstepH:0;
+                Tfm = Tf:-MSD.FMod.FstepT:0;
+                Lfm = Lf:-MSD.FMod.FstepL:0;
+                Hfm = Hf:-MSD.FMod.FstepH:0;
                 [Tfm, Lfm, Hfm] = meshgrid(Tfm,Lfm,Hfm);
 
                 Logic = Tfm > 0 & Lfm > 0 &  Hfm > 0;
@@ -613,7 +622,7 @@ for preI = 1:size(preP,1)
                 Lfm = Lfm(Logic);
                 Hfm = Hfm(Logic);
 
-                if qSF == 1
+                if MSD.q.SF == 1
                     Logic = Hfm == Lfm;
                     Tfm = Tfm(Logic);
                     Lfm = Lfm(Logic);
@@ -667,8 +676,8 @@ for preI = 1:size(preP,1)
             case 110
                 % 2D Foam Analysis - Matrix Creation
 
-                Tfm = Tf:-FstepT:0;
-                Lfm = Lf:-FstepL:0;
+                Tfm = Tf:-MSD.FMod.FstepT:0;
+                Lfm = Lf:-MSD.FMod.FstepL:0;
                 [Tfm, Lfm] = meshgrid(Tfm,Lfm);
 
                 Logic = Tfm > 0 & Lfm > 0;
@@ -689,10 +698,10 @@ for preI = 1:size(preP,1)
                 disp('[+] [111] Foam Vector Created')
             case 112
                 % Thermal Property Translation
-                TCw = ThermalConductivityWall;
-                TCs = ThermalConductivityStud;
-                SP = StudPosition;
-                SL = StudLength;
+                TCw = MSD.Wall.TC;
+                TCs = MSD.Stud.TC;
+                SP = MSD.Stud.Pos;
+                SL = MSD.Stud.Length;
 
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
@@ -700,7 +709,7 @@ for preI = 1:size(preP,1)
                 % Note: 0.0381 m is the width of a 2 by 4
                 SPu = SP + SL/2; % Stud Size Upper Bound
                 SPl = SP - SL/2; % Stud Size Lower Bound
-                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,propertyStyle);
+                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
                 disp('[+] [113] Stud Location Defined')
             case 114
                 % Thermal Property if No Stud
@@ -1071,10 +1080,10 @@ for I = 1:size(P,1)
                 end
 
                 % Keep Savedate of ModelSpecifications file
-                savedateMS = savedate;
+                savedateMS = MSD.savedate;
 
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSD.MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
                 clear savedateMS
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
@@ -1099,7 +1108,7 @@ for I = 1:size(P,1)
                     load(MS)
                 end
 
-                if savedateMS ~= savedate
+                if savedateMS ~= MSD.savedate
                     disp(['[!] [204] [Model ',numMstr,'] ','It appears that the ModelSpecifications file associated with this model has been overwritten.'])
                     qContinue = input(['[?] [204] [Model ',numMstr,'] ','This could seriously mess with your results, are you sure you want to continue? (1 = y, 0 = n): ']);
                     
@@ -1172,7 +1181,7 @@ for I = 1:size(P,1)
                 SPc = SP(numM);
                 SPu = SPc + SL/2; % Stud Size Upper Bound
                 SPl = SPc - SL/2; % Stud Size Lower Bound
-                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,propertyStyle);
+                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
                 disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(SPc)])
 
             case 401
@@ -1184,13 +1193,13 @@ for I = 1:size(P,1)
                 end
                 numMstr = num2str(numM);
                 
-                thermalmodel = createpde('thermal',modelType);
+                thermalmodel = createpde('thermal',MSD.modelType);
                 ThermalModel{numM} = thermalmodel;
                 disp(['[+] [401] [Model ',numMstr,'] ','New Thermal Model Created'])
             case 402
                 % 3D Generate Single Geometry
                 disp(['[$] [402] [Model ',numMstr,'] ','Generating Geometry'])
-                ThermalModel{numM}.Geometry = modelshapew3D(thermalmodel,qRM,Lw,Hw,Tw,Lf,Hf,Tf);
+                ThermalModel{numM}.Geometry = modelshapew3D(thermalmodel,MSD.q.RM,Lw,Hw,Tw,Lf,Hf,Tf);
                 disp(['[+] [402] [Model ',numMstr,'] ','Geometry Generated'])
                 
             case 403
@@ -1218,11 +1227,11 @@ for I = 1:size(P,1)
 
                     figure(1)
 
-                    thermalBC(thermalmodel,'Face',IndoorF,'Temperature',TempwI); % These boundary conditions will be kept for the final model
-                    thermalBC(thermalmodel,'Face',[OutdoorFF,OutdoorWF],'Temperature',TempwO);
+                    thermalBC(thermalmodel,'Face',IndoorF,'Temperature',MSD.BC.TempwI); % These boundary conditions will be kept for the final model
+                    thermalBC(thermalmodel,'Face',[OutdoorFF,OutdoorWF],'Temperature',MSD.BC.TempwO);
 
 
-                    if all(modelType=="transient")
+                    if all(MSD.modelType=="transient")
 
                         thermalIC(thermalmodel,Tempi); % Initial Conditions only apply to tranient models
 
@@ -1234,7 +1243,7 @@ for I = 1:size(P,1)
                                                        'MassDensity',TMw,...
                                                        'SpecificHeat',TSw);
 
-                    elseif all(modelType=="steadystate")
+                    elseif all(MSD.modelType=="steadystate")
                         thermalProperties(thermalmodel,'ThermalConductivity',TC);
                     end
 
@@ -1279,7 +1288,7 @@ for I = 1:size(P,1)
                 
                 thermalmodel = ThermalModel{numM}; % Import Thermal Model from Cell
 
-                if all(modelType=="transient")
+                if all(MSD.modelType=="transient")
                     TCw = ThermalConductivity; 
                     TMw = MassDensity; 
                     TSw = SpecificHeat;
@@ -1291,14 +1300,14 @@ for I = 1:size(P,1)
                     thermalIC(thermalmodel,Tempi); % Apply Initial Condition
             
                     disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Transient'])            
-                elseif all(modelType=="steadystate")
+                elseif all(MSD.modelType=="steadystate")
                     thermalProperties(thermalmodel,'ThermalConductivity',TC);
                     disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Steady State'])
                 end
 
                 % Apply Boundary Conditions
-                thermalBC(thermalmodel,'Edge',1,'Temperature',TempwI);
-                thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',TempwO);   
+                thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
+                thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',MSD.BC.TempwO);   
 
                 ThermalModel{numM} = thermalmodel; % Re Apply to Cell
                 disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
@@ -1348,14 +1357,14 @@ for I = 1:size(P,1)
                 end
                 
                 % Find R Value and Percent Error:
-                dTempRatio = ((TempwI-TempwO)/(IntersectTemp-TempwO)); %Whole Wall dT / Foam dT
+                dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(IntersectTemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                 RwM = Rf * dTempRatio;
                 RwM = RwM - Rf;
                 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
             case 504
                 % Duration with time2num
                 duration = -1*ones(size(timerf,1),1);
-                if run504 == 1
+                if MSD.Overrides.run504 == 1
                     duration = timerf(:) - timeri(:);
                     duration = time2num(duration(:),'seconds');
                 end
@@ -1366,13 +1375,13 @@ for I = 1:size(P,1)
                     Hf = -1;
                 end
                 
-                modelTypeSTR = string(modelType);
+                MSD.modelTypeSTR = string(MSD.modelType);
                 
                 AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [modelTypeSTR,Hmax,Hdelta,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,ThermalConductivityWall,ThermalConductivityStud,modelStyle]';
+                Specifications = [MSD.modelTypeSTR,Hmax,MSD.Mesh.Hdelta,Rw,Rf,Tw,Lw,Hw,MSD.BC.TempwI,MSD.BC.TempwO,Tempi,MSD.Wall.TC,MSD.Stud.TC,modelStyle]';
             case 506
                 % Create Foam Analysis Result Tables
-                switch OldVersion
+                switch MSD.Overrides.OldVersion
                     case 0
                         Specifications = array2table(Specifications,...
                             'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
@@ -1402,7 +1411,7 @@ for I = 1:size(P,1)
                     end
                     
                     % Find R Value and Percent Error:
-                    dTempRatio = ((TempwI-TempwO)/(intersecttemp-TempwO)); %Whole Wall dT / Foam dT
+                    dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(intersecttemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                     RwM(numM,1) = Rf * dTempRatio;
                     RwM(numM,1) = RwM(numM,1) - Rf;
                     pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error
@@ -1432,14 +1441,14 @@ for I = 1:size(P,1)
 
                 % Create Double Arrays:
                 
-                modelTypeSTR = string(modelType);
+                MSD.modelTypeSTR = string(MSD.modelType);
                 
                 AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
-                Specifications = [modelTypeSTR,Hmax,Hdelta,Rw,Rf,Tw,Lw,Hw,TempwI,TempwO,Tempi,...
-                    ThermalConductivityWall,ThermalConductivityStud,modelStyle,propertyStyle]';
+                Specifications = [MSD.modelTypeSTR,Hmax,MSD.Mesh.Hdelta,Rw,Rf,Tw,Lw,Hw,MSD.BC.TempwI,MSD.BC.TempwO,Tempi,...
+                    MSD.Wall.TC,MSD.Stud.TC,modelStyle,MSD.propertyStyle]';
                 
                 % Create Foam Analysis Result Tables
-                switch OldVersion
+                switch MSD.Overrides.OldVersion
                     case 0
                         Specifications = array2table(Specifications,...
                             'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
@@ -1799,8 +1808,8 @@ for I = 1:size(P,1)
                 end
             case 607
                 % Create Figure:
-                disp(['[$] [607] Plotting Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
-                fname = ['Thermal Properties for propertyStyle: "',propertyStyle,'"'];
+                disp(['[$] [607] Plotting Current Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'])
+                fname = ['Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'];
                 figure('Name',fname)
 
                 % Create Mesh and Plot:
@@ -1808,14 +1817,14 @@ for I = 1:size(P,1)
                 [location.x,location.y] = meshgrid(linspace(0,Tw + Tf),linspace(-Lw/2,Lw/2));
                 X = location.x;
                 Y = location.y;
-                V = thermalProperties(location,-1,TCw,TCs,SPl,SPu,Tw,propertyStyle);
+                V = thermalProperties(location,-1,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
                 surf(X,Y,V,'LineStyle','none');
                 view(0,90)
                 title(fname)
                 xlabel('X (Thickness)')
                 ylabel('Y (Length)')
                 colorbar
-                disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',propertyStyle,'"'])
+                disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'])
                 disp('[#] [607] Note: The exact shape of the geometry is NOT shown, only the thermal properties')
                 
             case 701
@@ -1852,36 +1861,67 @@ end
 
 %% Model Specification Presets: 
 
-function [] = msPreset(Preset)
-    switch Preset
+function MSD = msPreset(MSD)
+    switch MSD.Preset
         case 'None'
             disp('[~] No MSPreset has been applied')
+        case 'Generic'
+            % Property Style:
+            MSD.propertyStyle = 'TimeMachine'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+            
+            MSD.Wall.Thickness = 0.0635; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Wall Thermal Properties:
+            MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+
+            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.R = 10  + .63; 
+            MSD.Foam.R = 5;
+            
+            % Message
+            disp('[=] MSPreset "TimeMachine" has been applied')
+
         case 'TimeMachine'
             
             % Property Style:
-            propertyStyle = 'TimeMachine'; 
+            MSD.propertyStyle = 'GenericStud'; 
 
             % Shape of Wall:
-            FoamThickness = 2.54 * 10^-2; %m
-            %FoamThickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
-            FoamLength = 45.6 * 10^-2; %m
-            FoamHeight = FoamLength; 
 
-            %WallThickness = 5.08 * 10^-2; %m Generic Setting
-            WallThickness = 0.0635; %m Time Machine setting
-            WallLength = 90 * 10^-2; %m 
-            WallHeight = WallLength;
+            MSD.Foam.Thickness = 2.54 * 10^-2; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = 5.08 * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
 
             % Wall Thermal Properties:
-            ThermalConductivityWall = .0288; % Thermal Conductivity for the Wall W/(m*K)
-
-            ThermalConductivityStud = ThermalConductivityWall*(10/4.38); % If Applicable
-            StudPosition = 0; % Location of the center of the stud on the diagram
-            StudLength = 0.0381; % Length of the stud along the y direction in meters
+            MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            
+            % Stud
+            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
-            Rw = 10  + .63; 
-            Rf = 5;
+            MSD.Wall.R = 10; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "Generic" has been applied')
             
     end
 
