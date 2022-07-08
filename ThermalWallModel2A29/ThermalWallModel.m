@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A28
+%% ThermalWallModel v2.A29
 % Updated on July 7 2022
 
 clear
@@ -338,8 +338,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -358,8 +357,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -378,8 +376,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -398,8 +395,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -418,8 +414,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -438,8 +433,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -458,8 +452,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -478,8 +471,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -498,8 +490,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -518,8 +509,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -538,8 +528,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -558,8 +547,7 @@ for C = qCollection
             if size(prePline,2) < maxpreP
                 prePline = [prePline, zeros(1,maxpreP - size(prePline,2))];
             elseif size(prePline,2) > maxpreP
-                disp(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
-                return
+                error(['[!] Max preProgram Size MUST be updated to ',num2str(size(prePline,2))])
             end
 
             % Concatonate to P
@@ -581,7 +569,7 @@ end
 disp('[&] Initializing Collections')
 
 % Max Program Size:
-maxP = 15;
+maxP = 16;
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -756,8 +744,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -777,8 +764,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -797,8 +783,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -817,8 +802,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -837,8 +821,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -858,8 +841,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -878,8 +860,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -898,8 +879,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -918,8 +898,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -939,8 +918,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -959,8 +937,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -979,8 +956,7 @@ for preI = 1:size(preP,1)
                 if size(Pline,2) < maxP
                     Pline = [Pline, zeros(1,maxP - size(Pline,2))];
                 elseif size(Pline,2) > maxP
-                    disp(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                    return
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
                 end
                 
                 % Concatonate to P
@@ -1438,7 +1414,8 @@ for I = 1:size(P,1)
                 disp(['[+] [508] ','Foam Analysis Results Tables Created'])
             case 509
                 % Create Specifications Table:
-                Specifications = [MSD.modelTypeSTR,MSD.Mesh.Hmax,MSD.Mesh.Hdelta,MSD.Wall.R,MSD.Foam.R,MSD.Wall.Thickness,MSD.Wall.Length,...
+                modelTypeSTR = string(MSD.modelType);
+                Specifications = [modelTypeSTR,MSD.Mesh.Hmax,MSD.Mesh.Hdelta,MSD.Wall.R,MSD.Foam.R,MSD.Wall.Thickness,MSD.Wall.Length,...
                     MSD.Wall.Height,MSD.BC.TempwI,MSD.BC.TempwO,MSD.Wall.TC,MSD.Stud.TC,modelStyle,MSD.propertyStyle]';
                 Specifications = array2table(Specifications,...
                             'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
