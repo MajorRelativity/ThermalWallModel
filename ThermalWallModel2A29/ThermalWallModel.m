@@ -1285,8 +1285,10 @@ for I = 1:size(P,1)
             parfor numM = 1:size(ThermalModel,2)
                 numMstr = num2str(numM);
                 disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
+                timeri(numM,1) = datetime('now')
                 ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
-                disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])
+                timerf(numM,1) = datetime('now')
+                disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])  
             end
             disp('[+] [408] All Meshes generated')
 
@@ -1294,14 +1296,12 @@ for I = 1:size(P,1)
                 % Solve All Thermal Models
                 disp('[$] [408] Solving All Models')
                 parfor numM = 1:size(ThermalModel,2)
-                    timeri(numM) = datetime('now')
-
                     numMstr = num2str(numM);
                     disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
+                    timeri(numM,2) = datetime('now')
                     ThermalResults{numM} = solve(ThermalModel{numM});
+                    timerf(numM,2) = datetime('now')
                     disp(['[*] [409] [Model ',numMstr,'] ','Model Solved'])
-
-                    timerf(numM) = datetime('now')
                 end
                 disp('[$] [408] All Models Solved')
             case 501
@@ -1334,6 +1334,7 @@ for I = 1:size(P,1)
                 if MSD.Overrides.run504 == 1
                     duration = timerf(:) - timeri(:);
                     duration = time2num(duration(:),'seconds');
+                    duration = (ones(1,size(duration,2))*duration')'; % Sums rows
                 end
             case 505
                 % Collect Foam Analysis Result Variables
