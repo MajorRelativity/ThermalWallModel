@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A29
+%% ThermalWallModel v2.A31
 % Updated on July 7 2022
 
 clear
@@ -96,10 +96,10 @@ Process ID:
     502) End Timer
     503) Find Predicted R Value and Percent Error
     504) Duration with time2num
-    505) Collect Foam Analysis Result Variables
-    506) Create Foam Analysis Table
+    505) Log Initial numM Before Process
+    506) Add to Foam Analysis Log
     507) Find Predicted R Value and Percent Error for Stud Analysis
-    508) Create Stud Analysis Table
+    508) Add to Stud Analysis Result Logs
     509) Creat Specifications Table
 
 600) Analysis
@@ -1337,25 +1337,30 @@ for I = 1:size(P,1)
                     duration = (ones(1,size(duration,2))*duration')'; % Sums rows
                 end
             case 505
-                % Collect Foam Analysis Result Variables
-
-                if all(modelStyle=='2D')
-                    Hf = -1;
-                end
-
-                AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
+                % Log Initial numM Before Process
+                Logs.numMi = numM;
 
             case 506
-                % Create Foam Analysis Result Tables
-                switch MSD.Overrides.OldVersion
-                    case 0
-                        AResults = array2table(AResultsD,...
-                            'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
-                    case 1
-                        AResults = array2table(AResultsD,...
-                            'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
+                % Add to Foam Analysis Result Log
+                numA = numA + 1;
+                i = (numi:numM)';
+                
+                % Logs
+                Logs.numA = numA;
+                Logs.AType{numA,1} = 1; % AType = 1 means foam analysis
+                Logs.Index{numA,1} = i;
+                Logs.duration{numA,1} = duration;
+                Logs.Tf{numA,1} = Tf;
+                Logs.Lf{numA,1} = Lf;
+                if all(modelStyle=='2D')
+                    Hf = -1*ones(size(i,1),1);
                 end
-                disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
+                Logs.Hf{numA,1} = Hf;
+                Logs.pErrorT{numA,1} = pErrorT;
+                Logs.RwM{numA,1} = RwM;
+                Logs.IntersectTemp{numA,1} = IntersectTemp;
+                
+                disp(['[+] [506] [Model ',numMstr,'] ','Added to Foam Analysis Result Logs'])
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
@@ -1381,38 +1386,32 @@ for I = 1:size(P,1)
                 warning on
                 disp('[+] [507] Predicted R Values Found')
             case 508
-                % Create Analysis Table for Stud Analysis
-                numM = size(ThermalResults,2);
+                % Add to Stud Analysis Result Logs
                 numMstr = num2str(numM);
-
-                % Create Tf, Lf, Hf
-                Tfc = Tf * ones(numM,1);
-                Lfc = Lf * ones(numM,1);
+                numA = numA + 1;
+                i = (numi:numM)';
+                
+                % Logs
+                Logs.numA = numA;
+                Logs.AType{numA,1} = 1; % AType = 1 means foam analysis
+                Logs.Index{numA,1} = i;
+                Logs.duration{numA,1} = duration;
+                Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
+                Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
                 switch modelStyle
                     case '3D'
-                        Hfc = Hf * ones(numM,1);
+                        Hfc = Hf * ones(size(i,1),1);
                     case '2D'
-                        Hfc = -1 * ones(numM,1);
+                        Hfc = -1 * ones(size(i,1),1);
                 end
+                Logs.Hf{numA,1} = Hf;
+                Logs.pErrorT{numA,1} = pErrorT;
+                Logs.RwM{numA,1} = RwM;
+                Logs.IntersectTemp{numA,1} = IntersectTemp;
+                Logs.StudPosition{numA,1} = SP;
                 
-                % Recreate numM 
-                i = (1:numM)';
-
-                % Create Double Arrays:
-                AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
-                
-                % Create Foam Analysis Result Tables
-                switch MSD.Overrides.OldVersion
-                    case 0
-                        AResults = array2table(AResultsD,...
-                            'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
-                            'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
-                    case 1
-                        AResults = array2table(AResultsD,...
-                            'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall',...
-                            'TempAtIntersection','YPosInMeters'});
-                end
-                disp(['[+] [508] ','Foam Analysis Results Tables Created'])
+                % Message
+                disp(['[+] [508] ','Added Stud Analysis to Result Logs'])
             case 509
                 % Create Specifications Table:
                 modelTypeSTR = string(MSD.modelType);
