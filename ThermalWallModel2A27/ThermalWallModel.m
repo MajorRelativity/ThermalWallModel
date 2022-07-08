@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A27
+%% ThermalWallModel v2.A28
 % Updated on July 7 2022
 
 clear
@@ -100,6 +100,7 @@ Process ID:
     506) Create Foam Analysis Table
     507) Find Predicted R Value and Percent Error for Stud Analysis
     508) Create Stud Analysis Table
+    509) Creat Specifications Table
 
 600) Analysis
 
@@ -194,7 +195,7 @@ MSD.Preset = 'None';
 %% Save or Load Model Specifications
 
 % Apply Presets:
-msPreset(MSD)
+msPreset(MSD);
 
 % Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
@@ -769,7 +770,7 @@ for preI = 1:size(preP,1)
 
             case 2
                 % Collection #2 - Run Model From Geometry
-                Pline = [2 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
+                Pline = [2 204 301 501 404 405 502 503 504 505 506 509 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -850,7 +851,7 @@ for preI = 1:size(preP,1)
 
             case 52
                 % Collection #52 - Run Model From Geometry
-                Pline = [52 204 301 501 404 405 502 503 504 505 506 211 205 207 209]; % All collections must start with their collection #
+                Pline = [52 204 301 501 404 405 502 503 504 505 506 509 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -971,7 +972,7 @@ for preI = 1:size(preP,1)
                 end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 408 409 507 504 508 211 205 207 209]; % All collections must start with their collection #
+                Pline = [58 204 408 409 507 504 508 509 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -1079,12 +1080,12 @@ for I = 1:size(P,1)
                     disp('[+] [203] ThermaModels Directory Created')
                 end
 
-                % Keep Savedate of ModelSpecifications file
-                savedateMS = MSD.savedate;
+                % Store MSD
+                MSDm = MSD;
 
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MS','MSD.MSN','savedateMS',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
-                clear savedateMS
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MSDm',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
+                clear MSDm
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
             case 204
@@ -1093,34 +1094,24 @@ for I = 1:size(P,1)
                 disp(['[+] [204] [Model ',numMstr,'] ','Loading from Model Number ',MNstr])
 
                 % Force and Check Model Specification:
-                if ~exist(MS,'file')
-                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that the Model Specifications associated with this model have been deleted or are not present in the correct folder.'])
-                    qContinue = input(['[?] [204] [Model ',numMstr,'] ','This could seriously mess with your results, are you sure you want to continue? (1 = y, 0 = n): ']);
+                if MSDm.savedate ~= MSD.savedate
+                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that you are attempting to overwrite the Model Specifications associated with this file.'])
+                    qContinue = input(['[?] [204] [Model ',numMstr,'] ','What would you like to do (1 = Overwrite MS, 0 = Load MS from Model File, -1 = Quit): ']);
                     
-                    if qContinue == 0
-                        disp(['[-] [204] [Model ',numMstr,'] ','Quitting Script'])
-                        return
+                    switch qContinue
+                        case 1
+                            disp(['[*] [204] [Model ',numMstr,'] ','Overwritig Model Specifications with Current Settings'])
+                            pause(1) % Pause so this can be read
+                        case 0
+                            MSD = MSDm;
+                            disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',datestr(MSD.savedate)])
+                        case -1
+                            disp(['[-] [204] [Model ',numMstr,'] ','Quitting Script'])
+                            return
                     end
-
-                    disp(['[*] [204] [Model ',numMstr,'] ','Bold Move. Continuing...'])
-                    pause(3) % Pause so this can be read
-                else
-                    load(MS)
+                    clear qContinue
                 end
-
-                if savedateMS ~= MSD.savedate
-                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that the ModelSpecifications file associated with this model has been overwritten.'])
-                    qContinue = input(['[?] [204] [Model ',numMstr,'] ','This could seriously mess with your results, are you sure you want to continue? (1 = y, 0 = n): ']);
-                    
-                    if qContinue == 0
-                        disp(['[-] [204] [Model ',numMstr,'] ','Quitting Script'])
-                        return
-                    end
-
-                    disp(['[*] [204] [Model ',numMstr,'] ','Bold Move. Continuing...'])
-                    pause(3) % Pause so this can be read
-                end
-                disp(['[+] [204] [Model ',numMstr,'] ','Forced Model Specifications from ',MS])
+                
             case 205
                 % Save Analysis Logs
                 save(LogSavename,"AResults","AResultsD","Specifications","numM",'-v7.3')
@@ -1167,7 +1158,7 @@ for I = 1:size(P,1)
                 % Select Thermal Model Number:
                 if run301 == 1
                     numMstr = num2str(numM);
-                    qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (-1 = no or Input #): ']);
+                    qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (0 = no or Input #): ']);
                     if qnumM <= 0
                         disp(['[-] [301] [Model ',numMstr,'] ','Model Number Not Modified'])
                     else
@@ -1374,29 +1365,20 @@ for I = 1:size(P,1)
                 if all(modelStyle=='2D')
                     Hf = -1;
                 end
-                
-                MSD.modelTypeSTR = string(MSD.modelType);
-                
+
                 AResultsD(numM,:) = [numM,duration,Tf,Lf,Hf,pErrorT,RwM,IntersectTemp];
-                Specifications = [MSD.modelTypeSTR,Hmax,MSD.Mesh.Hdelta,Rw,Rf,Tw,Lw,Hw,MSD.BC.TempwI,MSD.BC.TempwO,Tempi,MSD.Wall.TC,MSD.Stud.TC,modelStyle]';
+
             case 506
                 % Create Foam Analysis Result Tables
                 switch MSD.Overrides.OldVersion
                     case 0
-                        Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
-                            'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall','Temp at Intersection (K)' });
-                        disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
                     case 1
-                        Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height',...
-                            'Indoor BC','Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall','TempAtIntersection' });
-                        disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
                 end
+                disp(['[+] [506] [Model ',numMstr,'] ','Foam Analysis Results Tables Created'])
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
@@ -1422,7 +1404,7 @@ for I = 1:size(P,1)
                 warning on
                 disp('[+] [507] Predicted R Values Found')
             case 508
-                % Create Foam Analysis Table for Stud Analysis
+                % Create Analysis Table for Stud Analysis
                 numM = size(ThermalResults,2);
                 numMstr = num2str(numM);
 
@@ -1440,32 +1422,27 @@ for I = 1:size(P,1)
                 i = (1:numM)';
 
                 % Create Double Arrays:
-                
-                MSD.modelTypeSTR = string(MSD.modelType);
-                
                 AResultsD = [i,duration,Tfc,Lfc,Hfc,pErrorT,RwM,IntersectTemp,SP];
-                Specifications = [MSD.modelTypeSTR,Hmax,MSD.Mesh.Hdelta,Rw,Rf,Tw,Lw,Hw,MSD.BC.TempwI,MSD.BC.TempwO,Tempi,...
-                    MSD.Wall.TC,MSD.Stud.TC,modelStyle,MSD.propertyStyle]';
                 
                 % Create Foam Analysis Result Tables
                 switch MSD.Overrides.OldVersion
                     case 0
-                        Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
-                            'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration (s)','Foam Thickness','Foam Length','Foam Height','% Error','Predicted Rwall',...
                             'Temp at Intersection (K)','Stud Position (Y Pos in m)'});
-                        disp(['[+] [508] ','Foam Analysis Results Tables Created'])
                     case 1
-                        Specifications = array2table(Specifications,...
-                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
-                            'Outdoor BC','Interior Temp','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
                         AResults = array2table(AResultsD,...
                             'VariableNames',{'Process','Duration','FoamThickness','FoamLength','FoamHeight','PercentError','PredictedRwall',...
                             'TempAtIntersection','YPosInMeters'});
-                        disp(['[+] [508] ','Foam Analysis Results Tables Created'])
                 end
+                disp(['[+] [508] ','Foam Analysis Results Tables Created'])
+            case 509
+                % Create Specifications Table:
+                Specifications = [MSD.modelTypeSTR,MSD.Mesh.Hmax,MSD.Mesh.Hdelta,MSD.Wall.R,MSD.Foam.R,MSD.Wall.Thickness,MSD.Wall.Length,...
+                    MSD.Wall.Height,MSD.BC.TempwI,MSD.BC.TempwO,MSD.Wall.TC,MSD.Stud.TC,modelStyle,MSD.propertyStyle]';
+                Specifications = array2table(Specifications,...
+                            'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
+                            'Outdoor BC','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
