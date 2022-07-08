@@ -65,7 +65,7 @@ if exist('MeshSettings.mat','file')
 end
 
 % Preferences:
-qSM = 0; %Show Mesh and Geometry (1 = yes, 0 = no)
+qSM = 1; %Show Mesh and Geometry (1 = yes, 0 = no)
 qSMp = 10; %Show Mesh Pause Length (s)
 qPss = 0; %Plot Steady State Animation (1 = yes, 0 = no)
 qIT = 0; %Readjust time? (1 = yes, 0 = no)
@@ -96,7 +96,7 @@ SpecificHeat = 1500; % Specific Heat for the Wall J / kg * K
 % Wall and Foam R Values. Foam Adjustment Settings:
 Rw = 10; 
 Rf = 5;
-FMas = .01; % How much the foam size is decreased on each wraparound
+FMas = .1; % How much the foam size is decreased on each wraparound
 
 % Heat Flux (if Applicable):
 HFo = (1.82)*1055/((60*60)*(.305^2)); %Heat Flux Outdoor
@@ -117,11 +117,11 @@ timeStepP = 60; %The step in between plots s
 qPF = 1; % 1 = display in seconds, 2 = display in minutes, 3 = display in hours
 
 %Initial Mesh Specifications:
-%Hmaxg = .001; %Minimum Mesh Length Guess
+Hmaxg = .01; %Minimum Mesh Length Guess
 %HdeltaP = .50; % The Percentage of Hmax you want the difference between
                   %the two to be. Given in # between 0 and 1, NOT percent.
 
-Hmaxg = 7.62*10^-4; % Second Setting
+%Hmaxg = 7.62*10^-4; % Second Setting
 HdeltaP = .90; % Second Setting
 
 %Model Solver Settings:

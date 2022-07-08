@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A31
+%% ThermalWallModel v2.A32
 % Updated on July 7 2022
 
 clear
@@ -50,6 +50,7 @@ Process ID:
     113) Thermal Property if Specific Thermal Properties
     114) Thermal Property if Simple Thermal Properties
     115) Create Stud Analysis Matrix
+    119) Reset numA if needed
 
     Save Files:
         105) Create Log Directory
@@ -77,6 +78,7 @@ Process ID:
 
     301) Select Model Number
     302) Stud Analysis Modification
+    303) Create '__p' variables for Parallel Pool Usage
 
 400) Operation
 
@@ -96,11 +98,12 @@ Process ID:
     502) End Timer
     503) Find Predicted R Value and Percent Error
     504) Duration with time2num
-    505) Log Initial numM Before Process
+    505) Log Initial numMi Before Process
     506) Add to Foam Analysis Log
     507) Find Predicted R Value and Percent Error for Stud Analysis
     508) Add to Stud Analysis Result Logs
     509) Creat Specifications Table
+    510) Create AResults Table
 
 600) Analysis
 
@@ -317,7 +320,7 @@ clear -regexp Colstr
 
 % Preallocate Varaibles: 
 
-maxpreP = 9;
+maxpreP = 10;
 numC = 1;
 
 % Create Pre-Run Process Index:
@@ -331,7 +334,7 @@ for C = qCollection
             break
         case 1            
             % Program #1 - Generate Geometry
-            prePline = [101 103 104 107 112 114 1]; %prePrograms always end with their program ID #
+            prePline = [101 119 103 104 107 112 114 1]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -350,7 +353,7 @@ for C = qCollection
             end
        case 2          
             % Program #2 - Run Model From Geometry
-            prePline = [101 104 105 117 106 109 118 107 2]; %prePrograms always end with their program ID #
+            prePline = [101 119 104 105 117 106 109 118 107 2]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -369,7 +372,7 @@ for C = qCollection
             end
        case 3          
             % Program #3 - Contour Slices
-            prePline = [101 107 3]; %prePrograms always end with their program ID #
+            prePline = [101 119 107 3]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -388,7 +391,7 @@ for C = qCollection
             end
         case 4
             % Program #4 - Get Temperature at Point
-            prePline = [101 107 4]; %prePrograms always end with their program ID #
+            prePline = [101 119 107 4]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -407,7 +410,7 @@ for C = qCollection
             end
        case 51            
             % Program #51 - 2D Generate Geometry
-            prePline = [101 112 111 104 108 114 51]; %prePrograms always end with their program ID #
+            prePline = [101 119 112 111 104 108 114 51]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -426,7 +429,7 @@ for C = qCollection
             end
        case 52          
             % Program #52 - 2D Run Model From Geometry
-            prePline = [101 104 105 116 106 109 118 108 52]; %prePrograms always end with their program ID #
+            prePline = [101 119 104 105 116 106 109 118 108 52]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -445,7 +448,7 @@ for C = qCollection
             end
        case 53          
             % Program #53 - 2D Contour Plot
-            prePline = [101 108 53]; %prePrograms always end with their program ID #
+            prePline = [101 119 108 53]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -464,7 +467,7 @@ for C = qCollection
             end
         case 54
             % Program #54 - 2D Get Temperature at Point
-            prePline = [101 108 54]; %prePrograms always end with their program ID #
+            prePline = [101 119 108 54]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -483,7 +486,7 @@ for C = qCollection
             end
         case 55
             % Program #55 - 2D Generate Single Geometry with Stud
-            prePline = [101 111 104 108 112 113 55]; %prePrograms always end with their program ID #
+            prePline = [101 119 111 104 108 112 113 55]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -502,7 +505,7 @@ for C = qCollection
             end
         case 56
             % Program #56 - 2D Plot Current Thermal Properties
-            prePline = [101 108 112 113 56]; %prePrograms always end with their program ID #
+            prePline = [101 119 108 112 113 56]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -521,7 +524,7 @@ for C = qCollection
             end
         case 57      
             % Program #57 - 2D Generate All Geometries with Stud
-            prePline = [101 111 104 108 112 115 57]; %prePrograms always end with their program ID #
+            prePline = [101 119 111 104 108 112 115 57]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -540,7 +543,7 @@ for C = qCollection
             end
         case 58          
             % Program #58 - 2D Solve All Stud Analysis Models
-            prePline = [101 104 105 116 106 109 118 108 58]; %prePrograms always end with their program ID #
+            prePline = [101 119 104 105 116 106 109 118 108 58]; %prePrograms always end with their program ID #
 
             % Add zeros if program size is less than max size
 
@@ -569,7 +572,7 @@ end
 disp('[&] Initializing Collections')
 
 % Max Program Size:
-maxP = 16;
+maxP = 18;
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -703,6 +706,7 @@ for preI = 1:size(preP,1)
             case 114
                 % Thermal Property if No Stud
                 TC = TCw;
+                SP = -1i;
                 disp('[+] [114] Thermal Properties Defined')
             case 115
                 % Create Stud Analysis Matrix
@@ -734,10 +738,14 @@ for preI = 1:size(preP,1)
             case 118
                 % Automatically Create ModelSavename
                 ModelSavename = [DataSavename,'/MeshedModels ',datestr(now,'yyyy-mm-dd HH-MM-ss'),'.mat'];
-                disp(['[+] [109] Meshed Models will be saved to',ModelSavename]) 
+                disp(['[+] [109] Meshed Models will be saved to',ModelSavename])
+            case 119
+                if ~exist('numA','var')
+                    numA = 0;
+                end
             case 1
                 % Collection #1 - Generate Geometry
-                Pline = [1 401 402 403 203]; % All collections must start with their collection #
+                Pline = [1 505 401 402 403 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -757,7 +765,8 @@ for preI = 1:size(preP,1)
 
             case 2
                 % Collection #2 - Run Model From Geometry
-                Pline = [2 204 301 501 404 405 502 503 504 505 506 509 211 205 207 209]; % All collections must start with their collection #
+                Pline = [2 204 301 501 404 405 502 503 504 ...
+                    506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -814,7 +823,7 @@ for preI = 1:size(preP,1)
                 end
             case 51
                 % Collection #51 - 2D Generate Geometry
-                Pline = [51 401 406 407 203]; % All collections must start with their collection #
+                Pline = [51 505 401 406 407 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -834,7 +843,8 @@ for preI = 1:size(preP,1)
 
             case 52
                 % Collection #52 - Run Model From Geometry
-                Pline = [52 204 301 501 404 405 502 503 504 505 506 509 211 205 207 209]; % All collections must start with their collection #
+                Pline = [52 204 301 501 404 405 502 503 ...
+                    504 506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -930,7 +940,7 @@ for preI = 1:size(preP,1)
                 end
             case 57
                 % Collection #57 - 2D Generate All Geometries with Studs
-                Pline = [57 401 302 406 407 702 701 203]; % All collections must start with their collection #
+                Pline = [57 505 401 302 406 407 702 701 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -949,7 +959,7 @@ for preI = 1:size(preP,1)
                 end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 408 409 507 504 508 509 211 205 207 209]; % All collections must start with their collection #
+                Pline = [58 204 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -1060,7 +1070,7 @@ for I = 1:size(P,1)
                 MSDm = MSD;
 
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','numM','numMstr','MN','MNstr','MSDm',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','Logs','numM','numMstr','MN','MNstr','MSDm',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
                 clear MSDm
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
@@ -1090,7 +1100,7 @@ for I = 1:size(P,1)
                 
             case 205
                 % Save Analysis Logs
-                save(LogSavename,"AResults","AResultsD","Specifications","numM",'-v7.3')
+                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM",'-v7.3')
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
@@ -1150,6 +1160,30 @@ for I = 1:size(P,1)
                 SPl = SPc - SL/2; % Stud Size Lower Bound
                 TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
                 disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(SPc)])
+            case 303
+                % Create '__p' variables for the Parallel Pool
+                
+                % Preallocate:
+                ip = Logs.numMi:numM;
+                sizeip = size(ip,2);
+                Tfp = zeros(1,sizeip);
+                Lfp = zeros(1,sizeip);
+                Hfp = zeros(1,sizeip);
+                Twp = zeros(1,sizeip);
+                Lwp = zeros(1,sizeip);
+                Hwp = zeros(1,sizeip);
+                % Create:
+                for ip = Logs.numMi:numM
+                    Tfp(ip) = Tf;
+                    Lfp(ip) = Lf;
+                    Hfp(ip) = Hf;
+                    Twp(ip) = Tw;
+                    Lwp(ip) = Lw;
+                    Hwp(ip) = Hw;
+                end
+                
+                % Clear
+                clear ip
 
             case 401
                 % Create Single New Thermal Model
@@ -1280,22 +1314,27 @@ for I = 1:size(P,1)
                 disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
 
             case 408
-            % Generate All Meshes
-            disp('[$] [408] Generating All Meshes')
-            parfor numM = 1:size(ThermalModel,2)
-                numMstr = num2str(numM);
-                disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
-                timeri(numM,1) = datetime('now')
-                ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
-                timerf(numM,1) = datetime('now')
-                disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])  
-            end
-            disp('[+] [408] All Meshes generated')
+                % Generate All Meshes
+                disp('[$] [408] Generating All Meshes')
+                parfor numM = Logs.numMi:numM
+                    numMstr = num2str(numM);
+                    disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
+                    timeri(numM,1) = datetime('now');
+                    % Ensure Correct Storage of Geometry
+                    wallGeometry2D(Lwp(numM),Twp(numM),Lfp(numM),Tfp(numM))
+                    
+                    % Generate Mesh
+                    ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
+                    
+                    timerf(numM,1) = datetime('now');
+                    disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])  
+                end
+                disp('[+] [408] All Meshes generated')
 
             case 409
                 % Solve All Thermal Models
                 disp('[$] [408] Solving All Models')
-                parfor numM = 1:size(ThermalModel,2)
+                parfor numM = Logs.numMi:size(ThermalModel,2)
                     numMstr = num2str(numM);
                     disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
                     timeri(numM,2) = datetime('now')
@@ -1330,7 +1369,7 @@ for I = 1:size(P,1)
                 pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
             case 504
                 % Duration with time2num
-                duration = -1*ones(size(timerf,1),1);
+                duration = -1i*ones(size(timerf,1),1);
                 if MSD.Overrides.run504 == 1
                     duration = timerf(:) - timeri(:);
                     duration = time2num(duration(:),'seconds');
@@ -1338,33 +1377,50 @@ for I = 1:size(P,1)
                 end
             case 505
                 % Log Initial numM Before Process
-                Logs.numMi = numM;
+                Logs.numMi = 1;
+                
+                if exist('Logs.numMi','var')
+                    Logs.numMi = numM;
+                end
+                
+                disp(['[+] [505] ','numMi determined to be:',num2str(Logs.numMi)])
 
             case 506
                 % Add to Foam Analysis Result Log
                 numA = numA + 1;
-                i = (numi:numM)';
+                i = (Logs.numMi:numM)';
                 
-                % Logs
+                % Logs (Always Present
                 Logs.numA = numA;
                 Logs.AType{numA,1} = 1; % AType = 1 means foam analysis
+                Logs.Size{numA,1} = size(i,1);
+                
                 Logs.Index{numA,1} = i;
                 Logs.duration{numA,1} = duration;
                 Logs.Tf{numA,1} = Tf;
                 Logs.Lf{numA,1} = Lf;
-                if all(modelStyle=='2D')
-                    Hf = -1*ones(size(i,1),1);
-                end
-                Logs.Hf{numA,1} = Hf;
                 Logs.pErrorT{numA,1} = pErrorT;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
+                
+                % Logs (Sometimes Present
+                if all(modelStyle=='2D')
+                    Hf = -1i*ones(Logs.Size{numA,1},1);
+                end
+                Logs.Hf{numA,1} = Hf;
+                
+                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                if exist('SP','var')
+                    Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
+                end
+                
+                % Logs (Never Present:
                 
                 disp(['[+] [506] [Model ',numMstr,'] ','Added to Foam Analysis Result Logs'])
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
-                parfor numM = 1:size(ThermalResults,2)
+                parfor numM = Logs.numMi:numM
                     numMstr = num2str(numM);
                     disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
                     % Find Temperature at Intersection:
@@ -1389,26 +1445,31 @@ for I = 1:size(P,1)
                 % Add to Stud Analysis Result Logs
                 numMstr = num2str(numM);
                 numA = numA + 1;
-                i = (numi:numM)';
+                i = (Logs.numMi:numM)';
                 
                 % Logs
                 Logs.numA = numA;
-                Logs.AType{numA,1} = 1; % AType = 1 means foam analysis
+                Logs.AType{numA,1} = 2; % AType = 2 means Stud Analysis
+                Logs.Size{numA,1} = size(i,1);
+                
                 Logs.Index{numA,1} = i;
                 Logs.duration{numA,1} = duration;
                 Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
                 Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
-                switch modelStyle
-                    case '3D'
-                        Hfc = Hf * ones(size(i,1),1);
-                    case '2D'
-                        Hfc = -1 * ones(size(i,1),1);
-                end
-                Logs.Hf{numA,1} = Hf;
                 Logs.pErrorT{numA,1} = pErrorT;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
                 Logs.StudPosition{numA,1} = SP;
+                
+                % Logs (Sometimes Present):
+                switch modelStyle
+                    case '3D'
+                        Logs.Hf{numA,1} = Hf * ones(Logs.Size{numA,1},1);
+                    case '2D'
+                        Logs.Hf{numA,1} = -1i * ones(Logs.Size{numA,1},1);
+                end
+
+                % Logs (Never Present):
                 
                 % Message
                 disp(['[+] [508] ','Added Stud Analysis to Result Logs'])
@@ -1420,6 +1481,9 @@ for I = 1:size(P,1)
                 Specifications = array2table(Specifications,...
                             'RowNames',{'Model','Hmax','Hdelta (0 to 1)','R-wall','R-foam','Wall Thickness','Wall Length','Wall Height','Indoor BC',...
                             'Outdoor BC','Wall Thermal Conductivity','Stud Thermal Conductivity','Model Style','Property Style'});
+            case 510
+                % Create AResults Table:
+                [AResults,AResultsD,AResultsC] = createAResults(Logs,MSD.Overrides.OldVersion);
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
@@ -1445,7 +1509,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = AResultsD(i,3);
+                            Tf = AResultsD(i,4);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1470,7 +1534,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = AResultsD(i,3);
+                        Tf = AResultsD(i,4);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1512,7 +1576,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = AResultsD(i,3);
+                            Tf = AResultsD(i,4);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1537,7 +1601,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = AResultsD(i,3);
+                        Tf = AResultsD(i,4);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1580,7 +1644,7 @@ for I = 1:size(P,1)
                             figure('Name',fname)
                             
                             % Pull Necessary Data for This Model:
-                            Tf = AResultsD(i,3);
+                            Tf = AResultsD(i,4);
                 
                             thermalresults = ThermalResults{i};
                             
@@ -1605,7 +1669,7 @@ for I = 1:size(P,1)
                         figure('Name',fname)
                         
                         % Pull Necessary Data for This Model:
-                        Tf = AResultsD(i,3);
+                        Tf = AResultsD(i,4);
             
                         thermalresults = ThermalResults{i};
                         
@@ -1632,9 +1696,9 @@ for I = 1:size(P,1)
                 Hw = str2double(Specifications{8,1});
                 Lw = str2double(Specifications{7,1});
 
-                Tf = AResultsD(numM,3);
-                Lf = AResultsD(numM,4);
-                Hf = AResultsD(numM,5);
+                Tf = AResultsD(numM,4);
+                Lf = AResultsD(numM,5);
+                Hf = AResultsD(numM,6);
 
                 gateTAP = 1;
                 while gateTAP == 1
@@ -1727,8 +1791,8 @@ for I = 1:size(P,1)
                 Tw = str2double(Specifications{6,1});
                 Lw = str2double(Specifications{7,1});
 
-                Tf = AResultsD(numM,3);
-                Lf = AResultsD(numM,4);
+                Tf = AResultsD(numM,4);
+                Lf = AResultsD(numM,5);
 
                 gateTAP = 1;
                 while gateTAP == 1
@@ -1821,7 +1885,7 @@ function MSD = msPreset(MSD)
             disp('[~] No MSPreset has been applied')
         case 'Generic'
             % Property Style:
-            MSD.propertyStyle = 'TimeMachine'; 
+            MSD.propertyStyle = 'GenericStud'; 
 
             % Shape of Wall:
 
@@ -1850,7 +1914,7 @@ function MSD = msPreset(MSD)
         case 'TimeMachine'
             
             % Property Style:
-            MSD.propertyStyle = 'GenericStud'; 
+            MSD.propertyStyle = 'TimeMachine'; 
 
             % Shape of Wall:
 
