@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A34
+%% ThermalWallModel v2.35
 % Updated on July 11 2022
 
 clear
@@ -157,7 +157,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 2.1*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 20*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
