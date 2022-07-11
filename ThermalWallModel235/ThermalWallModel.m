@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.35
+%% ThermalWallModel v2.36
 % Updated on July 11 2022
 
 clear
@@ -33,10 +33,11 @@ Process ID:
             054) Get Temperature at Point
         Generate Geometry: 
             055) Generate Single Geometry with Stud
-            057) Generate All Geometries with Studs
+            057) Generate All Stud Analysis Geometries
             059) Generate All Foam Analysis Geometries
         Solve Models:
             058) Solve All Stud Analysis Models
+            061) Solve All Foam Analysis Models
         Analysis:
             056) Plot Current Thermal Properties
             060) Plot Single Geometry
@@ -91,6 +92,7 @@ Process ID:
     302) Stud Analysis Modification
     303) Create '__p' variables for Parallel Pool Usage
     304) Foam Analysis Modification
+    305) Create '__p' variables for Foam Analysis in the Parallel Pool
 
 400) Operation
 
@@ -126,7 +128,7 @@ Process ID:
     605) 2D Contour Plot
     606) 2D Get Temperature at Point
     607) 2D Plot Current Thermal Properties
-    608
+    608) 2D Create Plot of Current Geometry
 
 700) Conditions
 
@@ -346,8 +348,7 @@ clear -regexp Colstr
 
 disp('[&] Initializing Collections')
 
-% Max Program Size:
-maxP = 20;
+P = [];
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -530,277 +531,68 @@ for preI = 1:size(preP,1)
             case 1
                 % Collection #1 - Generate Geometry
                 Pline = [1 505 401 402 403 212 203]; % All collections must start with their collection #
-                
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
 
             case 2
                 % Collection #2 - Run Model From Geometry
                 Pline = [2 204 213 301 501 404 405 502 503 504 ...
                     506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 3
                 % Collection #3 - Plot Contour Slices
                 Pline = [3 206 210 601 602 603]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 4 
                 % Collection #4 - Get Temperature at Point
                 Pline = [4 206 210 301 604]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 51
                 % Collection #51 - 2D Generate Geometry
                 Pline = [51 505 401 406 407 212 203]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
-
             case 52
                 % Collection #52 - Run Model From Geometry
                 Pline = [52 204 213 301 501 404 405 502 503 ...
                     504 506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 53
                 % Collection #53 - 2D Contour Plot
                 Pline = [53 206 208 210 605]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 54 
                 % Collection #54 - 2D Get Temperature at Point
                 Pline = [54 206 210 301 606]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 55
                 % Collection #55 - Generate Single Geometry with Stud
                 Pline = [55 401 406 407 212 203]; % All collections must start with their collection #
-                
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
                 
             case 56
                 % Collection #56 - 2D Plot Current Thermal Properties
                 Pline = [56 607]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 57
                 % Collection #57 - 2D Generate All Geometries with Studs
                 Pline = [57 505 401 302 406 407 702 701 212 203]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
                 Pline = [58 204 213 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 59
                 % Collection #59 - 2D Create all Foam Analysis Geometries
                 Pline = [59 212 505 401 304 406 407 703 701 203]; % All collections must start with their collection #
                 
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
             case 60
                 % Collection #60 - 2D Plot Single Geometry
                 Pline = [60 204 213 301 608]; % All collections must start with their collection #
-                
-                % Add zeros if program size is less than max size
-                    
-                if size(Pline,2) < maxP
-                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
-                elseif size(Pline,2) > maxP
-                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
-                end
-                
-                % Concatonate to P
-                
-                if exist('P','var')
-                    P = [P;Pline];
-                else
-                    P = Pline;
-                end
+            case 61
+                % Collection #61 - Solve All Foam Analysis Models
+                Pline = [58 204 213 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
         end
     end
+    % Concatonate Collection to P
+    P = concat2P(Pline,P,1);
 end
 
 disp('[=] Collections Initialized')
@@ -891,6 +683,14 @@ for I = 1:size(P,1)
             case 60
                 % Collection #60 - Plot Single Geometry
                 disp('[&] Starting Collection #60 - Plot Single Geometry')
+            case 61
+                % Collection #61 - Solve All Foam Analysis Models
+                disp('[&] Starting Collection #61 - Solve All Foam Analysis Models')
+
+                % Overrides
+                run206 = 0;
+                run208 = 0;
+                run210 = 0;
 
             case 203
                 % Make Directory:
@@ -977,9 +777,9 @@ for I = 1:size(P,1)
                 % Store necessary variables for ThermalModel
 
                 % Foam:
-                Store.Foam.T = Tf;
-                Store.Foam.H = Hf;
-                Store.Foam.L = Lf;
+                Store.Foam.T = Foam(:,1);
+                Store.Foam.H = Foam(:,3);
+                Store.Foam.L = Foam(:,2);
                 Store.Foam.Foam = Foam;
                 Logs.Foam.numMAdj = Foam(1,end) - 1; % Stores how the 
                 % model number must be adjusted to access the correct Foam
@@ -1030,7 +830,7 @@ for I = 1:size(P,1)
                 % Create '__p' variables for the Parallel Pool
                 
                 % Preallocate:
-                ip = (Logs.numMi:numM) - numMi;
+                ip = (Logs.numMi:numM) - (Logs.numMi - 1);
                 sizeip = size(ip,2);
                 Tfp = zeros(1,sizeip);
                 Lfp = zeros(1,sizeip);
@@ -1056,6 +856,25 @@ for I = 1:size(P,1)
                 Lf = Foam(numM-(Logs.numMi-1),2);
                 Hf = Foam(numM-(Logs.numMi-1),3);
                 Foam(numM-(Logs.numMi-1),end) = numM;
+            case 305
+                % Create '__p' variables for Foam Analysis in the Parallel Pool
+                Tfp = Tf;
+                Lfp = Lf;
+                Hfp = Hf;
+                
+                % Pre Allocate
+                ip = (Logs.numMi:numM) - (Logs.numMi - 1);
+                sizeip = size(ip,2);
+                Twp = zeros(1,sizeip);
+                Lwp = zeros(1,sizeip);
+                Hwp = zeros(1,sizeip);
+                
+                % Create
+                for ip = ip
+                    Twp(ip) = Tw;
+                    Lwp(ip) = Lw;
+                    Hwp(ip) = Hw;
+                end
 
             case 401
                 % Create Single New Thermal Model
@@ -1614,7 +1433,15 @@ for I = 1:size(P,1)
                     if qTRpa == -1
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
+                        % Pull Important Info:
+                        Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
+                        
+                        Tf = AResultsD(numM,4);
+                        Lf = AResultsD(numM,5);
                         numMstr = num2str(numM);
+                        
+                        % Plot
                         disp(['[$] [605] Plotting Model #',num2str(numM)])
                         fname = ['Results from 2D Model #',num2str(numM)];
                         figure('Name',fname)
@@ -1717,7 +1544,7 @@ for I = 1:size(P,1)
                 disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'])
                 disp('[#] [607] Note: The exact shape of the geometry is NOT shown, only the thermal properties')
            case 608
-                % Create Plot of Current Thermal Model
+                % Create Plot of Current Thermal Model Geometry
                 while numM > 0
                     % Asign Lf and Tf
                     Tf = Foam(numM-Logs.Foam.numMAdj,1);
