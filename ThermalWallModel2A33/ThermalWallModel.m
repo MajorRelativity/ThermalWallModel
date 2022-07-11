@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A33
-% Updated on July 8 2022
+%% ThermalWallModel v2.A34
+% Updated on July 11 2022
 
 clear
 addpath("Functions")
@@ -34,28 +34,31 @@ Process ID:
         Generate Geometry: 
             055) Generate Single Geometry with Stud
             057) Generate All Geometries with Studs
+            059) Generate All Foam Analysis Geometries
         Solve Models:
             058) Solve All Stud Analysis Models
         Analysis:
             056) Plot Current Thermal Properties
+            060) Plot Single Geometry
 
 
 100) PreRun
 
     101) Name Translation
-    102) 3D Foam Analysis - Matrix Creation
-    103) 3D Foam Matrix if no Foam Analysis
     104) Specify Thermal Model File Identification Number
     107) 3D Model Style
     108) 2D Model Style
-    110) 2D Foam Analysis - Matrix Creation
-
-    111) 2D Foam Matrix if no Foam Analysis
     112) Thermal Property Translation
     113) Thermal Property if Specific Thermal Properties
     114) Thermal Property if Simple Thermal Properties
     115) Create Stud Analysis Matrix
     119) Reset numA if needed
+
+    Foam Matrix  Creation:
+        102) 3D Foam Analysis - Matrix Creation
+        103) 3D Foam Matrix if no Foam Analysis
+        110) 2D Foam Analysis - Matrix Creation
+        111) 2D Foam Matrix if no Foam Analysis
 
     Save Files:
         105) Create Log Directory
@@ -76,14 +79,18 @@ Process ID:
     207) Save Meshed Thermal Model Log Data
     208) Load Meshed Thermal Model Log Data
     209) Save Thermal Results Log Data
-    210) Load Thermal Results Log Data
+    210) Load Thermal Results Log Data/
+
     211) Make Log Data Directory
+    212) Store Necessary Variables for ThermalModel
+    213) Unpack Necessary Variables for ThermalModel
 
 300) Modification
 
     301) Select Model Number
     302) Stud Analysis Modification
     303) Create '__p' variables for Parallel Pool Usage
+    304) Foam Analysis Modification
 
 400) Operation
 
@@ -119,11 +126,13 @@ Process ID:
     605) 2D Contour Plot
     606) 2D Get Temperature at Point
     607) 2D Plot Current Thermal Properties
+    608
 
 700) Conditions
 
     701) Evaluate Condition
     702) Repeat Stud Analysis
+    703) Repeat Foam Analysis
 
 %}
 
@@ -198,12 +207,12 @@ MSD.Foam.R = 5;
 'TimeMachine' - Time Machine Wall with Plate
 
 %}
-MSD.Preset = 'None';
+MSD.Preset = 'Generic';
 
 %% Save or Load Model Specifications
 
 % Apply Presets:
-msPreset(MSD);
+MSD = msPreset(MSD);
 
 % Creates Directors for Model Specifications
 if ~exist('ModelSpecifications','dir')
@@ -238,6 +247,7 @@ end
 
 % 000
 run57 = 1;
+run59 = 1;
 
 % 100:
 run104 = 1;
@@ -278,16 +288,18 @@ Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
 Colstr57 = '\n      57 = Generate All Geometries with Studs';
+Colstr59 = '\n      59 = Generate All Foam Analysis Geometries';
 
 Colstr58 = '\n      58 = Solve All Stud Analysis Models';
 
 Colstr56 = '\n      56 = Plot Current Thermal Properties';
+Colstr60 = '\n      60 = Plot Single Geometry';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55,Colstr57...
-    ColstrT3,Colstr56,...
+    ColstrT2,Colstr55,Colstr57,Colstr59...
+    ColstrT3,Colstr56,Colstr60,...
     ColstrT4,Colstr58];
 Colstr = [Colstr3D,Colstr2D];
 
@@ -335,7 +347,7 @@ clear -regexp Colstr
 disp('[&] Initializing Collections')
 
 % Max Program Size:
-maxP = 18;
+maxP = 20;
 
 % Prerun and Create Run Index
 for preI = 1:size(preP,1)
@@ -373,7 +385,7 @@ for preI = 1:size(preP,1)
 
             case 102
                 % 3D Foam Analysis - Matrix Creation
-
+                
                 Tfm = Tf:-MSD.FMod.FstepT:0;
                 Lfm = Lf:-MSD.FMod.FstepL:0;
                 Hfm = Hf:-MSD.FMod.FstepH:0;
@@ -390,15 +402,15 @@ for preI = 1:size(preP,1)
                     Lfm = Lfm(Logic);
                     Hfm = Hfm(Logic);
                 end
-
-                Foam = [Tfm, Lfm, Hfm]; % Full foam matrix
+                
+                Index = (1:size(Tfm,1))';
+                Foam = [Tfm, Lfm, Hfm, Index]; % Full foam matrix
 
                 Tf = Foam(:,1); % All thicknesses
                 Lf = Foam(:,2); % All lengths
                 Hf = Foam(:,3); % All heights
 
                 disp('[+] [102] Foam Matrix Created')
-
             case 103
                 % 3D Foam Matrix if no Foam Analysis
 
@@ -437,7 +449,7 @@ for preI = 1:size(preP,1)
                 disp(['[+] [109] Logs will be saved to',LogSavename]) 
             case 110
                 % 2D Foam Analysis - Matrix Creation
-
+                
                 Tfm = Tf:-MSD.FMod.FstepT:0;
                 Lfm = Lf:-MSD.FMod.FstepL:0;
                 [Tfm, Lfm] = meshgrid(Tfm,Lfm);
@@ -446,12 +458,14 @@ for preI = 1:size(preP,1)
                 Tfm = Tfm(Logic);
                 Lfm = Lfm(Logic);
 
-                Foam = [Tfm, Lfm]; % Full foam matrix
+                Index = (1:size(Tfm,1))';
+                Foam = [Tfm, Lfm, Index]; % Full foam matrix
 
                 Tf = Foam(:,1); % All thicknesses
                 Lf = Foam(:,2); % All lengths
 
                 disp('[+] [110] Foam Matrix Created')
+                
             case 111
                 % 3D Foam Matrix if no Foam Analysis
 
@@ -515,7 +529,7 @@ for preI = 1:size(preP,1)
                 end
             case 1
                 % Collection #1 - Generate Geometry
-                Pline = [1 505 401 402 403 203]; % All collections must start with their collection #
+                Pline = [1 505 401 402 403 212 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -535,7 +549,7 @@ for preI = 1:size(preP,1)
 
             case 2
                 % Collection #2 - Run Model From Geometry
-                Pline = [2 204 301 501 404 405 502 503 504 ...
+                Pline = [2 204 213 301 501 404 405 502 503 504 ...
                     506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -593,7 +607,7 @@ for preI = 1:size(preP,1)
                 end
             case 51
                 % Collection #51 - 2D Generate Geometry
-                Pline = [51 505 401 406 407 203]; % All collections must start with their collection #
+                Pline = [51 505 401 406 407 212 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -613,7 +627,7 @@ for preI = 1:size(preP,1)
 
             case 52
                 % Collection #52 - Run Model From Geometry
-                Pline = [52 204 301 501 404 405 502 503 ...
+                Pline = [52 204 213 301 501 404 405 502 503 ...
                     504 506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
@@ -671,7 +685,7 @@ for preI = 1:size(preP,1)
                 end
             case 55
                 % Collection #55 - Generate Single Geometry with Stud
-                Pline = [55 401 406 407 203]; % All collections must start with their collection #
+                Pline = [55 401 406 407 212 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -710,7 +724,7 @@ for preI = 1:size(preP,1)
                 end
             case 57
                 % Collection #57 - 2D Generate All Geometries with Studs
-                Pline = [57 505 401 302 406 407 702 701 203]; % All collections must start with their collection #
+                Pline = [57 505 401 302 406 407 702 701 212 203]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -729,7 +743,45 @@ for preI = 1:size(preP,1)
                 end
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
+                Pline = [58 204 213 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 59
+                % Collection #59 - 2D Create all Foam Analysis Geometries
+                Pline = [59 212 505 401 304 406 407 703 701 203]; % All collections must start with their collection #
+                
+                % Add zeros if program size is less than max size
+                    
+                if size(Pline,2) < maxP
+                    Pline = [Pline, zeros(1,maxP - size(Pline,2))];
+                elseif size(Pline,2) > maxP
+                    error(['[!] Max Program Size MUST be updated to ',num2str(size(Pline,2))])
+                end
+                
+                % Concatonate to P
+                
+                if exist('P','var')
+                    P = [P;Pline];
+                else
+                    P = Pline;
+                end
+            case 60
+                % Collection #60 - 2D Plot Single Geometry
+                Pline = [60 204 213 301 608]; % All collections must start with their collection #
                 
                 % Add zeros if program size is less than max size
                     
@@ -786,7 +838,7 @@ for I = 1:size(P,1)
                 % Collection #3 - Creating Slices
                 disp('[&] Starting Collection #3 - Creating Contour Slices')
             case 4
-                % Collection #3 - Creating Slices
+                % Collection #4 - Plotting Temperature at Point
                 disp('[&] Starting Collection #4 - Plotting Temperature at Point')
             case 51
                 % Collection #51 - Generate Single Geometry
@@ -829,6 +881,17 @@ for I = 1:size(P,1)
                 run206 = 0;
                 run208 = 0;
                 run210 = 0;
+            case 59
+                % Collection #59 - Create all Foam Analysis Geometries
+                if run59 == 1
+                    disp('[&] Starting Collection #59 - Create all Foam Analysis Geometries')
+                    run59 = 0;
+                end
+
+            case 60
+                % Collection #60 - Plot Single Geometry
+                disp('[&] Starting Collection #60 - Plot Single Geometry')
+
             case 203
                 % Make Directory:
                 if ~exist('ThermalModels','dir')
@@ -840,7 +903,7 @@ for I = 1:size(P,1)
                 MSDm = MSD;
 
                 % Save Thermal Model to Mat File
-                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','Logs','numM','numMstr','MN','MNstr','MSDm',"Tf","Lf","Hf","Tw","Lw","Hw",'-v7.3')
+                save(['ThermalModels/ThermalModel',MNstr,'.mat'],'ThermalModel','Logs','numM','numMstr','MN','MNstr','MSDm',"Store",'-v7.3')
                 clear MSDm
                 disp(['[+] [203] [Model ',numMstr,'] ','Saving to Model Number ',MNstr])
 
@@ -910,6 +973,39 @@ for I = 1:size(P,1)
                 if ~exist(DataSavename,'dir')
                     mkdir(DataSavename)
                 end
+            case 212
+                % Store necessary variables for ThermalModel
+
+                % Foam:
+                Store.Foam.T = Tf;
+                Store.Foam.H = Hf;
+                Store.Foam.L = Lf;
+                Store.Foam.Foam = Foam;
+                Logs.Foam.numMAdj = Foam(1,end) - 1; % Stores how the 
+                % model number must be adjusted to access the correct Foam
+                % #
+
+                % Wall
+                Store.Wall.T = Tw;
+                Store.Wall.H = Hw;
+                Store.Wall.L = Lw;
+
+
+            case 213
+                % Unpack necessary variables for ThermalModel
+                % Foam:
+                Tf = Store.Foam.T;
+                Hf = Store.Foam.H;
+                Lf = Store.Foam.L;
+                Foam = Store.Foam.Foam;
+
+                % Wall
+                Tw = Store.Wall.T;
+                Hw = Store.Wall.H;
+                Lw = Store.Wall.L;
+                
+                % Clear Variable
+                clear Store
             case 301
                 % Select Thermal Model Number:
                 if run301 == 1
@@ -925,7 +1021,7 @@ for I = 1:size(P,1)
                 end
             case 302
                 % Stud Analysis Modification
-                SPc = SP(numM);
+                SPc = SP(numM-(Logs.numMi-1));
                 SPu = SPc + SL/2; % Stud Size Upper Bound
                 SPl = SPc - SL/2; % Stud Size Lower Bound
                 TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
@@ -934,7 +1030,7 @@ for I = 1:size(P,1)
                 % Create '__p' variables for the Parallel Pool
                 
                 % Preallocate:
-                ip = Logs.numMi:numM;
+                ip = (Logs.numMi:numM) - numMi;
                 sizeip = size(ip,2);
                 Tfp = zeros(1,sizeip);
                 Lfp = zeros(1,sizeip);
@@ -943,7 +1039,7 @@ for I = 1:size(P,1)
                 Lwp = zeros(1,sizeip);
                 Hwp = zeros(1,sizeip);
                 % Create:
-                for ip = Logs.numMi:numM
+                for ip = ip
                     Tfp(ip) = Tf;
                     Lfp(ip) = Lf;
                     Hfp(ip) = Hf;
@@ -954,6 +1050,12 @@ for I = 1:size(P,1)
                 
                 % Clear
                 clear ip
+            case 304
+                % Foam Analysis Modification:
+                Tf = Foam(numM-(Logs.numMi-1),1);
+                Lf = Foam(numM-(Logs.numMi-1),2);
+                Hf = Foam(numM-(Logs.numMi-1),3);
+                Foam(numM-(Logs.numMi-1),end) = numM;
 
             case 401
                 % Create Single New Thermal Model
@@ -1146,14 +1248,14 @@ for I = 1:size(P,1)
                     duration = (ones(1,size(duration,2))*duration')'; % Sums rows
                 end
             case 505
-                % Log Initial numM Before Process
+                % Log Initial Logs.numM Before Process
                 Logs.numMi = 1;
                 
                 if exist('Logs.numMi','var')
                     Logs.numMi = numM;
                 end
                 
-                disp(['[+] [505] ','numMi determined to be: ',num2str(Logs.numMi)])
+                disp(['[+] [505] ','Logs.numMi determined to be: ',num2str(Logs.numMi)])
 
             case 506
                 % Add to Foam Analysis Result Log
@@ -1614,15 +1716,45 @@ for I = 1:size(P,1)
                 colorbar
                 disp(['[+] [607] Plotted Current Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'])
                 disp('[#] [607] Note: The exact shape of the geometry is NOT shown, only the thermal properties')
+           case 608
+                % Create Plot of Current Thermal Model
+                while numM > 0
+                    % Asign Lf and Tf
+                    Tf = Foam(numM-Logs.Foam.numMAdj,1);
+                    Lf = Foam(numM-Logs.Foam.numMAdj,2);
+                    wallGeometry2D(Lw,Tw,Lf,Tf)
+
+                    % Plot Model
+                    numMstr = num2str(numM);
+                    Fwg = figure('Name','Wall Geometry');
+                    pdegplot(ThermalModel{numM},'EdgeLabels','on')
+                    xaxis = [0,Tw+Tf+Tw];
+                    yaxis = [-3*Lw/4,3*Lw/4];
+                    axis([xaxis,yaxis])
+                    hold on
+                    axis square
+                    hold off
+                    drawnow
+                    disp(['[+] [608] [Model ',numMstr,'] ','Plotted Current Geometry']);
+                    numM = input(['[?] [608] [Model ',numMstr,'] ','Would you like to plot another geometry? (Choose Model # or 0 = n): ']);
+                end
                 
             case 701
-                % Evaluate Condition
+                % Evaluate Condition. When Condition == 1, the Collection
+                % will be repeated
                 if Condition == 1
                     break % If the condition is 1, exit before we can run case 0
                 end
             case 702
                 % Stud Analysis Condition
                 if SPc == SP(end)
+                    Condition = 0;
+                else
+                    Condition = 1;
+                end
+            case 703
+                % Foam Analysis Condition
+                if (numM-(Logs.numMi-1)) == Foam(end,end)
                     Condition = 0;
                 else
                     Condition = 1;
@@ -1653,9 +1785,9 @@ function MSD = msPreset(MSD)
     switch MSD.Preset
         case 'None'
             disp('[~] No MSPreset has been applied')
-        case 'Generic'
+        case 'TimeMachine'
             % Property Style:
-            MSD.propertyStyle = 'GenericStud'; 
+            MSD.propertyStyle = 'TimeMachine'; 
 
             % Shape of Wall:
 
@@ -1681,10 +1813,10 @@ function MSD = msPreset(MSD)
             % Message
             disp('[=] MSPreset "TimeMachine" has been applied')
 
-        case 'TimeMachine'
+        case 'Generic'
             
             % Property Style:
-            MSD.propertyStyle = 'TimeMachine'; 
+            MSD.propertyStyle = 'GenericStud'; 
 
             % Shape of Wall:
 
