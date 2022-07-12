@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A37
-% Updated on July 11 2022
+%% ThermalWallModel v2.A39
+% Updated on July 12 2022
 
 clear
 addpath("Functions")
@@ -35,9 +35,11 @@ Process ID:
             055) Generate Single Geometry with Stud
             057) Generate All Stud Analysis Geometries
             059) Generate All Foam Analysis Geometries
+            062) Generate All Plate Analysis Geometries
         Solve Models:
             058) Solve All Stud Analysis Models
             061) Solve All Foam Analysis Models
+            063) Solve All Plate Analysis Models
         Analysis:
             056) Plot Current Thermal Properties
             060) Plot Single Geometry
@@ -49,11 +51,16 @@ Process ID:
     104) Specify Thermal Model File Identification Number
     107) 3D Model Style
     108) 2D Model Style
-    112) Thermal Property Translation
-    113) Thermal Property if Specific Thermal Properties
-    114) Thermal Property if Simple Thermal Properties
     115) Create Stud Analysis Matrix
     119) Reset numA if needed
+
+    Plate Analysis:
+        120) 2D Create Plate Analysis Matrix
+
+    Thermal Properties:
+        112) Thermal Property Translation
+        113) Thermal Property if Specific Thermal Properties
+        114) Thermal Property if Simple Thermal Properties
 
     Foam Matrix  Creation:
         102) 3D Foam Analysis - Matrix Creation
@@ -93,6 +100,7 @@ Process ID:
     303) Create '__p' variables for Parallel Pool Usage
     304) Foam Analysis Modification
     305) Create '__p' variables for Foam Analysis in the Parallel Pool
+    306) Plate Analysis Modification
 
 400) Operation
 
@@ -118,6 +126,8 @@ Process ID:
     508) Add to Stud Analysis Result Logs
     509) Creat Specifications Table
     510) Create AResults Table
+    
+    511) Add to Plate Analysis Log
 
 600) Analysis
 
@@ -135,6 +145,7 @@ Process ID:
     701) Evaluate Condition
     702) Repeat Stud Analysis
     703) Repeat Foam Analysis
+    704) Repeat Plate Analysis
 
 %}
 
@@ -214,7 +225,7 @@ MSD.Foam.R = 5;
 'TimeMachine' - Time Machine Wall with Plate
 
 %}
-MSD.Preset = 'Generic';
+MSD.Preset = 'TimeMachine';
 
 %% Save or Load Model Specifications
 
@@ -255,6 +266,7 @@ end
 % 000
 run57 = 1;
 run59 = 1;
+run62 = 1;
 
 % 100:
 run104 = 1;
@@ -272,8 +284,8 @@ run301 = 1;
 % Collections:
 ColstrT1 = '\n    Standard:';
 ColstrT2 = '\n    Generate Geometry:';
-ColstrT3 = '\n    Analysis:';
-ColstrT4 = '\n    Solve Models';
+ColstrT3 = '\n    Solve Models';
+ColstrT4 = '\n    Analysis:';
 
 ColstrInput = '\n  Input: ';
 ColstrQuit = '\n -1 = Quit ';
@@ -294,10 +306,13 @@ Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Stud';
-Colstr57 = '\n      57 = Generate All Geometries with Studs';
+Colstr57 = '\n      57 = Generate All Stud Analysis Geometries';
 Colstr59 = '\n      59 = Generate All Foam Analysis Geometries';
+Colstr62 = '\n      62 = Generate All Plate Analysis Geometries';
 
 Colstr58 = '\n      58 = Solve All Stud Analysis Models';
+Colstr61 = '\n      61 = Solve All Foam Analysis Models';
+Colstr63 = '\n      63 = Solve All Plate Analysis Models';
 
 Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
@@ -305,9 +320,9 @@ Colstr60 = '\n      60 = Plot Single Geometry';
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55,Colstr57,Colstr59...
-    ColstrT3,Colstr56,Colstr60,...
-    ColstrT4,Colstr58];
+    ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
+    ColstrT3,Colstr58,Colstr61,Colstr63,...
+    ColstrT4,Colstr56,Colstr60];
 Colstr = [Colstr3D,Colstr2D];
 
 
@@ -475,7 +490,7 @@ for preI = 1:size(preP,1)
             case 111
                 % 3D Foam Matrix if no Foam Analysis
 
-                Foam = [Tf,Lf];
+                Foam = [Tf,Lf,1];
 
                 disp('[+] [111] Foam Vector Created')
             case 112
@@ -543,6 +558,24 @@ for preI = 1:size(preP,1)
                 if ~exist('numA','var')
                     numA = 0;
                 end
+            case 120
+                % 2D Create Plate Analysis Matrix
+                qPA = 0;
+
+                while qPA == 0
+                    qPA = input('[?] [120] Choose the number of plate analysis models you would like to run: ');
+                    switch qPA
+                        case qPA <= 0
+                            disp("[!] [120] That doesn't make sense, try again!")
+                            qPA = 0;
+                        otherwise
+                            disp(['[$] [120] Creating Plate matrix with ',num2str(qPA),' elements'])
+                            break
+                    end
+                end
+
+                Lp = (linspace(MSD.Plate.Length,0,qPA))';
+                disp('[+] [120] Plate Matrix Created')
             case 1
                 % Collection #1 - Generate Geometry
                 Pline = [1 505 401 402 403 212 203]; % All collections must start with their collection #
@@ -601,8 +634,14 @@ for preI = 1:size(preP,1)
                 % Collection #60 - 2D Plot Single Geometry
                 Pline = [60 204 213 301 608]; % All collections must start with their collection #
             case 61
-                % Collection #61 - Solve All Foam Analysis Models
-                Pline = [58 204 213 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
+                % Collection #61 - 2D Solve All Foam Analysis Models
+                Pline = [61 204 213 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
+            case 62
+                % Collection # 62 - 2D Generate All Plate Analysis Geometries
+                Pline = [62 505 401 306 406 407 704 701 212 203]; % All collections must start with their collection #
+            case 63
+                % Collection # 63 - 2D Solve All Plate Analysis Models
+                Pline = [63 204 213 303 408 409 507 504 511 509 510 211 205 207 209]; % All collections must start with their collection #
                 
         end
     end
@@ -677,7 +716,7 @@ for I = 1:size(P,1)
             case 57
                 % Collection #57 - Generate All Geometries with Stud
                 if run57 == 1
-                    disp('[&] Starting Collection #57 - 2D Generate All Geometries with Stud')
+                    disp('[&] Starting Collection #57 - Generate All Stud Analysis Geometries')
                     run57 = 0;
                 end
             case 58
@@ -706,6 +745,12 @@ for I = 1:size(P,1)
                 run206 = 0;
                 run208 = 0;
                 run210 = 0;
+            case 62
+                % Collection #62 - Generate All Plate Analysis Geometries
+                if run62 == 1
+                    disp('[&] Starting Collection #62 - Generate All Plate Analysis Geometries')
+                    run62 = 0;
+                end
 
             case 203
                 % Make Directory:
@@ -845,7 +890,7 @@ for I = 1:size(P,1)
 
                 % Condition
                 TC = @(location,state)thermalProperties(location,state,TP,MSD.propertyStyle);
-                disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(SPc)])
+                disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(TP.Stud.Center)])
             case 303
                 % Create '__p' variables for the Parallel Pool
                 
@@ -895,6 +940,15 @@ for I = 1:size(P,1)
                     Lwp(ip) = Lw;
                     Hwp(ip) = Hw;
                 end
+            case 306
+                % Plate Analysis Modification
+
+                % Load Variables
+                TP.Plate.L = Lp(numM-(Logs.numMi-1));
+
+                % Condition
+                TC = @(location,state)thermalProperties(location,state,TP,MSD.propertyStyle);
+                disp(['[+] [306] [Model ',numMstr,'] ','New Plate Length Set: ', num2str(TP.Plate.L)])
 
             case 401
                 % Create Single New Thermal Model
@@ -1124,6 +1178,11 @@ for I = 1:size(P,1)
                 if exist('SP','var')
                     Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
                 end
+
+                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                if exist('Lp','var')
+                    Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
+                end
                 
                 % Logs (Never Present:
                 
@@ -1165,8 +1224,8 @@ for I = 1:size(P,1)
                 
                 Logs.Index{numA,1} = i;
                 Logs.duration{numA,1} = duration;
-                Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
-                Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
+                Logs.Tf{numA,1} = Tf .* ones(size(i,1),1);
+                Logs.Lf{numA,1} = Lf .* ones(size(i,1),1);
                 Logs.pErrorT{numA,1} = pErrorT;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
@@ -1175,9 +1234,14 @@ for I = 1:size(P,1)
                 % Logs (Sometimes Present):
                 switch modelStyle
                     case '3D'
-                        Logs.Hf{numA,1} = Hf * ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = Hf .* ones(Logs.Size{numA,1},1);
                     case '2D'
-                        Logs.Hf{numA,1} = -1i * ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = -1i .* ones(Logs.Size{numA,1},1);
+                end
+
+                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                if exist('Lp','var')
+                    Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
                 end
 
                 % Logs (Never Present):
@@ -1195,6 +1259,45 @@ for I = 1:size(P,1)
             case 510
                 % Create AResults Table:
                 [AResults,AResultsD,AResultsC] = createAResults(Logs,MSD.Overrides.OldVersion);
+            case 511
+                % Add to Plate Analysis Results Log
+                numMstr = num2str(numM);
+                numA = numA + 1;
+                i = (Logs.numMi:numM)';
+                
+                % Logs
+                Logs.numA = numA;
+                Logs.AType{numA,1} = 3; % AType = 3 means Plate Analysis
+                Logs.Size{numA,1} = size(i,1);
+                
+                Logs.Index{numA,1} = i;
+                Logs.duration{numA,1} = duration;
+                Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
+                Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
+                Logs.pErrorT{numA,1} = pErrorT;
+                Logs.RwM{numA,1} = RwM;
+                Logs.IntersectTemp{numA,1} = IntersectTemp;
+
+                Logs.Lp{numA,1} = Lp;
+                
+                % Logs (Sometimes Present):
+                switch modelStyle
+                    case '3D'
+                        Logs.Hf{numA,1} = Hf * ones(Logs.Size{numA,1},1);
+                    case '2D'
+                        Logs.Hf{numA,1} = -1i * ones(Logs.Size{numA,1},1);
+                end
+
+                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                if exist('SP','var')
+                    Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
+                end
+                
+
+                % Logs (Never Present):
+                
+                % Message
+                disp(['[+] [508] ','Added Stud Analysis to Result Logs'])
 
             case 601
                % 3D Y Slice Analysis (Vertical Y)
@@ -1594,7 +1697,7 @@ for I = 1:size(P,1)
                 end
             case 702
                 % Stud Analysis Condition
-                if SPc == SP(end)
+                if TP.Stud.Center == SP(end)
                     Condition = 0;
                 else
                     Condition = 1;
@@ -1602,6 +1705,13 @@ for I = 1:size(P,1)
             case 703
                 % Foam Analysis Condition
                 if (numM-(Logs.numMi-1)) == Foam(end,end)
+                    Condition = 0;
+                else
+                    Condition = 1;
+                end
+            case 704
+                % Plate Analysis Condition
+                if TP.Plate.L == Lp(end)
                     Condition = 0;
                 else
                     Condition = 1;
