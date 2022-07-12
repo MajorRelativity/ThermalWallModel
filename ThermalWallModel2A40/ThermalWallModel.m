@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A40
+%% ThermalWallModel v2.B40
 % Updated on July 12 2022
 
 clear
@@ -170,7 +170,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 20*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 10*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -187,6 +187,8 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
 - 'GenericStud' = Traditional stud style
 - 'TimeMachine' = Recreates the bottem seciton of time machine. Stud 
     through middle with difference for plywood section
+- 'TimeMachineNoPlate = Just like time machine except there is no plate
+    between the foam and the wall.
 
 %}
 MSD.propertyStyle = 'TimeMachine'; 
@@ -223,9 +225,11 @@ MSD.Foam.R = 5;
 'None' - No Preset, Above Specifications are used
 'Generic' - Generic Wall with Generic Stud Positioning if Needed
 'TimeMachine' - Time Machine Wall with Plate
+'GenericExtended' - Generic Wall with Generic Stud Positioning. In 3D,
+ the Foam is extended to meet the height of the wall
 
 %}
-MSD.Preset = 'TimeMachine';
+MSD.Preset = 'GenericExtended';
 
 %% Save or Load Model Specifications
 
