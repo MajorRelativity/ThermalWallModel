@@ -1803,8 +1803,8 @@ function MSD = msPreset(MSD)
             MSD.Foam.R = 5;
 
             % Message:
-            disp('[=] MSPreset "Generic" has been applied')
-                case 'Generic'
+            disp('[=] MSPreset "GenericExtended" has been applied')
+        case 'Generic'
             
             % Property Style:
             MSD.propertyStyle = 'GenericStud'; 
