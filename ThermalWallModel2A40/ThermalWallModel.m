@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A39
+%% ThermalWallModel v2.A40
 % Updated on July 12 2022
 
 clear
@@ -156,8 +156,8 @@ Process ID:
 MSD.msMode = 201; % 201 = save, 202 = load
 
 % Overrides:
-MSD.Overrides.run504 = 0; % Change to 0 if time2num is not installed on your machine
-MSD.Overrides.OldVersion = 1; % Choose if you are running an old version of matlab
+MSD.Overrides.run504 = 1; % Change to 0 if time2num is not installed on your machine
+MSD.Overrides.OldVersion = 0; % Choose if you are running an old version of matlab
 
 % Model Type ("transient", "steadystate")
 MSD.modelType = 'steadystate';
@@ -1775,7 +1775,36 @@ function MSD = msPreset(MSD)
             % Message
             disp('[=] MSPreset "TimeMachine" has been applied')
 
-        case 'Generic'
+        case 'GenericExtended'
+            
+            % Property Style:
+            MSD.propertyStyle = 'GenericStud'; 
+
+            % Shape of Wall:
+
+            MSD.Wall.Thickness = 5.08 * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            MSD.Foam.Thickness = 2.54 * 10^-2; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Wall.Height; 
+
+            % Wall Thermal Properties:
+            MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            
+            % Stud
+            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.R = 10; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "Generic" has been applied')
+                case 'Generic'
             
             % Property Style:
             MSD.propertyStyle = 'GenericStud'; 
