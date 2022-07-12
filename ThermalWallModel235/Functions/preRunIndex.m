@@ -16,7 +16,7 @@ for C = qCollection
             prePline = -2; %prePrograms always end with their program ID #
             
             % Concatonate to preP
-            concat2P(prePline,preP,0)
+            preP = concat2P(prePline,preP,0);
             
             break
         case 0

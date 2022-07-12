@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.36
+%% ThermalWallModel v2.A37
 % Updated on July 11 2022
 
 clear
@@ -191,6 +191,11 @@ MSD.Wall.Height = MSD.Wall.Length;
 
 % Wall Thermal Properties:
 MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+
+% Plate:
+MSD.Plate.Length = .302; %Plate Length
+MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+MSD.Plate.TC = 236; %Plate Thermal Conductivity
 
 % Stud:
 MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
@@ -475,22 +480,32 @@ for preI = 1:size(preP,1)
                 disp('[+] [111] Foam Vector Created')
             case 112
                 % Thermal Property Translation
-                TCw = MSD.Wall.TC;
-                TCs = MSD.Stud.TC;
+                TP.Wall.TC = MSD.Wall.TC;
+
+                %Stud:
+                TP.Stud.TC = MSD.Stud.TC;
                 SP = MSD.Stud.Pos;
-                SL = MSD.Stud.Length;
+                TP.Stud.L = MSD.Stud.Length;
+
+                % Plate
+                TP.Plate.L = MSD.Plate.Length;
+                TP.Plate.T = MSD.Plate.Thickness;
+                TP.Plate.TC = MSD.Plate.TC;
 
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
                 % Thermal Properties if Studs
-                % Note: 0.0381 m is the width of a 2 by 4
-                SPu = SP + SL/2; % Stud Size Upper Bound
-                SPl = SP - SL/2; % Stud Size Lower Bound
-                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
+
+                TP.Stud.Center = SP(1);
+                TP.Stud.UpB = TP.Stud.Center + TP.Stud.L/2; % Stud Size Upper Bound
+                TP.Stud.LowB = TP.Stud.Center - TP.Stud.L/2; % Stud Size Lower Bound
+                TP.Wall.T = Tw;
+
+                TC = @(location,state)thermalProperties(location,state,TP,MSD.propertyStyle);
                 disp('[+] [113] Stud Location Defined')
             case 114
                 % Thermal Property if No Stud
-                TC = TCw;
+                TC = TP.Wall.TC;
                 SP = -1i;
                 disp('[+] [114] Thermal Properties Defined')
             case 115
@@ -821,10 +836,15 @@ for I = 1:size(P,1)
                 end
             case 302
                 % Stud Analysis Modification
-                SPc = SP(numM-(Logs.numMi-1));
-                SPu = SPc + SL/2; % Stud Size Upper Bound
-                SPl = SPc - SL/2; % Stud Size Lower Bound
-                TC = @(location,state)thermalProperties(location,state,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
+
+                % Load Variables
+                TP.Stud.Center = SP(numM-(Logs.numMi-1));
+                TP.Stud.UpB = TP.Stud.Center + TP.Stud.L/2; % Stud Size Upper Bound
+                TP.Stud.LowB = TP.Stud.Center - TP.Stud.L/2; % Stud Size Lower Bound
+                TP.Wall.T = Tw;
+
+                % Condition
+                TC = @(location,state)thermalProperties(location,state,TP,MSD.propertyStyle);
                 disp(['[+] [302] [Model ',numMstr,'] ','New Stud Location Set: ', num2str(SPc)])
             case 303
                 % Create '__p' variables for the Parallel Pool
@@ -927,11 +947,11 @@ for I = 1:size(P,1)
 
                         thermalIC(thermalmodel,Tempi); % Initial Conditions only apply to tranient models
 
-                        TCw = ThermalConductivity; 
+                        TP.Wall.TC = ThermalConductivity; 
                         TMw = MassDensity; 
                         TSw = SpecificHeat;
 
-                        thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
+                        thermalProperties(thermalmodel,'ThermalConductivity',TP.Wall.TC,...
                                                        'MassDensity',TMw,...
                                                        'SpecificHeat',TSw);
 
@@ -981,11 +1001,11 @@ for I = 1:size(P,1)
                 thermalmodel = ThermalModel{numM}; % Import Thermal Model from Cell
 
                 if all(MSD.modelType=="transient")
-                    TCw = ThermalConductivity; 
+                    TP.Wall.TC = ThermalConductivity; 
                     TMw = MassDensity; 
                     TSw = SpecificHeat;
                     
-                    thermalProperties(thermalmodel,'ThermalConductivity',TCw,...
+                    thermalProperties(thermalmodel,'ThermalConductivity',TP.Wall.TC,...
                                                    'MassDensity',TMw,...
                                                    'SpecificHeat',TSw);
             
@@ -1534,7 +1554,7 @@ for I = 1:size(P,1)
                 [location.x,location.y] = meshgrid(linspace(0,Tw + Tf),linspace(-Lw/2,Lw/2));
                 X = location.x;
                 Y = location.y;
-                V = thermalProperties(location,-1,TCw,TCs,SPl,SPu,Tw,MSD.propertyStyle);
+                V = thermalProperties(location,-1,TP,MSD.propertyStyle);
                 surf(X,Y,V,'LineStyle','none');
                 view(0,90)
                 title(fname)
@@ -1617,7 +1637,6 @@ function MSD = msPreset(MSD)
             MSD.propertyStyle = 'TimeMachine'; 
 
             % Shape of Wall:
-
             MSD.Foam.Thickness = 2.54 * 10^-2 + 0.0015875; % Including Aluminum Plate
             MSD.Foam.Length = 45.6 * 10^-2; %m
             MSD.Foam.Height = MSD.Foam.Length; 
@@ -1629,6 +1648,12 @@ function MSD = msPreset(MSD)
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
 
+            % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+
+            % Stud
             MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
