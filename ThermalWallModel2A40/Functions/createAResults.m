@@ -69,6 +69,7 @@ function AResultsC = cleanAResults(AResults)
 
         if missing
             AResults(:,I) = [];
+            I = 0;
         end       
 
     end

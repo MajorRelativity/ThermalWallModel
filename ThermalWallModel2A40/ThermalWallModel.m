@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B40
+%% ThermalWallModel v2.B41
 % Updated on July 12 2022
 
 clear
@@ -170,7 +170,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 10*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 20*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -616,7 +616,7 @@ for preI = 1:size(preP,1)
                 
             case 55
                 % Collection #55 - Generate Single Geometry with Stud
-                Pline = [55 401 406 407 212 203]; % All collections must start with their collection #
+                Pline = [55 505 401 406 407 212 203]; % All collections must start with their collection #
                 
             case 56
                 % Collection #56 - 2D Plot Current Thermal Properties
