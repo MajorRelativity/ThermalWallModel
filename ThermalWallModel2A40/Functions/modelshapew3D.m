@@ -10,17 +10,30 @@ function gm = modelshapew3D(model,qRM,Lw,Hw,Tw,Lf,Hf,Tf)
 
 IntSize = .005; %Controls the spread of points created within the geometry
 
+%% Find Wall and Foam # of Points:
+
+PointNum.Lw = Lw/IntSize;
+PointNum.Hw = Hw/IntSize;
+PointNum.Tw = Tw/IntSize;
+
+PointNum.Lf = Lf/IntSize;
+PointNum.Hf = Hf/IntSize;
+PointNum.Tf = Tf/IntSize;
+
 
 %% Wall:
 
 % Create Mesh Grid: Creates a 3D mesh grid of all points in the wall
-xw = 0:IntSize:Tw;
+xw = linspace(0,Tw,PointNum.Tw);
 if qRM == 0
-    yw = (-Lw/2):IntSize:(Lw/2);
-    zw = (-Hw/2):IntSize:(Hw/2);
+    yw = linspace(-Lw/2,Lw/2,PointNum.Lw);
+    zw = linspace(-Hw/2,Hw/2,PointNum.Hw);
 elseif qRM == 1
-    yw = (0):IntSize:(Lw/2);
-    zw = (0):IntSize:(Hw/2);
+    PointNum.Lw = PointNum.Lw/2;
+    PointNum.Hw = PointNum.Hw/2;
+
+    yw = linspace(0,Lw/2,PointNum.Lw);
+    zw = linspace(0,Hw/2,PointNum.Hw);
 end
 [Xw, Yw, Zw] = meshgrid(xw,yw,zw);
 
@@ -39,13 +52,16 @@ IntPointsw(Index,2) = Yw(Index);
 IntPointsw(Index,3) = Zw(Index);
 
 %% Foam (runs same as wall):
-xf = Tw:IntSize:(Tw+Tf);
+xf = linspace(Tw,Tw+Tf,PointNum.Tf);
 if qRM == 0
-    yf = (-Lf/2):IntSize:(Lf/2);
-    zf = (-Hf/2):IntSize:(Hf/2);
+    yf = linspace(-Lf/2,Lf/2,PointNum.Lf);
+    zf = linspace(-Hf/2,Hf/2,PointNum.Hf);
 elseif qRM == 1
-    yf = (0):IntSize:(Lf/2);
-    zf = (0):IntSize:(Hf/2);
+    PointNum.Lf = PointNum.Lf/2;
+    PointNum.Hf = PointNum.Hf/2;
+
+    yf = linspace(0,Lf/2,PointNum.Lf);
+    zf = linspace(0,Hf/2,PointNum.Hf);
 end
 [Xf, Yf, Zf] = meshgrid(xf,yf,zf);
 
