@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.50
+%% ThermalWallModel v2.51
 % Updated on July 13 2022
 
 clear
@@ -24,6 +24,8 @@ Process ID:
             004) Get Temperature at Point
         Generate Geometry:
             005) Generate Single Geometry with Stud
+        Solve Models:
+            006) Solve Single Model with Overrides
           
 
     051 - 099 = 2D Model:
@@ -114,6 +116,7 @@ Process ID:
     407) 2D Apply Thermal Properties
     408) Generate All Meshes
     409) Solve All Models
+    410) Generate Mesh with Overrides
 
 500) Post Processing
 
@@ -171,9 +174,14 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 10*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
+
+MSD.q.NCM3D = 1; % Ask for inconsistant mesh specifications when generating 3D geometry
+% in order to accomidate hardware limitations on smaller mesh sizes
+MSD.Mesh.HOverride = 15*10^-3; % Override Mesh Length (for inconsistant mesh
+% specificaton
 
 % Foam Modification Settings:
 MSD.FMod.FstepT = 1; % Step size between foam trials for thickness
@@ -305,6 +313,8 @@ Colstr4 = '\n      4 = Get Temperature at Point';
 
 Colstr5 = '\n      5 = Plot Single Geometry with Stud';
 
+Colstr6 = '\n      6 = Run Single Model From Geometry with Mesh Overrides';
+
 Colstr2DT = '\n  51 - 100: 2D Model';
 
 Colstr51 = '\n      51 = Generate Single Geometry ';
@@ -326,7 +336,8 @@ Colstr60 = '\n      60 = Plot Single Geometry';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
-    ColstrT2,Colstr5];
+    ColstrT2,Colstr5,...
+    ColstrT3,Colstr6];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
@@ -409,6 +420,7 @@ for preI = 1:size(preP,1)
                 % Mesh Name Translation
                 Hmax = MSD.Mesh.Hmax;
                 Hmin = MSD.Mesh.Hmin;
+                HOverride = MSD.Mesh.HOverride;
 
                 disp('[+] [101] Names Translated')
 
@@ -600,9 +612,15 @@ for preI = 1:size(preP,1)
             case 4 
                 % Collection #4 - Get Temperature at Point
                 Pline = [4 206 210 301 604]; % All collections must start with their collection #
+
             case 5
                 % Collection #5 - Generate Single Geometry with Stud
                 Pline = [5 505 401 402 403 212 203]; % All collections must start with their collection #
+
+            case 6
+                % Collection #6 - Run Model From Geometry with Mesh Overrides
+                Pline = [2 204 213 301 501 410 405 502 503 504 ...
+                    506 509 510 211 205 207 209]; % All collections must start with their collection #
                 
             case 51
                 % Collection #51 - 2D Generate Geometry
@@ -702,6 +720,15 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #5 - Generate Single Geometry with Stud')
 
                 % Overrides:
+                run301 = 0;
+            case 6
+                % Collection #6 - Run Single Model From Geometry with Mesh Overrides
+                disp('[&] Starting Collection #6 - Solve Single Model with Mesh Overrides')
+
+                % Overrides
+                run206 = 0;
+                run208 = 0;
+                run210 = 0;
                 run301 = 0;
             case 51
                 % Collection #51 - Generate Single Geometry
@@ -1004,6 +1031,12 @@ for I = 1:size(P,1)
                     OutdoorFF = input(['[?] [403] [Model ',numMstr,'] ','Specify the face # of the outdoor foam side: ']);
                     OutdoorWF = input(['[?] [403] [Model ',numMstr,'] ','Specify the face # of the outdoor wall side: ']);
 
+
+                    % Ask for Inconsistant Mesh:
+                    if MSD.q.NCM3D == 1
+                        Logs.NCMF = input(['[?] [403] [Model ',numMstr,'] ','Specify the face #(s) you would like to use a reduced mesh around: ']);
+                    end
+
                     % Run Prototype Model for Check
                     disp(['[*] [403] [Model ',numMstr,'] ','Running Prototype Model for Check'])
                     generateMesh(thermalmodel,'Hmin',0.2,'Hmax',1);
@@ -1125,6 +1158,16 @@ for I = 1:size(P,1)
                     disp(['[*] [409] [Model ',numMstr,'] ','Model Solved'])
                 end
                 disp('[$] [408] All Models Solved')
+            case 410
+                % Generate Single Mesh with Overrides:
+                disp(['[$] [410] [Model ',numMstr,'] ','Generating Mesh with overrides'])
+                
+                if ~exist('Logs.NCMF','var')
+                    error('[!] [410] This model does not appear to have any overries associated with it')
+                end
+
+                ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax,'Hface',{Logs.NCMF,HOverride});
+                disp(['[+] [410] [Model ',numMstr,'] ','Mesh Generated'])
             case 501
                 % Start Timer
                 timeri = datetime('now');

@@ -42,6 +42,10 @@ for C = qCollection
         case 5       
             % Collection #5 - Generate Single Geometry with Stud
             prePline = [101 119 103 104 107 112 113 5]; %prePrograms always end with their program ID #
+
+        case 6   
+            % Collection #6 - Run Model From Geometry with Mesh Overrides
+            prePline = [101 119 103 104 107 112 114 1]; %prePrograms always end with their program ID #
             
         case 51            
             % Collection #51 - 2D Generate Geometry
