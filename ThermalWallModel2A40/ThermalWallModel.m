@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B41
+%% ThermalWallModel v2.B46
 % Updated on July 12 2022
 
 clear
@@ -23,6 +23,7 @@ Process ID:
             003) Create Contour Plot Slices
             004) Get Temperature at Point
         Generate Geometry:
+            005) Generate Single Geometry with Stud
           
 
     051 - 099 = 2D Model:
@@ -170,7 +171,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 20*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 10*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -229,7 +230,7 @@ MSD.Foam.R = 5;
  the Foam is extended to meet the height of the wall
 
 %}
-MSD.Preset = 'GenericExtended';
+MSD.Preset = 'Generic';
 
 %% Save or Load Model Specifications
 
@@ -302,6 +303,8 @@ Colstr2 = '\n      2 = Run Single Model From Geometry ';
 Colstr3 = '\n      3 = Create Contour Plot Slices';
 Colstr4 = '\n      4 = Get Temperature at Point';
 
+Colstr5 = '\n      5 = Plot Single Geometry with Stud';
+
 Colstr2DT = '\n  51 - 100: 2D Model';
 
 Colstr51 = '\n      51 = Generate Single Geometry ';
@@ -322,7 +325,8 @@ Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
 
 
-Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
+    ColstrT2,Colstr5];
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
@@ -596,6 +600,9 @@ for preI = 1:size(preP,1)
             case 4 
                 % Collection #4 - Get Temperature at Point
                 Pline = [4 206 210 301 604]; % All collections must start with their collection #
+            case 5
+                % Collection #5 - Generate Single Geometry with Stud
+                Pline = [5 505 401 402 403 212 203]; % All collections must start with their collection #
                 
             case 51
                 % Collection #51 - 2D Generate Geometry
@@ -690,6 +697,12 @@ for I = 1:size(P,1)
             case 4
                 % Collection #4 - Plotting Temperature at Point
                 disp('[&] Starting Collection #4 - Plotting Temperature at Point')
+            case 5
+                % Collection #5 - Generate Single Geometry with Stud
+                disp('[&] Starting Collection #5 - Generate Single Geometry with Stud')
+
+                % Overrides:
+                run301 = 0;
             case 51
                 % Collection #51 - Generate Single Geometry
                 disp('[&] Starting Collection #51 - Generate Geometry')
@@ -1472,11 +1485,11 @@ for I = 1:size(P,1)
                             X = Xslice.*ones(size(Z,1),size(Z,2));
                             V = interpolateTemperature(thermalresults,X,Y,Z);
                             V = reshape(V,size(Z));
-                            surf(Z,Y,V,'LineStyle','none');
+                            surf(Y,Z,V,'LineStyle','none');
                             view(0,90)
                             title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
-                            xlabel('Z (Height)')
-                            ylabel('Y (Length)')
+                            xlabel('Y (Length)')
+                            ylabel('Z (Height)')
                             colorbar
                         end
                    else
@@ -1497,11 +1510,11 @@ for I = 1:size(P,1)
                         X = Xslice.*ones(size(Z,1),size(Z,2));
                         V = interpolateTemperature(thermalresults,X,Y,Z);
                         V = reshape(V,size(Z));
-                        surf(Z,Y,V,'LineStyle','none');
+                        surf(Y,Z,V,'LineStyle','none');
                         view(0,90)
                         title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
-                        xlabel('Z (Height)')
-                        ylabel('Y (Length)')
+                        xlabel('Y (Length)')
+                        ylabel('Z (Height)')
                         colorbar
                         gateP = input('[?] [603] Would you like to plot more rows? (1 = yes, 0 = no): ');
                    end
