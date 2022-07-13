@@ -27,27 +27,31 @@ for C = qCollection
             % Collection #1 - Generate Geometry
             prePline = [101 119 103 104 107 112 114 1]; %prePrograms always end with their program ID #
 
-       case 2          
+        case 2          
             % Collection #2 - Run Model From Geometry
             prePline = [101 119 104 105 117 106 109 118 107 2]; %prePrograms always end with their program ID #
 
-       case 3          
+        case 3          
             % Collection #3 - Contour Slices
             prePline = [101 119 107 3]; %prePrograms always end with their program ID #
 
         case 4
             % Collection #4 - Get Temperature at Point
             prePline = [101 119 107 4]; %prePrograms always end with their program ID #
+
+        case 5       
+            % Collection #5 - Generate Single Geometry with Stud
+            prePline = [101 119 103 104 107 112 113 5]; %prePrograms always end with their program ID #
             
-       case 51            
+        case 51            
             % Collection #51 - 2D Generate Geometry
             prePline = [101 119 112 111 104 108 114 51]; %prePrograms always end with their program ID #
 
-       case 52          
+        case 52          
             % Collection #52 - 2D Run Model From Geometry
             prePline = [101 119 104 105 116 106 109 118 108 52]; %prePrograms always end with their program ID #
 
-       case 53          
+        case 53          
             % Collection #53 - 2D Contour Plot
             prePline = [101 119 108 53]; %prePrograms always end with their program ID #
 
