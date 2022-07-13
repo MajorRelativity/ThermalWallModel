@@ -10,6 +10,16 @@ function gm = modelshapew3D(model,qRM,Lw,Hw,Tw,Lf,Hf,Tf)
 
 IntSize = .005; %Controls the spread of points created within the geometry
 
+Tf = 2.54 * 10^-2; %m
+Lf = 45.6 * 10^-2; %m
+Hf = Lf; 
+
+Tw = 5.08 * 10^-2; %m
+Lw = 90 * 10^-2; %m 
+Hw = Lw;
+qRM = 0;
+model = createpde;
+
 %% Find Wall and Foam # of Points:
 
 PointNum.Lw = Lw/IntSize;
