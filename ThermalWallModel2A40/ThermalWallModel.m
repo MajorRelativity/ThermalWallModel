@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B42
+%% ThermalWallModel v2.B44
 % Updated on July 12 2022
 
 clear
@@ -1472,11 +1472,11 @@ for I = 1:size(P,1)
                             X = Xslice.*ones(size(Z,1),size(Z,2));
                             V = interpolateTemperature(thermalresults,X,Y,Z);
                             V = reshape(V,size(Z));
-                            surf(Z,Y,V,'LineStyle','none');
+                            surf(Y,Z,V,'LineStyle','none');
                             view(0,90)
                             title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
-                            xlabel('Z (Height)')
-                            ylabel('Y (Length)')
+                            xlabel('Y (Length)')
+                            ylabel('Z (Height)')
                             colorbar
                         end
                    else
@@ -1497,11 +1497,11 @@ for I = 1:size(P,1)
                         X = Xslice.*ones(size(Z,1),size(Z,2));
                         V = interpolateTemperature(thermalresults,X,Y,Z);
                         V = reshape(V,size(Z));
-                        surf(Z,Y,V,'LineStyle','none');
+                        surf(Y,Z,V,'LineStyle','none');
                         view(0,90)
                         title(['Colored Plot through X (Thickness) = ',num2str(Xslice)])
-                        xlabel('Z (Height)')
-                        ylabel('Y (Length)')
+                        xlabel('Y (Length)')
+                        ylabel('Z (Height)')
                         colorbar
                         gateP = input('[?] [603] Would you like to plot more rows? (1 = yes, 0 = no): ');
                    end
