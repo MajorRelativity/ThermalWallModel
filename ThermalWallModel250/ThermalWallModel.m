@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.51
-% Updated on July 13 2022
+%% ThermalWallModel v2.52
+% Updated on July 14 2022
 
 clear
 addpath("Functions")
@@ -46,6 +46,7 @@ Process ID:
         Analysis:
             056) Plot Current Thermal Properties
             060) Plot Single Geometry
+            064) Plot Temperatures Across Intersection
 
 
 100) PreRun
@@ -143,6 +144,7 @@ Process ID:
     606) 2D Get Temperature at Point
     607) 2D Plot Current Thermal Properties
     608) 2D Create Plot of Current Geometry
+    609) 2D Plot Temperature Across Intersection
 
 700) Conditions
 
@@ -333,6 +335,7 @@ Colstr63 = '\n      63 = Solve All Plate Analysis Models';
 
 Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
+Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
@@ -341,7 +344,7 @@ Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
-    ColstrT4,Colstr56,Colstr60];
+    ColstrT4,Colstr56,Colstr60,Colstr64];
 Colstr = [Colstr3D,Colstr2D];
 
 
@@ -666,11 +669,14 @@ for preI = 1:size(preP,1)
                 % Collection #61 - 2D Solve All Foam Analysis Models
                 Pline = [61 204 213 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
             case 62
-                % Collection # 62 - 2D Generate All Plate Analysis Geometries
+                % Collection #62 - 2D Generate All Plate Analysis Geometries
                 Pline = [62 505 401 306 406 407 704 701 212 203]; % All collections must start with their collection #
             case 63
-                % Collection # 63 - 2D Solve All Plate Analysis Models
+                % Collection #63 - 2D Solve All Plate Analysis Models
                 Pline = [63 204 213 303 408 409 507 504 511 509 510 211 205 207 209]; % All collections must start with their collection #
+            case 64
+                % Collection #64 - 2D Plot Temperatures Across Intersection
+                Pline = [64 206 210 609]; % All collections must start with their collection #
                 
         end
     end
@@ -795,6 +801,9 @@ for I = 1:size(P,1)
                     disp('[&] Starting Collection #62 - Generate All Plate Analysis Geometries')
                     run62 = 0;
                 end
+            case 64
+                % Collection #64 - Plot Temperatures Across Intersection
+                disp('[&] Starting Collection #64 - Plot Temperatures Across Intersection')
 
             case 203
                 % Make Directory:
@@ -1196,8 +1205,8 @@ for I = 1:size(P,1)
                 % Duration with time2num
                 duration = -1i*ones(size(timerf,1),1);
                 if MSD.Overrides.run504 == 1
-                    duration = timerf(:) - timeri(:);
-                    duration = time2num(duration(:),'seconds');
+                    duration = timerf - timeri;
+                    duration = time2num(duration,'seconds');
                     duration = (ones(1,size(duration,2))*duration')'; % Sums rows
                 end
             case 505
@@ -1707,7 +1716,7 @@ for I = 1:size(P,1)
                     gateTAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
                 end
             case 607
-                % Create Figure:
+                % Plot Current Thermal Properties:
                 disp(['[$] [607] Plotting Current Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'])
                 fname = ['Thermal Properties for propertyStyle: "',MSD.propertyStyle,'"'];
                 figure('Name',fname)
@@ -1747,6 +1756,84 @@ for I = 1:size(P,1)
                     drawnow
                     disp(['[+] [608] [Model ',numMstr,'] ','Plotted Current Geometry']);
                     numM = input(['[?] [608] [Model ',numMstr,'] ','Would you like to plot another geometry? (Choose Model # or 0 = n): ']);
+                end
+            case 609
+                % Create Graph of Temperatures Across Intersection:
+                gateP = 1;
+                while gateP == 1
+                    qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (-1 = all, or row index # from AResults): ');
+    
+                    if qTRpa == -1
+                        % Create plot for all table values
+                        for numM = 1:size(ThermalResults,2)
+
+                        % Pull Important Info:
+                        Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
+                        
+                        Tf = AResultsD(numM,4);
+                        Lf = AResultsD(numM,5);
+                        numMstr = num2str(numM);
+
+                        % Interpolate Temperature:
+                        y = linspace(-Lf/2,Lf/2);
+                        T = zeros(1,size(y,2));
+                        c = 1;
+                        for i = y
+                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
+                            c = c + 1;
+                        end
+                        clear c
+                        
+                        % Plot
+                        disp(['[$] [609] Plotting Model #',num2str(numM)])
+                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        plot(y,T,'ro')
+
+                        title(fname)
+                        xlabel('Length (m)')
+                        ylabel('Temperature')
+
+                        end
+                        gateP = 0;
+                    else
+                        % Create plot for specific value
+                        numM = qTRpa;
+
+                        % Pull Important Info:
+                        Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
+                        
+                        Tf = AResultsD(numM,4);
+                        Lf = AResultsD(numM,5);
+                        numMstr = num2str(numM);
+
+                        % Interpolate Temperature:
+                        y = linspace(-Lf/2,Lf/2);
+                        T = zeros(1,size(y,2));
+                        c = 1;
+                        for i = y
+                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
+                            c = c + 1;
+                        end
+                        clear c
+
+
+                        % Plot
+                        disp(['[$] [609] Plotting Model #',num2str(numM)])
+                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        plot(y,T,'ro')
+                        
+                        title(fname)
+                        xlabel('Length (m)')
+                        ylabel('Temperature')
+
+                        gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
+                    end
                 end
                 
             case 701

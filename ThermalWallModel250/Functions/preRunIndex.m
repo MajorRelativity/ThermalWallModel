@@ -98,6 +98,9 @@ for C = qCollection
         case 63
             % Collection #63 - 2D Solve All Plate Analysis Models
             prePline = [101 119 104 105 116 106 109 118 108 63]; %prePrograms always end with their program ID #
+        case 64
+            % Collection #64 - 2D Plot Temperatures Across Intersection
+            prePline = [101 119 108 64]; %prePrograms always end with their program ID #
 
     end
     
