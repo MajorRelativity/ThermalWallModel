@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.54
+%% ThermalWallModel v2.55
 % Updated on July 15 2022
 
 clear
@@ -154,6 +154,7 @@ Process ID:
     702) Repeat Stud Analysis
     703) Repeat Foam Analysis
     704) Repeat Plate Analysis
+    705) Repeat Collection 53
 
 %}
 
@@ -282,6 +283,7 @@ end
 %% Reset Overrides:
 
 % 000
+run54 = 1;
 run57 = 1;
 run59 = 1;
 run62 = 1;
@@ -647,7 +649,7 @@ for preI = 1:size(preP,1)
                 
             case 54 
                 % Collection #54 - 2D Get Temperature at Point
-                Pline = [54 206 210 301 606]; % All collections must start with their collection #
+                Pline = [54 206 210 301 606 705 701]; % All collections must start with their collection #
                 
             case 55
                 % Collection #55 - Generate Single Geometry with Stud
@@ -766,7 +768,10 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #53 - Create Contour Plot')
             case 54
                 % Collection #54 - Plotting Temperature at Point
-                disp('[&] Starting Collection #54 - Plotting Temperature at Point')
+                if run54 == 1
+                    disp('[&] Starting Collection #54 - Plotting Temperature at Point')
+                    run54 = 0;
+                end
             case 55
                 % Collection #55 - Generating Single Geometry with Stud
                 disp('[&] Starting Collection #55 - Generating Single Geometry with Stud')
@@ -1859,7 +1864,7 @@ for I = 1:size(P,1)
                     end
                 end
             case 610
-                %% Get Average Temperature Across Plate Region
+                % Get Average Temperature Across Plate Region
                 gateP = 1;
                 while gateP == 1
                     qTRpa = input('[?] [610] What model # do you want to average the Intersection of? (-1 = all, or row index # from AResults): ');
@@ -1986,6 +1991,22 @@ for I = 1:size(P,1)
                     Condition = 0;
                 else
                     Condition = 1;
+                end
+            case 705
+                % Repeat Collection 54
+                Condition = input('[?] [705] Would you like to restart Collection 54? (y = 1, n = 0): ');
+                
+                % Adjust Run Variables
+                switch Condition
+                    case 0
+                        disp('[-] [705] Exiting Collection')
+                    case 1
+                        run206 = 0;
+                        run210 = 0;
+                        disp('[+] [705] Restarting Collection')
+                    otherwise
+                        Condition = 0;
+                        disp('[-] [705] Invalid Input - Exiting Collection')
                 end
 
         end
