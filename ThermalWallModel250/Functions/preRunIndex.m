@@ -101,6 +101,9 @@ for C = qCollection
         case 64
             % Collection #64 - 2D Plot Temperatures Across Intersection
             prePline = [101 119 108 64]; %prePrograms always end with their program ID #
+        case 65
+            % Collection #65 - 2D Get Average Temperature Across Plate
+            prePline = [101 119 108 65]; %prePrograms always end with their program ID #
 
     end
     
