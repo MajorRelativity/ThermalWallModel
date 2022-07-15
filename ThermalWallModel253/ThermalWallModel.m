@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.53
+%% ThermalWallModel v2.54
 % Updated on July 15 2022
 
 clear
@@ -1663,6 +1663,9 @@ for I = 1:size(P,1)
                         xlabel('Thickness (m)')
                         ylabel('Length (m)')
                         hold off
+                        
+                        drawnow
+
                         end
                         gateP = 0;
                     else
@@ -1685,6 +1688,9 @@ for I = 1:size(P,1)
                         xlabel('Thickness (m)')
                         ylabel('Length (m)')
                         hold off
+
+                        drawnow
+
                         gateP = input('[?] [605] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                 end
@@ -1809,6 +1815,8 @@ for I = 1:size(P,1)
                         xlabel('Length (m)')
                         ylabel('Temperature')
 
+                        drawnow
+
                         end
                         gateP = 0;
                     else
@@ -1844,6 +1852,8 @@ for I = 1:size(P,1)
                         title(fname)
                         xlabel('Length (m)')
                         ylabel('Temperature')
+
+                        drawnow
 
                         gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
