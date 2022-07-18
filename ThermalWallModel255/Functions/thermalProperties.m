@@ -38,16 +38,21 @@ switch propertyStyle
         % Pieces:
         Plate = (TP.Wall.T<=location.x & TP.Wall.T+TP.Plate.T>=location.x).*...
             ((TP.Plate.L/2>=location.y & -TP.Plate.L/2<=location.y).*TP.Plate.TC + (TP.Plate.L/2<=location.y | -TP.Plate.L/2>=location.y).*TP.Foam.TC);
+
         Stud = (TP.Wallboard.T<location.x & TP.Wall.T - TP.Siding.T > location.x).*...
             ((location.y >= TP.Stud.LowB & location.y <= TP.Stud.UpB) | (location.y >= TP.Stud.LowB2 & location.y <= TP.Stud.UpB2) | (location.y >= TP.Stud.LowB3 & location.y <= TP.Stud.UpB3)).*...
             TP.Stud.TC +...
             ~((location.y >= TP.Stud.LowB & location.y <= TP.Stud.UpB) | (location.y >= TP.Stud.LowB2 & location.y <= TP.Stud.UpB2) | (location.y >= TP.Stud.LowB3 & location.y <= TP.Stud.UpB3)).*...
             TP.Wall.TC;
 
+        Wallboard = (location.x<TP.Wallboard.T).*TP.Wallboard.TC;
 
+        Siding = (location.x<TP.Wall.T & location.x>(TP.Wall.T - TP.Siding.T)).*TP.Wallboard.TC;
+
+        Foam = (TP.Wall.T+TP.Plate.T<location.x).*TP.Wall.TC;
        
         % Thermal Conductivity:
-        TC = Stud + Plate;
+        TC = Wallboard + Stud + Siding + Plate + Foam;
 end
 
 %% Used to PLot Sample Points if Needed

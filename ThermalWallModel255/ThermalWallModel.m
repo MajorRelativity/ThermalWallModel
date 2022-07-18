@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A57
+%% ThermalWallModel v2.A58
 % Updated on July 18 2022
 
 clear
