@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A56
+%% ThermalWallModel v2.A57
 % Updated on July 18 2022
 
 clear
@@ -225,6 +225,7 @@ MSD.Wall.Height = MSD.Wall.Length;
 
 % Wall Thermal Properties:
 MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+MSD.Foam.TC = MSD.Wall.TC;
 
 % Plate:
 MSD.Plate.Length = .302; %Plate Length
@@ -535,8 +536,9 @@ for preI = 1:size(preP,1)
             case 112
                 % Thermal Property Translation
                 TP.Wall.TC = MSD.Wall.TC;
+                TP.Foam.TC = MSD.Foam.TC;
 
-                %Stud:
+                % Stud:
                 TP.Stud.TC = MSD.Stud.TC;
                 SP = MSD.Stud.Pos;
                 TP.Stud.L = MSD.Stud.Length;
@@ -545,6 +547,9 @@ for preI = 1:size(preP,1)
                 TP.Plate.L = MSD.Plate.Length;
                 TP.Plate.T = MSD.Plate.Thickness;
                 TP.Plate.TC = MSD.Plate.TC;
+
+                % Extra:
+                
 
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
@@ -2124,6 +2129,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
 
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
@@ -2163,6 +2169,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
             MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
@@ -2195,6 +2202,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
             MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
@@ -2207,6 +2215,39 @@ function MSD = msPreset(MSD)
 
             % Message:
             disp('[=] MSPreset "Generic" has been applied')
+        case 'Complex'
+
+            % Property Style:
+            MSD.propertyStyle = 'Complex'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2 + 0.0015875; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = 13.97 * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.On = true;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "Complex" has been applied') 
             
     end
 
