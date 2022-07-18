@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.55
-% Updated on July 15 2022
+%% ThermalWallModel v2.A56
+% Updated on July 18 2022
 
 clear
 addpath("Functions")
@@ -13,6 +13,7 @@ Process ID:
 
     -01) Quit
     -02) Get Collection Programs
+    -03) Unit Conversion Tool
 
 000) Collection
 
@@ -81,6 +82,9 @@ Process ID:
         117) Create 3D Data Save File
         118) Automatically Create ModelSavename
 
+    Other:
+        121) Determine Conversion
+
 200) Load / Save / Store
 
     201) Make Directory and Save ModelSpecification.mat
@@ -119,6 +123,9 @@ Process ID:
     408) Generate All Meshes
     409) Solve All Models
     410) Generate Mesh with Overrides
+
+    411) Convert R Imperial to SI
+    412) Convert TC SI to Imperial
 
 500) Post Processing
 
@@ -308,9 +315,14 @@ ColstrT3 = '\n    Solve Models';
 ColstrT4 = '\n    Analysis:';
 
 ColstrInput = '\n  Input: ';
-ColstrQuit = '\n -1 = Quit ';
+
+ColstrDebug3 = '\n -3 = Debug: Unit Conversion Tool ';
 ColstrDebug2 = '\n -2 = Debug: Show Collection Programs ';
+ColstrQuit = '\n -1 = Quit ';
+
 ColstrRun = '\n  0 = Run with Nothing Else ';
+
+
 Colstr3DT = '\n  1 - 50: 3D Model';
 
 Colstr1 = '\n      1 = Generate Single Geometry ';
@@ -321,6 +333,7 @@ Colstr4 = '\n      4 = Get Temperature at Point';
 Colstr5 = '\n      5 = Plot Single Geometry with Stud';
 
 Colstr6 = '\n      6 = Run Single Model From Geometry with Mesh Overrides';
+
 
 Colstr2DT = '\n  51 - 100: 2D Model';
 
@@ -351,7 +364,8 @@ Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
     ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65];
-Colstr = [Colstr3D,Colstr2D];
+ColstrDebug = ColstrDebug3;
+Colstr = [Colstr3D,Colstr2D,ColstrDebug];
 
 
 % Create Variables:
@@ -402,13 +416,6 @@ P = [];
 for preI = 1:size(preP,1)
     for prep = preP(preI,:)
         switch prep
-            case -2
-                disp('[+] [-02] Displaying preP:')
-                disp(preP)
-                disp('[+] [-02] Displaying P:')
-                disp(P)
-                disp('[~] [-02] Quitting Script:')
-                return
             case 0
                 % Ignore
                 break
@@ -608,6 +615,46 @@ for preI = 1:size(preP,1)
 
                 Lp = (linspace(MSD.Plate.Length,0,qPA))';
                 disp('[+] [120] Plate Matrix Created')
+            case 121
+                % Determine Conversion
+                MSD.q.CON = input(['[?] [121] Would you like to:',...
+                    '\n    1 = R Imperial to SI' ...
+                    '\n    2 = TC SI to Imperial',...
+                    '\n   -1 = Quit',...
+                    '\n  Input: ']);
+                switch MSD.q.CON
+                    case -1
+                        disp('[~] [121] Quitting Script')
+                        return
+                    case 1
+                        R = input('[?] [121] Input Imperial R Value: ');
+                    case 2
+                        TCSI = input('[?] [121] Input Thermal Conductivity Value: ');
+                    otherwise
+                        disp('[~] [121] Invalid Input, Quitting Script')
+                        return
+                end
+
+                T = input('[?] [411] Please Enter the Thinkness This R is Associated to in Meters: ');
+
+            case -3
+                % Collection #-3 - Unit Conversion Tool
+
+                switch MSD.q.CON
+                    case 1
+                        Pline = [-3 411];
+                    case 2
+                        Pline = [-3 412];
+                end
+
+            case -2
+                % Collection #-2 - Display PreP and P
+                disp('[+] [-02] Displaying preP:')
+                disp(preP)
+                disp('[+] [-02] Displaying P:')
+                disp(P)
+                disp('[~] [-02] Quitting Script:')
+                return
             case 1
                 % Collection #1 - Generate Geometry
                 Pline = [1 505 401 402 403 212 203]; % All collections must start with their collection #
@@ -712,6 +759,10 @@ for I = 1:size(P,1)
             case 0
                 % Ignore and Finish Collection
                 break
+            case -3
+                % Collection #-3 - Unit Conversion Tool
+                disp('[&] Starting Collection #-3 - Unit Conversion Tool')
+
             case 1
                 % Collection #1 - Generate Single Geometry
                 disp('[&] Starting Collection #1 - Generate Geometry')
@@ -1195,6 +1246,30 @@ for I = 1:size(P,1)
 
                 ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax,'Hface',{Logs.NCMF,HOverride});
                 disp(['[+] [410] [Model ',numMstr,'] ','Mesh Generated'])
+            case 411
+                % Convert Imperial R to Metric Thermal Conductivity
+                RSI = R * (1/1055) * (3600/1) * (1/10.76) * (1/1.8); %Conversion In order: (btu/J) * (2/hr) * (msq/ftsq) * (C/F)
+
+                TCSI = T/RSI;
+
+                Conversion = [R;T;RSI;TCSI];
+                Conversion = array2table(Conversion,...
+                    'RowNames',{'Initial R (hr*F*ft^2/Btu)','Thickness (m)','RSI (K*m^2/W)','Thermal Conductivity (W/m*k)'});
+                disp('[+] [411] Displaying Conversions')
+                disp(Conversion)
+
+            case 412
+                % Convert Metric Thermal Conductivity to Imperial R
+                RSI = T/TCSI;
+
+                R = RSI / ((1/1055) * (3600/1) * (1/10.76) * (1/1.8)); %Conversion In order: (btu/J) * (2/hr) * (msq/ftsq) * (C/F)
+
+                Conversion = [TCSI;T;RSI;R];
+                Conversion = array2table(Conversion,...
+                    'RowNames',{'Thermal Conductivity (W/m*k)','Thickness (m)','RSI (K*m^2/W)','R (hr*F*ft^2/Btu)'});
+                disp('[+] [411] Displaying Conversions')
+                disp(Conversion)
+
             case 501
                 % Start Timer
                 timeri = datetime('now');
