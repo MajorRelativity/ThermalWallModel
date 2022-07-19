@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.C61
+%% ThermalWallModel v2.C62
 % Updated on July 19 2022
 
 clear
@@ -296,21 +296,21 @@ end
 %% Reset Overrides:
 
 % 000
-run54 = 1;
-run57 = 1;
-run59 = 1;
-run62 = 1;
+run.p54 = true;
+run.p57 = true;
+run.p59 = true;
+run.p62 = true;
 
 % 100:
-run104 = 1;
+run.p104 = true;
 
 % 200:
-run206 = 1;
-run208 = 1;
-run210 = 1;
+run.p206 = true;
+run.p208 = true;
+run.p210 = true;
 
 % 300
-run301 = 1;
+run.p301 = true;
 
 %% Collection Selection:
 
@@ -487,10 +487,10 @@ for preI = 1:size(preP,1)
                 disp('[+] [103] Foam Vector Created')
                 
             case 104
-                if run104 == 1
+                if run.p104
                     MN = input('[?] [104] Choose a Thermal Model File ID Number #: ');
                     MNstr = num2str(MN);
-                    run104 = 0;
+                    run.p104 = false;
                     disp(['[#] [104] Script Will Pull From and Save To Model: ',num2str(MN)])
                 end
             case 105
@@ -781,16 +781,16 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #1 - Generate Geometry')
 
                 % Overrides:
-                run301 = 0;
+                run.p301 = false;
             case 2
                 % Collection #2 - Solve Single Thermal Model
                 disp('[&] Starting Collection #2 - Solve Thermal Model')
 
                 % Overrides
-                run206 = 0;
-                run208 = 0;
-                run210 = 0;
-                run301 = 0;
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
+                run.p301 = false;
             case 3
                 % Collection #3 - Creating Slices
                 disp('[&] Starting Collection #3 - Creating Contour Slices')
@@ -802,39 +802,39 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #5 - Generate Single Geometry with Stud')
 
                 % Overrides:
-                run301 = 0;
+                run.p301 = false;
             case 6
                 % Collection #6 - Run Single Model From Geometry with Mesh Overrides
                 disp('[&] Starting Collection #6 - Solve Single Model with Mesh Overrides')
 
                 % Overrides
-                run206 = 0;
-                run208 = 0;
-                run210 = 0;
-                run301 = 0;
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
+                run.p301 = false;
             case 51
                 % Collection #51 - Generate Single Geometry
                 disp('[&] Starting Collection #51 - Generate Geometry')
 
                 % Overrides:
-                run301 = 0;
+                run.p301 = 0;
             case 52
                 % Collection #52 - Solve Single Thermal Model
                 disp('[&] Starting Collection #52 - Solve Thermal Model')
 
                 % Overrides
-                run206 = 0;
-                run208 = 0;
-                run210 = 0;
-                run301 = 0;
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
+                run.p301 = false;
             case 53
                 % Collection #53 - Creating Slices
                 disp('[&] Starting Collection #53 - Create Contour Plot')
             case 54
                 % Collection #54 - Plotting Temperature at Point
-                if run54 == 1
+                if run.p54
                     disp('[&] Starting Collection #54 - Plotting Temperature at Point')
-                    run54 = 0;
+                    run.p54 = false;
                 end
             case 55
                 % Collection #55 - Generating Single Geometry with Stud
@@ -844,23 +844,23 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #56 - 2D Plot Current Termal Properties')
             case 57
                 % Collection #57 - Generate All Geometries with Stud
-                if run57 == 1
+                if run.p57 == 1
                     disp('[&] Starting Collection #57 - Generate All Stud Analysis Geometries')
-                    run57 = 0;
+                    run.p57 = false;
                 end
             case 58
                 % Collection #58 - Solve All Stud Analysis Models
                 disp('[&] Starting Collection #58 - Solve All Stud Analysis Models')
 
                 % Overrides
-                run206 = 0;
-                run208 = 0;
-                run210 = 0;
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
             case 59
                 % Collection #59 - Create all Foam Analysis Geometries
-                if run59 == 1
+                if run.p59
                     disp('[&] Starting Collection #59 - Create all Foam Analysis Geometries')
-                    run59 = 0;
+                    run.p59 = false;
                 end
 
             case 60
@@ -871,14 +871,14 @@ for I = 1:size(P,1)
                 disp('[&] Starting Collection #61 - Solve All Foam Analysis Models')
 
                 % Overrides
-                run206 = 0;
-                run208 = 0;
-                run210 = 0;
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
             case 62
                 % Collection #62 - Generate All Plate Analysis Geometries
-                if run62 == 1
+                if run.p62
                     disp('[&] Starting Collection #62 - Generate All Plate Analysis Geometries')
-                    run62 = 0;
+                    run.p62 = false;
                 end
             case 64
                 % Collection #64 - Plot Temperatures Across Intersection
@@ -932,7 +932,7 @@ for I = 1:size(P,1)
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
-                if run206 == 1
+                if run.p206
                     % Load Foam Analysis Logs
                     disp('[?] Choose the Log file you would like to load: ')
                     [filenameAL, pathnameAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
@@ -944,7 +944,7 @@ for I = 1:size(P,1)
                 save(ModelSavename,"ThermalModel","numM",'-v7.3')
                 disp(['[+] [207] Mesh Thermal Models have been saved as ',LogSavename])
             case 208
-                if run208 == 1
+                if run.p208
                     % Load Thermal Model Logs
                     disp('[?] Choose the Meshed Thermal Model file you would like to load: ')
                     [filenameTML, pathnameTML] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
@@ -956,7 +956,7 @@ for I = 1:size(P,1)
                 save(ResultsSavename,"ThermalResults","numM",'-v7.3')
                 disp(['[+] [209] Thermal Results have been saved as ',ResultsSavename])
             case 210
-                if run210 == 1
+                if run.p210
                     % Load Thermal Results Logs
                     disp('[?] Choose the Thermal Results file you would like to load: ')
                     [filenameTRL, pathnameTRL] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
@@ -1003,7 +1003,7 @@ for I = 1:size(P,1)
                 clear Store
             case 301
                 % Select Thermal Model Number:
-                if run301 == 1
+                if run.p301
                     numMstr = num2str(numM);
                     qnumM = input(['[?] [301] [Model ',numMstr,'] ','Current Model Number: ',numMstr,'\n    Choose a New One? (0 = no or Input #): ']);
                     if qnumM <= 0
@@ -2100,8 +2100,8 @@ for I = 1:size(P,1)
                     case 0
                         disp('[-] [705] Exiting Collection')
                     case 1
-                        run206 = 0;
-                        run210 = 0;
+                        run.p206 = false;
+                        run.p210 = false;
                         disp('[+] [705] Restarting Collection')
                     otherwise
                         Condition = 0;
