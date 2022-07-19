@@ -107,6 +107,9 @@ for C = qCollection
         case 65
             % Collection #65 - 2D Get Average Temperature Across Plate
             prePline = [101 119 108 65]; %prePrograms always end with their program ID #
+        case 66
+            % Collection #66 - 2D Get Heat Flux at a Point
+            prePline = [101 119 108 66]; %prePrograms always end with their program ID #
             
 
     end

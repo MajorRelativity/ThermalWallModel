@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B60
+%% ThermalWallModel v2.C61
 % Updated on July 19 2022
 
 clear
@@ -361,6 +361,7 @@ Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
 Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
+Colstr66 = '\n      66 = Get Heat Flux At Point';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
@@ -369,7 +370,7 @@ Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
-    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65];
+    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
 ColstrDebug = ColstrDebug3;
 Colstr = [Colstr3D,Colstr2D,ColstrDebug];
 
@@ -747,7 +748,8 @@ for preI = 1:size(preP,1)
             case 65
                 % Collection #65 - 2D Get Temperature Across Plate Region
                 Pline = [65 206 210 610]; % All collections must start with their collection #
-                
+            case 66
+                PLine = [66 206 210 301]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
