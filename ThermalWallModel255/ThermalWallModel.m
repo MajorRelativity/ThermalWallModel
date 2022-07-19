@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B59
+%% ThermalWallModel v2.B60
 % Updated on July 19 2022
 
 clear
@@ -241,6 +241,7 @@ MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
 MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
 % Wall and Foam R Values. Foam Adjustment Settings:
+MSD.Wall.eR = NaN;
 MSD.Wall.R = 10  + .63; 
 MSD.Foam.R = 5;
 
@@ -435,6 +436,7 @@ for preI = 1:size(preP,1)
                 Hw = MSD.Wall.Height;
 
                 % R Value Name Translation:
+                eRw = MSD.Wall.eR;
                 Rw = MSD.Wall.R;
                 Rf = MSD.Foam.R;
 
@@ -569,7 +571,7 @@ for preI = 1:size(preP,1)
             case 114
                 % Thermal Property if No Stud
                 TC = TP.Wall.TC;
-                SP = -1i;
+                SP = NaN;
                 disp('[+] [114] Thermal Properties Defined')
             case 115
                 % Create Stud Analysis Matrix
@@ -1302,10 +1304,14 @@ for I = 1:size(P,1)
                 dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(IntersectTemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                 RwM = Rf * dTempRatio;
                 RwM = RwM - Rf;
-                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
+
+                % Find Percent Errors:
+                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
+                pErrorET = abs((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
+
             case 504
                 % Duration with time2num
-                duration = -1i*ones(size(timerf,1),1);
+                duration = NaN*ones(size(timerf,1),1);
                 if MSD.Overrides.run504 == 1
                     duration = timerf - timeri;
                     duration = time2num(duration,'seconds');
@@ -1336,21 +1342,22 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf;
                 Logs.Lf{numA,1} = Lf;
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
                 
                 % Logs (Sometimes Present
                 if all(modelStyle=='2D')
-                    Hf = -1i*ones(Logs.Size{numA,1},1);
+                    Hf = NaN*ones(Logs.Size{numA,1},1);
                 end
                 Logs.Hf{numA,1} = Hf;
                 
-                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.StudPosition{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if exist('SP','var')
                     Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.Lp{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if MSD.Plate.On
                     Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
                 end
@@ -1371,11 +1378,15 @@ for I = 1:size(P,1)
                         intersecttemp = interpolateTemperature(ThermalResults{numM},Tw,0);
                     end
                     
-                    % Find R Value and Percent Error:
+                    % Find R Value
                     dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(intersecttemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                     RwM(numM,1) = Rf * dTempRatio;
                     RwM(numM,1) = RwM(numM,1) - Rf;
-                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error
+                    
+                    % Find Percent Errors: 
+                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
+                    pErrorET(numM,1) = abs((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
+
 
                     % Save Intersect Temp
                     IntersectTemp(numM,1) = intersecttemp
@@ -1398,6 +1409,7 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf .* ones(size(i,1),1);
                 Logs.Lf{numA,1} = Lf .* ones(size(i,1),1);
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
                 Logs.StudPosition{numA,1} = SP;
@@ -1407,10 +1419,10 @@ for I = 1:size(P,1)
                     case '3D'
                         Logs.Hf{numA,1} = Hf .* ones(Logs.Size{numA,1},1);
                     case '2D'
-                        Logs.Hf{numA,1} = -1i .* ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = NaN .* ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.Lp{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if MSD.Plate.On
                     Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
                 end
@@ -1446,6 +1458,7 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
                 Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
 
@@ -1456,10 +1469,10 @@ for I = 1:size(P,1)
                     case '3D'
                         Logs.Hf{numA,1} = Hf * ones(Logs.Size{numA,1},1);
                     case '2D'
-                        Logs.Hf{numA,1} = -1i * ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = NaN * ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.StudPosition{numA,1} = NaN * ones(Logs.Size{numA,1},1);
                 if exist('SP','var')
                     Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
                 end
@@ -2147,6 +2160,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10  + .63; 
             MSD.Foam.R = 5;
             
@@ -2181,6 +2195,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10; 
             MSD.Foam.R = 5;
 
@@ -2214,6 +2229,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10; 
             MSD.Foam.R = 5;
 
@@ -2250,6 +2266,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
             MSD.Wall.R = 18 + .45 + .81; 
             MSD.Foam.R = 5;
 
