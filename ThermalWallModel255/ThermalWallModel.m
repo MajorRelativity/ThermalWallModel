@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A56
-% Updated on July 18 2022
+%% ThermalWallModel v2.C61
+% Updated on July 19 2022
 
 clear
 addpath("Functions")
@@ -210,6 +210,8 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
     through middle with difference for plywood section
 - 'TimeMachineNoPlate = Just like time machine except there is no plate
     between the foam and the wall.
+- 'Complex' = Plate with stud, wallboard, and siding. This is meant to
+    represent a real house
 
 %}
 MSD.propertyStyle = 'TimeMachine'; 
@@ -225,6 +227,7 @@ MSD.Wall.Height = MSD.Wall.Length;
 
 % Wall Thermal Properties:
 MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+MSD.Foam.TC = MSD.Wall.TC;
 
 % Plate:
 MSD.Plate.Length = .302; %Plate Length
@@ -238,6 +241,7 @@ MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
 MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
 % Wall and Foam R Values. Foam Adjustment Settings:
+MSD.Wall.eR = NaN;
 MSD.Wall.R = 10  + .63; 
 MSD.Foam.R = 5;
 
@@ -249,9 +253,11 @@ MSD.Foam.R = 5;
 'TimeMachine' - Time Machine Wall with Plate
 'GenericExtended' - Generic Wall with Generic Stud Positioning. In 3D,
  the Foam is extended to meet the height of the wall
+'Complex' - Plate with stud, wallboard, and siding. This is meant to
+represent a real house
 
 %}
-MSD.Preset = 'TimeMachine';
+MSD.Preset = 'Complex';
 
 %% Save or Load Model Specifications
 
@@ -355,6 +361,7 @@ Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
 Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
+Colstr66 = '\n      66 = Get Heat Flux At Point';
 
 
 Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
@@ -363,7 +370,7 @@ Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
 Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
     ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
     ColstrT3,Colstr58,Colstr61,Colstr63,...
-    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65];
+    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
 ColstrDebug = ColstrDebug3;
 Colstr = [Colstr3D,Colstr2D,ColstrDebug];
 
@@ -430,6 +437,7 @@ for preI = 1:size(preP,1)
                 Hw = MSD.Wall.Height;
 
                 % R Value Name Translation:
+                eRw = MSD.Wall.eR;
                 Rw = MSD.Wall.R;
                 Rf = MSD.Foam.R;
 
@@ -535,8 +543,9 @@ for preI = 1:size(preP,1)
             case 112
                 % Thermal Property Translation
                 TP.Wall.TC = MSD.Wall.TC;
+                TP.Foam.TC = MSD.Foam.TC;
 
-                %Stud:
+                % Stud:
                 TP.Stud.TC = MSD.Stud.TC;
                 SP = MSD.Stud.Pos;
                 TP.Stud.L = MSD.Stud.Length;
@@ -545,6 +554,9 @@ for preI = 1:size(preP,1)
                 TP.Plate.L = MSD.Plate.Length;
                 TP.Plate.T = MSD.Plate.Thickness;
                 TP.Plate.TC = MSD.Plate.TC;
+
+                % Extra:
+                
 
                 disp('[+] [112] Thermal Property Names Translated')
             case 113
@@ -560,7 +572,7 @@ for preI = 1:size(preP,1)
             case 114
                 % Thermal Property if No Stud
                 TC = TP.Wall.TC;
-                SP = -1i;
+                SP = NaN;
                 disp('[+] [114] Thermal Properties Defined')
             case 115
                 % Create Stud Analysis Matrix
@@ -736,7 +748,8 @@ for preI = 1:size(preP,1)
             case 65
                 % Collection #65 - 2D Get Temperature Across Plate Region
                 Pline = [65 206 210 610]; % All collections must start with their collection #
-                
+            case 66
+                PLine = [66 206 210 301]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -1293,10 +1306,14 @@ for I = 1:size(P,1)
                 dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(IntersectTemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                 RwM = Rf * dTempRatio;
                 RwM = RwM - Rf;
-                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error
+
+                % Find Percent Errors:
+                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
+                pErrorET = abs((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
+
             case 504
                 % Duration with time2num
-                duration = -1i*ones(size(timerf,1),1);
+                duration = NaN*ones(size(timerf,1),1);
                 if MSD.Overrides.run504 == 1
                     duration = timerf - timeri;
                     duration = time2num(duration,'seconds');
@@ -1327,21 +1344,22 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf;
                 Logs.Lf{numA,1} = Lf;
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
                 
                 % Logs (Sometimes Present
                 if all(modelStyle=='2D')
-                    Hf = -1i*ones(Logs.Size{numA,1},1);
+                    Hf = NaN*ones(Logs.Size{numA,1},1);
                 end
                 Logs.Hf{numA,1} = Hf;
                 
-                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.StudPosition{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if exist('SP','var')
                     Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.Lp{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if MSD.Plate.On
                     Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
                 end
@@ -1362,11 +1380,15 @@ for I = 1:size(P,1)
                         intersecttemp = interpolateTemperature(ThermalResults{numM},Tw,0);
                     end
                     
-                    % Find R Value and Percent Error:
+                    % Find R Value
                     dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(intersecttemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
                     RwM(numM,1) = Rf * dTempRatio;
                     RwM(numM,1) = RwM(numM,1) - Rf;
-                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error
+                    
+                    % Find Percent Errors: 
+                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
+                    pErrorET(numM,1) = abs((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
+
 
                     % Save Intersect Temp
                     IntersectTemp(numM,1) = intersecttemp
@@ -1389,6 +1411,7 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf .* ones(size(i,1),1);
                 Logs.Lf{numA,1} = Lf .* ones(size(i,1),1);
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
                 Logs.StudPosition{numA,1} = SP;
@@ -1398,10 +1421,10 @@ for I = 1:size(P,1)
                     case '3D'
                         Logs.Hf{numA,1} = Hf .* ones(Logs.Size{numA,1},1);
                     case '2D'
-                        Logs.Hf{numA,1} = -1i .* ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = NaN .* ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.Lp{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.Lp{numA,1} = NaN*ones(Logs.Size{numA,1},1);
                 if MSD.Plate.On
                     Logs.Lp{numA,1} = Lp.*ones(Logs.Size{numA,1},1);
                 end
@@ -1437,6 +1460,7 @@ for I = 1:size(P,1)
                 Logs.Tf{numA,1} = Tf * ones(size(i,1),1);
                 Logs.Lf{numA,1} = Lf * ones(size(i,1),1);
                 Logs.pErrorT{numA,1} = pErrorT;
+                Logs.pErrorET{numA,1} = pErrorET;
                 Logs.RwM{numA,1} = RwM;
                 Logs.IntersectTemp{numA,1} = IntersectTemp;
 
@@ -1447,10 +1471,10 @@ for I = 1:size(P,1)
                     case '3D'
                         Logs.Hf{numA,1} = Hf * ones(Logs.Size{numA,1},1);
                     case '2D'
-                        Logs.Hf{numA,1} = -1i * ones(Logs.Size{numA,1},1);
+                        Logs.Hf{numA,1} = NaN * ones(Logs.Size{numA,1},1);
                 end
 
-                Logs.StudPosition{numA,1} = -1i*ones(Logs.Size{numA,1},1);
+                Logs.StudPosition{numA,1} = NaN * ones(Logs.Size{numA,1},1);
                 if exist('SP','var')
                     Logs.StudPosition{numA,1} = SP.*ones(Logs.Size{numA,1},1);
                 end
@@ -2124,6 +2148,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
 
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
@@ -2137,6 +2162,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10  + .63; 
             MSD.Foam.R = 5;
             
@@ -2163,6 +2189,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
             MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
@@ -2170,6 +2197,7 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10; 
             MSD.Foam.R = 5;
 
@@ -2195,6 +2223,7 @@ function MSD = msPreset(MSD)
 
             % Wall Thermal Properties:
             MSD.Wall.TC = .0288; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
             MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
@@ -2202,11 +2231,49 @@ function MSD = msPreset(MSD)
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = NaN;
             MSD.Wall.R = 10; 
             MSD.Foam.R = 5;
 
             % Message:
             disp('[=] MSPreset "Generic" has been applied')
+        case 'Complex'
+
+            % Property Style:
+            MSD.propertyStyle = 'Complex'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2 + 0.0015875; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = 13.97 * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.On = true;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "Complex" has been applied') 
             
     end
 
