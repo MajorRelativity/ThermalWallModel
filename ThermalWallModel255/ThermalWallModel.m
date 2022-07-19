@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A58
-% Updated on July 18 2022
+%% ThermalWallModel v2.B59
+% Updated on July 19 2022
 
 clear
 addpath("Functions")
@@ -210,6 +210,8 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
     through middle with difference for plywood section
 - 'TimeMachineNoPlate = Just like time machine except there is no plate
     between the foam and the wall.
+- 'Complex' = Plate with stud, wallboard, and siding. This is meant to
+    represent a real house
 
 %}
 MSD.propertyStyle = 'TimeMachine'; 
@@ -250,9 +252,11 @@ MSD.Foam.R = 5;
 'TimeMachine' - Time Machine Wall with Plate
 'GenericExtended' - Generic Wall with Generic Stud Positioning. In 3D,
  the Foam is extended to meet the height of the wall
+'Complex' - Plate with stud, wallboard, and siding. This is meant to
+represent a real house
 
 %}
-MSD.Preset = 'TimeMachine';
+MSD.Preset = 'Complex';
 
 %% Save or Load Model Specifications
 
@@ -2231,6 +2235,9 @@ function MSD = msPreset(MSD)
             MSD.Wall.Height = MSD.Wall.Length;
 
             % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 236; %Plate Thermal Conductivity
             MSD.Plate.On = true;
 
             % Wall and Foam Thermal Properties:
