@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.C62
+%% ThermalWallModel v2.C63
 % Updated on July 19 2022
 
 clear
@@ -49,6 +49,7 @@ Process ID:
             060) Plot Single Geometry
             064) Plot Temperatures Across Intersection
             065) Get Average Temperature Acroos Plate Region
+            066) Get Heat Flux at a Point
 
 
 100) PreRun
@@ -110,6 +111,8 @@ Process ID:
     304) Foam Analysis Modification
     305) Create '__p' variables for Foam Analysis in the Parallel Pool
     306) Plate Analysis Modification
+    307) Add One to Model Number
+    308) Set Model Number to Logs.numMi
 
 400) Operation
 
@@ -155,6 +158,8 @@ Process ID:
     609) 2D Plot Temperature Across Intersection
     610) 2D Take Average Across Plate Region
 
+    611) 2D Get Heat Flux at a Point
+
 700) Conditions
 
     701) Evaluate Condition
@@ -162,6 +167,7 @@ Process ID:
     703) Repeat Foam Analysis
     704) Repeat Plate Analysis
     705) Repeat Collection 53
+    706) Repeat Collection 66
 
 %}
 
@@ -300,6 +306,7 @@ run.p54 = true;
 run.p57 = true;
 run.p59 = true;
 run.p62 = true;
+run.p66 = true;
 
 % 100:
 run.p104 = true;
@@ -311,6 +318,7 @@ run.p210 = true;
 
 % 300
 run.p301 = true;
+run.p307 = true;
 
 %% Collection Selection:
 
@@ -749,7 +757,8 @@ for preI = 1:size(preP,1)
                 % Collection #65 - 2D Get Temperature Across Plate Region
                 Pline = [65 206 210 610]; % All collections must start with their collection #
             case 66
-                PLine = [66 206 210 301]; % All collections must start with their collection #
+                % Collection #66 - 2D Get Heat Flux At Point
+                Pline = [66 206 210 301 307 611 706 701]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -886,6 +895,15 @@ for I = 1:size(P,1)
             case 65
                 % Collection #65 - Get Temperature Across Plate Region
                 disp('[&] Starting Collection #65 - Get Temperature Across Plate Region')
+            case 66
+                if run.p66
+                    % Collection #66 - Get Heat Flux at Point
+                    disp('[&] Starting Collection #66 - Get Heat Flux at Point')
+    
+                    % Overrides:
+                    run.p307 = false;
+                    run.p66 = false;
+                end
 
             case 203
                 % Make Directory:
@@ -1084,6 +1102,13 @@ for I = 1:size(P,1)
                 % Condition
                 TC = @(location,state)thermalProperties(location,state,TP,MSD.propertyStyle);
                 disp(['[+] [306] [Model ',numMstr,'] ','New Plate Length Set: ', num2str(TP.Plate.L)])
+            case 307
+                % Add One to numM
+                if run.p307
+                    numM = numM + 1;
+                    numMstr = num2str(numM);
+                    disp('[+] [307] Added One to numM')
+                end
 
             case 401
                 % Create Single New Thermal Model
@@ -2063,6 +2088,61 @@ for I = 1:size(P,1)
                         gateP = input('[?] [610] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                 end
+            case 611
+                % 2D Get Heat Flux at Point
+                
+                % Load Important Information:
+                Tw = str2double(Specifications{6,1});
+                Lw = str2double(Specifications{7,1});
+
+                Tf = AResultsD(numM,4);
+                Lf = AResultsD(numM,5);
+
+                gateHFAP = 1;
+                while gateHFAP == 1
+                    % Count Number of Points
+                    if ~exist('numHFAP','var')
+                        numHFAP = 1;
+                    else
+                        numHFAP = numHFAP + 1;
+                    end
+                    
+                    % Get Point
+
+                    if ~exist('qHFAM','var') || qHFAM ~= 2
+                        disp(['[?] [606] [Model ',numMstr,'] ','What point would you like to use?'])
+                        disp('[#] Origin is in center of indoor wall')
+                        x = input('    Thickness = ');
+                        y = input('    Length = ');
+                    end
+
+                    if ~exist('qHFAM','var') || qHFAM == 0
+                        qHFAM = input('Plot This Value across All Models? (1 = y, 0 = n): ');
+                        if qHFAM == 1 % Let it cycle through once to prevent double plotting
+                            numHFAP = numHFAP - 1;
+                            break
+                        end
+                    end
+                        % Create Array and Table
+                        HFAtPointP = evaluateHeatFlux(ThermalResults{numM},x,y);
+                        HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP];
+                        HFAtPoint = array2table(HFAtPointD,...
+                            'VariableNames',{'Point','Model #','X','Y','HeatFlux'});
+                        disp(HFAtPoint)
+                        
+                        if qHFAM == 0
+                            % Clear Old Values:
+                            clear x
+                            clear y
+                            clear HFAtPointP
+        
+                            % Another?
+                            gateHFAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
+                        else
+                            gateHFAP = 0;
+                        end
+                end
+
                 
             case 701
                 % Evaluate Condition. When Condition == 1, the Collection
@@ -2106,6 +2186,37 @@ for I = 1:size(P,1)
                     otherwise
                         Condition = 0;
                         disp('[-] [705] Invalid Input - Exiting Collection')
+                end
+            case 706
+                % Repeat Collection 66
+                switch qHFAM
+                    case 0
+                        Condition = input('[?] [705] Would you like to restart Collection 54? (y = 1, n = 0): ');
+                    case 1
+                        qHFAM = 2;
+                        numM = Logs.numMi - 1;
+
+                        Condition = 1;
+
+                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                            qHFAM = 0;
+                            disp('[-] [706] There was only one model to plot in, so there is no sense in walking through the models')
+                        end
+
+                        run.p301 = false;
+                        run.p307 = true;
+                    case 2
+                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                            qHFAM = 0;
+                            numM = Logs.numMi;
+                            run.p301 = true;
+                            run.p307 = false;
+                            Condition = input('[?] [705] Would you like to restart Collection 54? (y = 1, n = 0): ');
+                            disp('[+] [706] Finished Walking Through Models')
+                        else
+                            disp('[*] [706] Restarting Collection')
+                        end
+
                 end
 
         end
