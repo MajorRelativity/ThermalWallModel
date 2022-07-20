@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.C63
-% Updated on July 19 2022
+%% ThermalWallModel v2.D64
+% Updated on July 20 2022
 
 clear
 addpath("Functions")
@@ -192,7 +192,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = .4*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -1871,7 +1871,7 @@ for I = 1:size(P,1)
 
                 % Create Mesh and Plot:
 
-                [location.x,location.y] = meshgrid(linspace(0,Tw + Tf),linspace(-Lw/2,Lw/2));
+                [location.x,location.y] = meshgrid(linspace(0,Tw + Tf,500),linspace(-Lw/2,Lw/2,500));
                 X = location.x;
                 Y = location.y;
                 V = thermalProperties(location,-1,TP,MSD.propertyStyle);
@@ -2359,7 +2359,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.Length = 45.6 * 10^-2; %m
             MSD.Foam.Height = MSD.Foam.Length; 
 
-            MSD.Wall.Thickness = 13.97 * 10^-2; %m
+            MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
             MSD.Wall.Length = 90 * 10^-2; %m 
             MSD.Wall.Height = MSD.Wall.Length;
 
