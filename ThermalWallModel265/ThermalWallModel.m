@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.D64
+%% ThermalWallModel v2.65
 % Updated on July 20 2022
 
 clear
@@ -192,7 +192,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = .4*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -261,6 +261,7 @@ MSD.Foam.R = 5;
  the Foam is extended to meet the height of the wall
 'Complex' - Plate with stud, wallboard, and siding. This is meant to
 represent a real house
+'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
 MSD.Preset = 'Complex';
@@ -2191,7 +2192,7 @@ for I = 1:size(P,1)
                 % Repeat Collection 66
                 switch qHFAM
                     case 0
-                        Condition = input('[?] [705] Would you like to restart Collection 54? (y = 1, n = 0): ');
+                        Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                     case 1
                         qHFAM = 2;
                         numM = Logs.numMi - 1;
@@ -2211,7 +2212,7 @@ for I = 1:size(P,1)
                             numM = Logs.numMi;
                             run.p301 = true;
                             run.p307 = false;
-                            Condition = input('[?] [705] Would you like to restart Collection 54? (y = 1, n = 0): ');
+                            Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                             disp('[+] [706] Finished Walking Through Models')
                         else
                             disp('[*] [706] Restarting Collection')
@@ -2385,6 +2386,43 @@ function MSD = msPreset(MSD)
 
             % Message:
             disp('[=] MSPreset "Complex" has been applied') 
+        case 'ComplexNoFoam'
+
+            % Property Style:
+            MSD.propertyStyle = 'Complex'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 10^-8;
+            MSD.Foam.Length = 89 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.Length = 0; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.On = false;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "ComplexNoFoam" has been applied') 
             
     end
 
