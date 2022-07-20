@@ -8,6 +8,12 @@ addpath("Functions")
 
 %{
 
+Required Toolboxes:
+
+- Parallel Computing Toolbox
+- Partial Differential Equation Toolbox
+- Predictive Maintenance Toolbox
+
 Process ID:
 -00) Debug:
 
@@ -390,6 +396,7 @@ numC = 1;
 
 % Question:
 while gateC == 1
+    
     switch numC
         case 1
             qCollection(numC) = input(['[?] What would you like to do?',Colstr,ColstrQuit,ColstrInput]);
@@ -397,6 +404,7 @@ while gateC == 1
             qCollection(numC) = input(['[?] What else would you like to do?',Colstr,ColstrDebug2,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
+    % Takes action based on the current choice:
     switch qCollection(numC)
         case -2
             disp('[&] Initiating Debug Mode: Getting programs for all requested collections.')
