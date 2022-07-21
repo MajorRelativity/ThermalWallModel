@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.65
-% Updated on July 20 2022
+%% ThermalWallModel v2.A66
+% Updated on July 21 2022
 
 clear
 addpath("Functions")
@@ -378,30 +378,58 @@ Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
 Colstr66 = '\n      66 = Get Heat Flux At Point';
 
+% General Colstr
+Colstr3D1 = [ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr3D2 = [ColstrT2,Colstr5];
+Colstr3D3 = [ColstrT3,Colstr6];
+Colstr3D = [Colstr3DT,Colstr3D1,Colstr3D2,Colstr3D3];
 
-Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
-    ColstrT2,Colstr5,...
-    ColstrT3,Colstr6];
-Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
-    ColstrT3,Colstr58,Colstr61,Colstr63,...
-    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
-ColstrDebug = ColstrDebug3;
+Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54];
+Colstr2D2 = [ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62];
+Colstr2D3 = [ColstrT3,Colstr58,Colstr61,Colstr63];
+Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
+Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
+
+ColstrDebug = [ColstrDebug2,ColstrDebug3];
 Colstr = [Colstr3D,Colstr2D,ColstrDebug];
 
+% Colstr Pages:
+n = 0.1;
+p = 0.2;
+a = 0.3;
+ColstrPC = '\n  n = "Next Page", p = "Previous Page", a = "Show All Collections"';
+
+Colstr3DP1 = [Colstr3DT,Colstr3D1];
+Colstr3DP2 = [Colstr3DT,Colstr3D2,Colstr3D3];
+
+Colstr2DP1 = [Colstr2DT,Colstr2D1];
+Colstr2DP2 = [Colstr2DT,Colstr2D2];
+Colstr2DP3 = [Colstr2DT,Colstr2D3];
+Colstr2DP4 = [Colstr2DT,Colstr2D4];
+
+ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4};
+ColstrPD = [];
 
 % Create Variables:
 gateC = 1;
 numC = 1;
+numP = 0;
 
-% Question:
+% First Question:
+SQ = false;
+qCollection(numC) = input(['[?] What would you like to do?',ColstrPC,ColstrQuit,ColstrInput]);
+
+% Check First Answer
+Invalid = qCollection == 0 || qCollection == -2;
+if Invalid
+    error("[!] You can't use that as the first collection!")
+end
+
 while gateC == 1
-    
-    switch numC
-        case 1
-            qCollection(numC) = input(['[?] What would you like to do?',Colstr,ColstrQuit,ColstrInput]);
-        otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?',Colstr,ColstrDebug2,ColstrQuit,ColstrRun,ColstrInput]);
+
+    % Subsequent Questions:
+    if SQ
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -418,14 +446,38 @@ while gateC == 1
         case 0
             gateC = 0;
             numC = numC - 1;
+        case p
+            if numP <= 1
+                numP = size(ColstrP,2);
+            else
+                numP = numP - 1;
+            end
+            ColstrPD = ColstrP{numP};
+            qCollection(numC) = [];
+        case n
+            if numP == size(ColstrP,2)
+                numP = 1;
+            else
+                numP = numP + 1;
+            end
+            ColstrPD = ColstrP{numP};
+            qCollection(numC) = [];
+        case a
+            ColstrPD = Colstr;
+            qCollection(numC) = [];
         otherwise
             numC = numC + 1;
     end
+    SQ = true;
     
 end
 
 % Clear Collection Names:
 clear -regexp Colstr
+clear Invalid
+clear p
+clear n
+clear a
 
 %% Create Pre-Run Process Index:
 [preP,numC] = preRunIndex(qCollection);
@@ -599,7 +651,7 @@ for preI = 1:size(preP,1)
                     qSA = input('[?] [115] Choose the number of stud analysis models you would like to run: ');
                     switch qSA
                         case qSA <= 0
-                            disp("[!] [115] That doesn't make sense, try again!")
+                            fprintf(2,"[!] [115] That doesn't make sense, try again!\n")
                             qSA = 0;
                         otherwise
                             disp(['[$] [115] Creating Stud matrix with ',num2str(qSA),' elements'])
@@ -634,7 +686,7 @@ for preI = 1:size(preP,1)
                     qPA = input('[?] [120] Choose the number of plate analysis models you would like to run: ');
                     switch qPA
                         case qPA <= 0
-                            disp("[!] [120] That doesn't make sense, try again!")
+                            fprintf(2,"[!] [120] That doesn't make sense, try again!\n")
                             qPA = 0;
                         otherwise
                             disp(['[$] [120] Creating Plate matrix with ',num2str(qPA),' elements'])
@@ -767,7 +819,7 @@ for preI = 1:size(preP,1)
                 Pline = [65 206 210 610]; % All collections must start with their collection #
             case 66
                 % Collection #66 - 2D Get Heat Flux At Point
-                Pline = [66 206 210 301 307 611 706 701]; % All collections must start with their collection #
+                Pline = [66 206 208 210 301 307 611 706 701]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -936,7 +988,7 @@ for I = 1:size(P,1)
 
                 % Force and Check Model Specification:
                 if MSDm.savedate ~= MSD.savedate
-                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that you are attempting to overwrite the Model Specifications associated with this file.'])
+                    fprintf(2,['[!] [204] [Model ',numMstr,'] ','It appears that you are attempting to overwrite the Model Specifications associated with this file.\n'])
                     qContinue = input(['[?] [204] [Model ',numMstr,'] ','What would you like to do (1 = Overwrite MS, 0 = Load MS from Model File, -1 = Quit): ']);
                     
                     switch qContinue
@@ -1196,7 +1248,7 @@ for I = 1:size(P,1)
 
                     gateV = input(['[?] [403] [Model ',numMstr,'] ','Does this model look correct? (1 = y, 0 = n): ']);
                     if gateV == 0
-                        disp(['[!] [403] [Model ',numMstr,'] ','You likely did not choose the faces correctly, try again!'])
+                        fprintf(2,['[!] [403] [Model ',numMstr,'] ','You likely did not choose the faces correctly, try again!\n'])
                     else
                         ThermalModel{numM} = thermalmodel;
                         disp(['[+] [403] [Model ',numMstr,'] ','Geometry Verified'])
@@ -2018,8 +2070,8 @@ for I = 1:size(P,1)
                         % Check Plate Legnth:
                         if isnan(Lp)
                             Lp = MSD.Plate.Length;
-                            disp(['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp)]);
+                            fprintf(2,['[!] [610] [Model ',num2str(numM),'] ',...
+                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp),'\n']);
                         end
 
                         % Interpolate Temperature:
