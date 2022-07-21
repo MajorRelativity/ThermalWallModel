@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A66
+%% ThermalWallModel v2.A67
 % Updated on July 21 2022
 
 clear
@@ -819,7 +819,7 @@ for preI = 1:size(preP,1)
                 Pline = [65 206 210 610]; % All collections must start with their collection #
             case 66
                 % Collection #66 - 2D Get Heat Flux At Point
-                Pline = [66 206 208 210 301 307 611 706 701]; % All collections must start with their collection #
+                Pline = [66 206 210 301 307 611 706 701]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -1007,7 +1007,7 @@ for I = 1:size(P,1)
                 
             case 205
                 % Save Analysis Logs
-                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM",'-v7.3')
+                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM","Logs",'-v7.3')
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
@@ -2189,7 +2189,9 @@ for I = 1:size(P,1)
                         HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP];
                         HFAtPoint = array2table(HFAtPointD,...
                             'VariableNames',{'Point','Model #','X','Y','HeatFlux'});
-                        disp(HFAtPoint)
+                        if ~(qHFAM == 2 && numM < size(ThermalResults,2))
+                            disp(HFAtPoint)
+                        end
                         
                         if qHFAM == 0
                             % Clear Old Values:
@@ -2250,16 +2252,19 @@ for I = 1:size(P,1)
                 end
             case 706
                 % Repeat Collection 66
+                run.p206 = false;
+                run.p210 = false;
+
                 switch qHFAM
                     case 0
                         Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                     case 1
                         qHFAM = 2;
-                        numM = Logs.numMi - 1;
+                        numM = 0;
 
                         Condition = 1;
 
-                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                        if size(ThermalResults,2) == 1
                             qHFAM = 0;
                             disp('[-] [706] There was only one model to plot in, so there is no sense in walking through the models')
                         end
@@ -2267,15 +2272,13 @@ for I = 1:size(P,1)
                         run.p301 = false;
                         run.p307 = true;
                     case 2
-                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                        if numM == size(ThermalResults,2)
                             qHFAM = 0;
-                            numM = Logs.numMi;
+                            numM = 1;
                             run.p301 = true;
                             run.p307 = false;
                             Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                             disp('[+] [706] Finished Walking Through Models')
-                        else
-                            disp('[*] [706] Restarting Collection')
                         end
 
                 end
@@ -2285,7 +2288,7 @@ for I = 1:size(P,1)
     
     if exist('Condition','var') % Determines if the loop should be repeated
         if Condition == 1
-            disp('[*] Repeating Collection')
+            disp(['[*] Repeating Collection #',num2str(P(I,1))])
         else
             break % Exits Loop
         end
