@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A67
+%% ThermalWallModel v2.A69
 % Updated on July 21 2022
 
 clear
@@ -244,11 +244,11 @@ MSD.Foam.TC = MSD.Wall.TC;
 % Plate:
 MSD.Plate.Length = .302; %Plate Length
 MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-MSD.Plate.TC = 236; %Plate Thermal Conductivity
+MSD.Plate.TC = 150; %Plate Thermal Conductivity
 MSD.Plate.On = false;
 
 % Stud:
-MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+MSD.Stud.TC = .115; % If Applicable
 MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
 MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2159,6 +2159,9 @@ for I = 1:size(P,1)
                 Tf = AResultsD(numM,4);
                 Lf = AResultsD(numM,5);
 
+                TempwI = str2double(Specifications{9,1});
+                TempwO = str2double(Specifications{10,1});
+
                 gateHFAP = 1;
                 while gateHFAP == 1
                     % Count Number of Points
@@ -2185,10 +2188,13 @@ for I = 1:size(P,1)
                         end
                     end
                         % Create Array and Table
+                        disp(['[$] [611] Getting Heat Flux at Point on Model ',numMstr,': (',num2str(x),',',num2str(y),')'])
                         HFAtPointP = evaluateHeatFlux(ThermalResults{numM},x,y);
-                        HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP];
+                        RfromHF = ((abs(TempwI - TempwO))/HFAtPointP) * 5.678;
+
+                        HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP,RfromHF];
                         HFAtPoint = array2table(HFAtPointD,...
-                            'VariableNames',{'Point','Model #','X','Y','HeatFlux'});
+                            'VariableNames',{'Point','Model #','X','Y','HeatFlux','Rwall'});
                         if ~(qHFAM == 2 && numM < size(ThermalResults,2))
                             disp(HFAtPoint)
                         end
@@ -2198,6 +2204,7 @@ for I = 1:size(P,1)
                             clear x
                             clear y
                             clear HFAtPointP
+                            clear RfromHF
         
                             % Another?
                             gateHFAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
@@ -2328,7 +2335,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = .16; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = true;
 
             % Stud
@@ -2367,7 +2374,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
-            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2401,7 +2408,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
-            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2430,7 +2437,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = true;
 
             % Wall and Foam Thermal Properties:
@@ -2438,7 +2445,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = 0.0288;
             
             % Stud
-            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2467,7 +2474,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = 0; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = false;
 
             % Wall and Foam Thermal Properties:
@@ -2475,12 +2482,12 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = 0.0288;
             
             % Stud
-            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % R value for studs is 6.88/5.5in
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
-            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.eR = (16/((1.5/6.88) + (14.5/18))) + .45 + .81; % Effective R value
             MSD.Wall.R = 18 + .45 + .81; 
             MSD.Foam.R = 5;
 
