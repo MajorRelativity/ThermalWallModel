@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.A69
-% Updated on July 21 2022
+%% ThermalWallModel v2.A70
+% Updated on July 22 2022
 
 clear
 addpath("Functions")
@@ -660,7 +660,7 @@ for preI = 1:size(preP,1)
                 end
       
                 SP = (linspace(-Lw/2,Lw/2,qSA-1))';
-                SP = [-Lw;SP]; % Adding extra evaluation location where there is no stud
+                SP = [-Lw*10;SP]; % Adding extra evaluation location where there is no stud
                 disp('[+] [115] Stud Matrix Created')
             case 116
                 % Create 2D Data Save File:
@@ -1007,6 +1007,7 @@ for I = 1:size(P,1)
                 
             case 205
                 % Save Analysis Logs
+                disp('[$] [205] Saving Logs')
                 save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM","Logs",'-v7.3')
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
@@ -1020,6 +1021,7 @@ for I = 1:size(P,1)
                 end
             case 207
                 % Save Thermal Model Logs
+                disp('[$] [207] Saving Thermal Models')
                 save(ModelSavename,"ThermalModel","numM",'-v7.3')
                 disp(['[+] [207] Mesh Thermal Models have been saved as ',LogSavename])
             case 208
@@ -1032,6 +1034,7 @@ for I = 1:size(P,1)
                 end
             case 209
                 % Save Thermal Results Logs
+                disp('[$] [209] Saving Thermal Results')
                 save(ResultsSavename,"ThermalResults","numM",'-v7.3')
                 disp(['[+] [209] Thermal Results have been saved as ',ResultsSavename])
             case 210
