@@ -110,6 +110,9 @@ for C = qCollection
         case 66
             % Collection #66 - 2D Get Heat Flux at a Point
             prePline = [101 119 108 66]; %prePrograms always end with their program ID #
+        case 67
+            % Collection #60 - 2D Plot Single Geometry
+            prePline = [101 119 104 108 67]; %prePrograms always end with their program ID #
             
 
     end

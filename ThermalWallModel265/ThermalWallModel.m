@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A70
+%% ThermalWallModel v2.A71
 % Updated on July 22 2022
 
 clear
@@ -56,6 +56,7 @@ Process ID:
             064) Plot Temperatures Across Intersection
             065) Get Average Temperature Acroos Plate Region
             066) Get Heat Flux at a Point
+            067) Plot Single Mesh
 
 
 100) PreRun
@@ -165,6 +166,7 @@ Process ID:
     610) 2D Take Average Across Plate Region
 
     611) 2D Get Heat Flux at a Point
+    612) Plot Current Mesh
 
 700) Conditions
 
@@ -377,6 +379,7 @@ Colstr60 = '\n      60 = Plot Single Geometry';
 Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
 Colstr66 = '\n      66 = Get Heat Flux At Point';
+Colstr67 = '\n      67 = Plot Single Mesh';
 
 % General Colstr
 Colstr3D1 = [ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
@@ -387,7 +390,7 @@ Colstr3D = [Colstr3DT,Colstr3D1,Colstr3D2,Colstr3D3];
 Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54];
 Colstr2D2 = [ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62];
 Colstr2D3 = [ColstrT3,Colstr58,Colstr61,Colstr63];
-Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
+Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66,Colstr67];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
 ColstrDebug = [ColstrDebug2,ColstrDebug3];
@@ -820,6 +823,9 @@ for preI = 1:size(preP,1)
             case 66
                 % Collection #66 - 2D Get Heat Flux At Point
                 Pline = [66 206 210 301 307 611 706 701]; % All collections must start with their collection #
+            case 67
+                % Collection #67 - 2D Plot Single Mesh
+                Pline = [67 204 213 301 612]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -965,6 +971,9 @@ for I = 1:size(P,1)
                     run.p307 = false;
                     run.p66 = false;
                 end
+            case 67
+                % Collection #67 - Plot Single Mesh
+                disp('[&] Starting Collection #67 - Plot Single Mesh')
 
             case 203
                 % Make Directory:
@@ -2215,8 +2224,42 @@ for I = 1:size(P,1)
                             gateHFAP = 0;
                         end
                 end
+            case 612
+                % Plot Current Thermal Model Mesh
+                disp(['[$] [612] [Model ',numMstr,'] ','Plotting Mesh'])
 
-                
+                while numM > 0
+                    % Asign Lf and Tf
+                    disp(['[*] [612] [Model ',numMstr,'] ','Generating Mesh'])
+                    Tf = Foam(numM-Logs.Foam.numMAdj,1);
+                    Lf = Foam(numM-Logs.Foam.numMAdj,2);
+
+                    wallGeometry2D(Lw,Tw,Lf,Tf)
+                    
+                    % Generate Mesh:
+                    Mesh612 = generateMesh(ThermalModel{numM},'Hmax',Hmax,'Hmin',Hmin);
+
+                    % Plot Model
+                    disp(['[*] [612] [Model ',numMstr,'] ','Plotting Mesh'])
+                    numMstr = num2str(numM);
+                    Fwg = figure('Name','Mesh');
+                    hold on
+                    title(['Mesh for Model ',numMstr,' - Note the Scale Difference'])
+                    xlabel('Thickness')
+                    ylabel('Length')
+                    pdemesh(Mesh612)
+                    xaxis = [0,Tw+Tf+Tw];
+                    yaxis = [-3*Lw/4,3*Lw/4];
+                    axis([xaxis,yaxis])
+                    axis square
+                    hold off
+                    drawnow
+                    disp(['[+] [612] [Model ',numMstr,'] ','Plotted Current Geometry']);
+                    numM = input(['[?] [612] [Model ',numMstr,'] ','Would you like to plot another mesh? (Choose Model # or 0 = n): ']);
+
+                end
+                clear Mesh612
+
             case 701
                 % Evaluate Condition. When Condition == 1, the Collection
                 % will be repeated
