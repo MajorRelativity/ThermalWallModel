@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A72
+%% ThermalWallModel v2.B74
 % Updated on July 25 2022
 
 clear
@@ -200,7 +200,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = .4*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -274,7 +274,7 @@ represent a real house
 'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
-MSD.Preset = 'ComplexNoFoam';
+MSD.Preset = 'Complex';
 
 %% Save or Load Model Specifications
 
@@ -434,7 +434,7 @@ while gateC == 1
 
     % Subsequent Questions:
     if SQ
-        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrQuit,ColstrRun,ColstrInput]);
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrPC,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -1286,8 +1286,13 @@ for I = 1:size(P,1)
             case 406
                 % 2D Generate Single Geometry:
                 disp(['[$] [406] [Model ',numMstr,'] ','Generating 2D Geometry'])
-                wallGeometry2D(Lw,Tw,Lf,Tf); %Ensures new geometry is loaded
-                geometryFromEdges(ThermalModel{numM},@modelshapew); % Uses Geometry
+                GP.Wall.L = Lw;
+                GP.Wall.T = Tw;
+                GP.Foam.L = Lf;
+                GP.Foam.T = Tf;
+                GP.propertyStyle = MSD.propertyStyle;
+                modelshapew = @(varargin)modelshapew2D(GP,varargin{:});
+                geometryFromEdges(ThermalModel{numM},modelshapew); % Uses Geometry
                 disp(['[+] [406] [Model ',numMstr,'] ','2D Geometry Generated'])
             case 407 
                 disp(['[$] [407] [Model ',numMstr,'] ','Applying Conditions'])
@@ -1312,9 +1317,16 @@ for I = 1:size(P,1)
                     disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Steady State'])
                 end
 
-                % Apply Boundary Conditions
-                thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
-                thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',MSD.BC.TempwO);   
+                % Apply Boundary Conditions based on property style
+                switch MSD.propertyStyle
+                    case 'ComplexNoFoam'
+                        thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
+                        thermalBC(thermalmodel,'Edge',3,'Temperature',MSD.BC.TempwO);  
+                    otherwise
+                        thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
+                        thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',MSD.BC.TempwO);  
+                end
+
 
                 ThermalModel{numM} = thermalmodel; % Re Apply to Cell
                 disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
@@ -1326,8 +1338,6 @@ for I = 1:size(P,1)
                     numMstr = num2str(numM);
                     disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
                     timeri(numM,1) = datetime('now');
-                    % Ensure Correct Storage of Geometry
-                    wallGeometry2D(Lwp(numM),Twp(numM),Lfp(numM),Tfp(numM))
                     
                     % Generate Mesh
                     ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
@@ -1964,7 +1974,6 @@ for I = 1:size(P,1)
                     % Asign Lf and Tf
                     Tf = Foam(numM-Logs.Foam.numMAdj,1);
                     Lf = Foam(numM-Logs.Foam.numMAdj,2);
-                    wallGeometry2D(Lw,Tw,Lf,Tf)
 
                     % Plot Model
                     numMstr = num2str(numM);
@@ -2235,8 +2244,6 @@ for I = 1:size(P,1)
                     disp(['[*] [612] [Model ',numMstr,'] ','Generating Mesh'])
                     Tf = Foam(numM-Logs.Foam.numMAdj,1);
                     Lf = Foam(numM-Logs.Foam.numMAdj,2);
-
-                    wallGeometry2D(Lw,Tw,Lf,Tf)
                     
                     % Generate Mesh:
                     Mesh612 = generateMesh(ThermalModel{numM},'Hmax',Hmax,'Hmin',Hmin);
@@ -2511,8 +2518,8 @@ function MSD = msPreset(MSD)
 
             % Shape of Wall:
 
-            MSD.Foam.Thickness = 10^-8;
-            MSD.Foam.Length = 89 * 10^-2; %m
+            MSD.Foam.Thickness = 0;
+            MSD.Foam.Length = 0; %m
             MSD.Foam.Height = MSD.Foam.Length; 
 
             MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
