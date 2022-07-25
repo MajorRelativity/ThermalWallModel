@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.75
+%% ThermalWallModel v2.76
 % Updated on July 25 2022
 
 clear
@@ -63,6 +63,7 @@ Process ID:
             065) Get Average Temperature Acroos Plate Region
             066) Get Heat Flux at a Point
             067) Plot Single Mesh
+            068) Plot Heat Flux Across Wall
 
 
 100) PreRun
@@ -388,6 +389,7 @@ Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
 Colstr66 = '\n      66 = Get Heat Flux At Point';
 Colstr67 = '\n      67 = Plot Single Mesh';
+Colstr68 = '\n      68 = Plot Heat Flux Across Wall';
 
 % General Colstr
 Colstr3D1 = [ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
@@ -398,7 +400,8 @@ Colstr3D = [Colstr3DT,Colstr3D1,Colstr3D2,Colstr3D3];
 Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54];
 Colstr2D2 = [ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62];
 Colstr2D3 = [ColstrT3,Colstr58,Colstr61,Colstr63];
-Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66,Colstr67];
+Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,...
+    Colstr66,Colstr67,Colstr68];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
 ColstrDebug = [ColstrDebug2,ColstrDebug3];
@@ -440,7 +443,7 @@ while gateC == 1
 
     % Subsequent Questions:
     if SQ
-        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrPC,ColstrQuit,ColstrRun,ColstrInput]);
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrQuit,ColstrRun,ColstrPC,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -834,6 +837,9 @@ for preI = 1:size(preP,1)
             case 67
                 % Collection #67 - 2D Plot Single Mesh
                 Pline = [67 204 213 301 612]; % All collections must start with their collection #
+            case 68
+                % Collection #68 - 2D Plot Heat Flux Across Wall
+                Pline = [68 206 210 613]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -982,6 +988,9 @@ for I = 1:size(P,1)
             case 67
                 % Collection #67 - Plot Single Mesh
                 disp('[&] Starting Collection #67 - Plot Single Mesh')
+            case 68
+                % Collection #68 - Plot Heat Flux Across Wall
+                disp('[&] Starting Collection #68 - Plot Heat Flux Across Wall')
 
             case 203
                 % Make Directory:
@@ -2276,6 +2285,117 @@ for I = 1:size(P,1)
 
                 end
                 clear Mesh612
+            case 613
+                % Create Graph of Heat Flux Across the Outdoor Wall:
+                gateP = 1;
+                qW = input('[?] [613] Plot Heat Flux across: (1 = Outdoor Wall, 2 = Indoor Wall, -1 = Quit): ');
+                switch qW
+                    case 1
+                        qWstr = 'Outdoor';
+                    case 2
+                        qWstr = 'Indoor';
+                    otherwise
+                        disp('[~] Quitting Script')
+                        return
+                end
+                
+                while gateP == 1
+                    a = 0;
+                    qTRpa = input(['[?] [613] What model # do you want to plot the Heat Flux across the',...
+                        qWstr,' Wall of? (a = all, or row index # from AResults): ']);
+    
+                    if qTRpa == a
+                        % Create plot for all table values
+                        for numM = 1:size(ThermalResults,2)
+
+                        % Pull Important Info:
+                        Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
+                        
+                        Tf = AResultsD(numM,4);
+                        Lf = AResultsD(numM,5);
+                        numMstr = num2str(numM);
+
+                        % Interpolate Temperature:
+                        y = linspace(-Lf/2,Lf/2,12);
+                        T = zeros(1,size(y,2));
+                        c = 1;
+                        
+                        switch qW
+                            case 1
+                                x = Tw;
+                            case 2
+                                x = 0;
+                        end
+
+                        for i = y
+                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
+                            c = c + 1;
+                        end
+                        clear c
+                        
+                        % Plot
+                        disp(['[$] [613] Plotting Model #',num2str(numM)])
+                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        plot(y,T,'bo')
+
+                        title(fname)
+                        xlabel('Length (m)')
+                        ylabel('Heat Flux')
+
+                        drawnow
+
+                        end
+                        gateP = 0;
+                    else
+                        % Create plot for specific value
+                        numM = qTRpa;
+
+                        % Pull Important Info:
+                        Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
+                        
+                        Tf = AResultsD(numM,4);
+                        Lf = AResultsD(numM,5);
+                        numMstr = num2str(numM);
+
+                        % Interpolate Temperature:
+                        y = linspace(-Lf/2,Lf/2,12);
+                        T = zeros(1,size(y,2));
+                        c = 1;
+
+                        switch qW
+                            case 1
+                                x = Tw;
+                            case 2
+                                x = 0;
+                        end
+                        
+                        for i = y
+                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
+                            c = c + 1;
+                        end
+                        clear c
+
+
+                        % Plot
+                        disp(['[$] [613] Plotting Model #',num2str(numM)])
+                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
+                        figure('Name',fname)
+        
+                        plot(y,T,'bo')
+                        
+                        title(fname)
+                        xlabel('Length (m)')
+                        ylabel('Heat Flux')
+
+                        drawnow
+
+                        gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
+                    end
+                end
 
             case 701
                 % Evaluate Condition. When Condition == 1, the Collection
