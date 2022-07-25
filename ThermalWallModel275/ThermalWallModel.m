@@ -1,8 +1,10 @@
-%% ThermalWallModel v2.76
+%% ThermalWallModel v2.A77
 % Updated on July 25 2022
 
 clear
 addpath("Functions")
+addpath("Functions/Modeling")
+addpath("Functions/System")
 
 %% Documentation:
 
