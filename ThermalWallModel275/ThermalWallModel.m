@@ -1,10 +1,13 @@
-%% ThermalWallModel v2.A77
+%% ThermalWallModel v2.A78
 % Updated on July 25 2022
 
 clear
+
+% Add Paths:
 addpath("Functions")
 addpath("Functions/Modeling")
 addpath("Functions/System")
+addpath("Functions/Analysis")
 
 %% Documentation:
 
@@ -2289,7 +2292,6 @@ for I = 1:size(P,1)
                 clear Mesh612
             case 613
                 % Create Graph of Heat Flux Across the Outdoor Wall:
-                gateP = 1;
                 qW = input('[?] [613] Plot Heat Flux across: (1 = Outdoor Wall, 2 = Indoor Wall, -1 = Quit): ');
                 switch qW
                     case 1
@@ -2301,6 +2303,7 @@ for I = 1:size(P,1)
                         return
                 end
                 
+                gateP = 1;
                 while gateP == 1
                     a = 0;
                     qTRpa = input(['[?] [613] What model # do you want to plot the Heat Flux across the',...
@@ -2313,87 +2316,19 @@ for I = 1:size(P,1)
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2,12);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        
-                        switch qW
-                            case 1
-                                x = Tw;
-                            case 2
-                                x = 0;
-                        end
-
-                        for i = y
-                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Plot
-                        disp(['[$] [613] Plotting Model #',num2str(numM)])
-                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'bo')
-
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Heat Flux')
-
-                        drawnow
+                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         end
                         gateP = 0;
                     else
                         % Create plot for specific value
                         numM = qTRpa;
-
-                        % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2,12);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-
-                        switch qW
-                            case 1
-                                x = Tw;
-                            case 2
-                                x = 0;
-                        end
-                        
-                        for i = y
-                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
-                            c = c + 1;
-                        end
-                        clear c
-
-
-                        % Plot
-                        disp(['[$] [613] Plotting Model #',num2str(numM)])
-                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'bo')
-                        
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Heat Flux')
-
-                        drawnow
+                        % Get Flux at Wall
+                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
