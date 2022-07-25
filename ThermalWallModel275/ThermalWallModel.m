@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.B74
+%% ThermalWallModel v2.75
 % Updated on July 25 2022
 
 clear
@@ -7,6 +7,12 @@ addpath("Functions")
 %% Documentation:
 
 %{
+
+Suppressed Messages:
+- %#ok<*AGROW> suppresses all messages concerning a variable increasing in
+size on a loop
+- %#ok<*PFTUSW> suppresses all messages concerning a variable in a parfor
+loop that is used after
 
 Required Toolboxes:
 
@@ -665,7 +671,7 @@ for preI = 1:size(preP,1)
                 end
       
                 SP = (linspace(-Lw/2,Lw/2,qSA-1))';
-                SP = [-Lw*10;SP]; % Adding extra evaluation location where there is no stud
+                SP = [-Lw*10;SP]; %#ok<*AGROW> % Adding extra evaluation location where there is no stud
                 disp('[+] [115] Stud Matrix Created')
             case 116
                 % Create 2D Data Save File:
@@ -1351,7 +1357,7 @@ for I = 1:size(P,1)
                 % Solve All Thermal Models
                 disp('[$] [408] Solving All Models')
                 parfor numM = Logs.numMi:size(ThermalModel,2)
-                    numMstr = num2str(numM);
+                    numMstr = num2str(numM); %#ok<*PFTUSW> 
                     disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
                     timeri(numM,2) = datetime('now')
                     ThermalResults{numM} = solve(ThermalModel{numM});
@@ -1480,6 +1486,8 @@ for I = 1:size(P,1)
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
+                TempwI = MSD.BC.TempwI;
+                TempwO = MSD.BC.TempwO;
                 parfor numM = Logs.numMi:numM
                     numMstr = num2str(numM);
                     disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
@@ -1491,7 +1499,7 @@ for I = 1:size(P,1)
                     end
                     
                     % Find R Value
-                    dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(intersecttemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
+                    dTempRatio = ((TempwI-TempwO)/(intersecttemp-TempwO)); %Whole Wall dT / Foam dT
                     RwM(numM,1) = Rf * dTempRatio;
                     RwM(numM,1) = RwM(numM,1) - Rf;
                     
