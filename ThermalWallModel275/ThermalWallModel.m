@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.65
-% Updated on July 20 2022
+%% ThermalWallModel v2.75
+% Updated on July 25 2022
 
 clear
 addpath("Functions")
@@ -7,6 +7,12 @@ addpath("Functions")
 %% Documentation:
 
 %{
+
+Suppressed Messages:
+- %#ok<*AGROW> suppresses all messages concerning a variable increasing in
+size on a loop
+- %#ok<*PFTUSW> suppresses all messages concerning a variable in a parfor
+loop that is used after
 
 Required Toolboxes:
 
@@ -56,6 +62,7 @@ Process ID:
             064) Plot Temperatures Across Intersection
             065) Get Average Temperature Acroos Plate Region
             066) Get Heat Flux at a Point
+            067) Plot Single Mesh
 
 
 100) PreRun
@@ -165,6 +172,7 @@ Process ID:
     610) 2D Take Average Across Plate Region
 
     611) 2D Get Heat Flux at a Point
+    612) Plot Current Mesh
 
 700) Conditions
 
@@ -224,6 +232,8 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
     between the foam and the wall.
 - 'Complex' = Plate with stud, wallboard, and siding. This is meant to
     represent a real house
+- 'ComplexNoFoam' = Same as complex, but the wall siding continues to
+    infinity.
 
 %}
 MSD.propertyStyle = 'TimeMachine'; 
@@ -244,11 +254,11 @@ MSD.Foam.TC = MSD.Wall.TC;
 % Plate:
 MSD.Plate.Length = .302; %Plate Length
 MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-MSD.Plate.TC = 236; %Plate Thermal Conductivity
+MSD.Plate.TC = 150; %Plate Thermal Conductivity
 MSD.Plate.On = false;
 
 % Stud:
-MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+MSD.Stud.TC = .115; % If Applicable
 MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
 MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -377,31 +387,60 @@ Colstr60 = '\n      60 = Plot Single Geometry';
 Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
 Colstr66 = '\n      66 = Get Heat Flux At Point';
+Colstr67 = '\n      67 = Plot Single Mesh';
 
+% General Colstr
+Colstr3D1 = [ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
+Colstr3D2 = [ColstrT2,Colstr5];
+Colstr3D3 = [ColstrT3,Colstr6];
+Colstr3D = [Colstr3DT,Colstr3D1,Colstr3D2,Colstr3D3];
 
-Colstr3D = [Colstr3DT,ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4,...
-    ColstrT2,Colstr5,...
-    ColstrT3,Colstr6];
-Colstr2D = [Colstr2DT,ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,...
-    ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62...
-    ColstrT3,Colstr58,Colstr61,Colstr63,...
-    ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66];
-ColstrDebug = ColstrDebug3;
+Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54];
+Colstr2D2 = [ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62];
+Colstr2D3 = [ColstrT3,Colstr58,Colstr61,Colstr63];
+Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,Colstr66,Colstr67];
+Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
+
+ColstrDebug = [ColstrDebug2,ColstrDebug3];
 Colstr = [Colstr3D,Colstr2D,ColstrDebug];
 
+% Colstr Pages:
+n = 0.1;
+p = 0.2;
+a = 0.3;
+ColstrPC = '\n  n = "Next Page", p = "Previous Page", a = "Show All Collections"';
+
+Colstr3DP1 = [Colstr3DT,Colstr3D1];
+Colstr3DP2 = [Colstr3DT,Colstr3D2,Colstr3D3];
+
+Colstr2DP1 = [Colstr2DT,Colstr2D1];
+Colstr2DP2 = [Colstr2DT,Colstr2D2];
+Colstr2DP3 = [Colstr2DT,Colstr2D3];
+Colstr2DP4 = [Colstr2DT,Colstr2D4];
+
+ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4};
+ColstrPD = [];
 
 % Create Variables:
 gateC = 1;
 numC = 1;
+numP = 0;
 
-% Question:
+% First Question:
+SQ = false;
+qCollection(numC) = input(['[?] What would you like to do?',ColstrPC,ColstrQuit,ColstrInput]);
+
+% Check First Answer
+Invalid = qCollection == 0 || qCollection == -2;
+if Invalid
+    error("[!] You can't use that as the first collection!")
+end
+
 while gateC == 1
-    
-    switch numC
-        case 1
-            qCollection(numC) = input(['[?] What would you like to do?',Colstr,ColstrQuit,ColstrInput]);
-        otherwise
-            qCollection(numC) = input(['[?] What else would you like to do?',Colstr,ColstrDebug2,ColstrQuit,ColstrRun,ColstrInput]);
+
+    % Subsequent Questions:
+    if SQ
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrPC,ColstrQuit,ColstrRun,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -418,14 +457,38 @@ while gateC == 1
         case 0
             gateC = 0;
             numC = numC - 1;
+        case p
+            if numP <= 1
+                numP = size(ColstrP,2);
+            else
+                numP = numP - 1;
+            end
+            ColstrPD = ColstrP{numP};
+            qCollection(numC) = [];
+        case n
+            if numP == size(ColstrP,2)
+                numP = 1;
+            else
+                numP = numP + 1;
+            end
+            ColstrPD = ColstrP{numP};
+            qCollection(numC) = [];
+        case a
+            ColstrPD = Colstr;
+            qCollection(numC) = [];
         otherwise
             numC = numC + 1;
     end
+    SQ = true;
     
 end
 
 % Clear Collection Names:
 clear -regexp Colstr
+clear Invalid
+clear p
+clear n
+clear a
 
 %% Create Pre-Run Process Index:
 [preP,numC] = preRunIndex(qCollection);
@@ -599,7 +662,7 @@ for preI = 1:size(preP,1)
                     qSA = input('[?] [115] Choose the number of stud analysis models you would like to run: ');
                     switch qSA
                         case qSA <= 0
-                            disp("[!] [115] That doesn't make sense, try again!")
+                            fprintf(2,"[!] [115] That doesn't make sense, try again!\n")
                             qSA = 0;
                         otherwise
                             disp(['[$] [115] Creating Stud matrix with ',num2str(qSA),' elements'])
@@ -608,7 +671,7 @@ for preI = 1:size(preP,1)
                 end
       
                 SP = (linspace(-Lw/2,Lw/2,qSA-1))';
-                SP = [-Lw;SP]; % Adding extra evaluation location where there is no stud
+                SP = [-Lw*10;SP]; %#ok<*AGROW> % Adding extra evaluation location where there is no stud
                 disp('[+] [115] Stud Matrix Created')
             case 116
                 % Create 2D Data Save File:
@@ -634,7 +697,7 @@ for preI = 1:size(preP,1)
                     qPA = input('[?] [120] Choose the number of plate analysis models you would like to run: ');
                     switch qPA
                         case qPA <= 0
-                            disp("[!] [120] That doesn't make sense, try again!")
+                            fprintf(2,"[!] [120] That doesn't make sense, try again!\n")
                             qPA = 0;
                         otherwise
                             disp(['[$] [120] Creating Plate matrix with ',num2str(qPA),' elements'])
@@ -768,6 +831,9 @@ for preI = 1:size(preP,1)
             case 66
                 % Collection #66 - 2D Get Heat Flux At Point
                 Pline = [66 206 210 301 307 611 706 701]; % All collections must start with their collection #
+            case 67
+                % Collection #67 - 2D Plot Single Mesh
+                Pline = [67 204 213 301 612]; % All collections must start with their collection #
         end
     end
     % Concatonate Collection to P
@@ -913,6 +979,9 @@ for I = 1:size(P,1)
                     run.p307 = false;
                     run.p66 = false;
                 end
+            case 67
+                % Collection #67 - Plot Single Mesh
+                disp('[&] Starting Collection #67 - Plot Single Mesh')
 
             case 203
                 % Make Directory:
@@ -936,7 +1005,7 @@ for I = 1:size(P,1)
 
                 % Force and Check Model Specification:
                 if MSDm.savedate ~= MSD.savedate
-                    disp(['[!] [204] [Model ',numMstr,'] ','It appears that you are attempting to overwrite the Model Specifications associated with this file.'])
+                    fprintf(2,['[!] [204] [Model ',numMstr,'] ','It appears that you are attempting to overwrite the Model Specifications associated with this file.\n'])
                     qContinue = input(['[?] [204] [Model ',numMstr,'] ','What would you like to do (1 = Overwrite MS, 0 = Load MS from Model File, -1 = Quit): ']);
                     
                     switch qContinue
@@ -955,7 +1024,8 @@ for I = 1:size(P,1)
                 
             case 205
                 % Save Analysis Logs
-                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM",'-v7.3')
+                disp('[$] [205] Saving Logs')
+                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM","Logs",'-v7.3')
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
@@ -968,6 +1038,7 @@ for I = 1:size(P,1)
                 end
             case 207
                 % Save Thermal Model Logs
+                disp('[$] [207] Saving Thermal Models')
                 save(ModelSavename,"ThermalModel","numM",'-v7.3')
                 disp(['[+] [207] Mesh Thermal Models have been saved as ',LogSavename])
             case 208
@@ -980,6 +1051,7 @@ for I = 1:size(P,1)
                 end
             case 209
                 % Save Thermal Results Logs
+                disp('[$] [209] Saving Thermal Results')
                 save(ResultsSavename,"ThermalResults","numM",'-v7.3')
                 disp(['[+] [209] Thermal Results have been saved as ',ResultsSavename])
             case 210
@@ -1196,7 +1268,7 @@ for I = 1:size(P,1)
 
                     gateV = input(['[?] [403] [Model ',numMstr,'] ','Does this model look correct? (1 = y, 0 = n): ']);
                     if gateV == 0
-                        disp(['[!] [403] [Model ',numMstr,'] ','You likely did not choose the faces correctly, try again!'])
+                        fprintf(2,['[!] [403] [Model ',numMstr,'] ','You likely did not choose the faces correctly, try again!\n'])
                     else
                         ThermalModel{numM} = thermalmodel;
                         disp(['[+] [403] [Model ',numMstr,'] ','Geometry Verified'])
@@ -1220,8 +1292,13 @@ for I = 1:size(P,1)
             case 406
                 % 2D Generate Single Geometry:
                 disp(['[$] [406] [Model ',numMstr,'] ','Generating 2D Geometry'])
-                wallGeometry2D(Lw,Tw,Lf,Tf); %Ensures new geometry is loaded
-                geometryFromEdges(ThermalModel{numM},@modelshapew); % Uses Geometry
+                GP.Wall.L = Lw;
+                GP.Wall.T = Tw;
+                GP.Foam.L = Lf;
+                GP.Foam.T = Tf;
+                GP.propertyStyle = MSD.propertyStyle;
+                modelshapew = @(varargin)modelshapew2D(GP,varargin{:});
+                geometryFromEdges(ThermalModel{numM},modelshapew); % Uses Geometry
                 disp(['[+] [406] [Model ',numMstr,'] ','2D Geometry Generated'])
             case 407 
                 disp(['[$] [407] [Model ',numMstr,'] ','Applying Conditions'])
@@ -1246,9 +1323,16 @@ for I = 1:size(P,1)
                     disp(['[#] [407] [Model ',numMstr,'] ','Model Type = Steady State'])
                 end
 
-                % Apply Boundary Conditions
-                thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
-                thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',MSD.BC.TempwO);   
+                % Apply Boundary Conditions based on property style
+                switch MSD.propertyStyle
+                    case 'ComplexNoFoam'
+                        thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
+                        thermalBC(thermalmodel,'Edge',3,'Temperature',MSD.BC.TempwO);  
+                    otherwise
+                        thermalBC(thermalmodel,'Edge',1,'Temperature',MSD.BC.TempwI);
+                        thermalBC(thermalmodel,'Edge',[3,5,7],'Temperature',MSD.BC.TempwO);  
+                end
+
 
                 ThermalModel{numM} = thermalmodel; % Re Apply to Cell
                 disp(['[+] [407] [Model ',numMstr,'] ','Conditions Applied'])
@@ -1260,8 +1344,6 @@ for I = 1:size(P,1)
                     numMstr = num2str(numM);
                     disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
                     timeri(numM,1) = datetime('now');
-                    % Ensure Correct Storage of Geometry
-                    wallGeometry2D(Lwp(numM),Twp(numM),Lfp(numM),Tfp(numM))
                     
                     % Generate Mesh
                     ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
@@ -1275,7 +1357,7 @@ for I = 1:size(P,1)
                 % Solve All Thermal Models
                 disp('[$] [408] Solving All Models')
                 parfor numM = Logs.numMi:size(ThermalModel,2)
-                    numMstr = num2str(numM);
+                    numMstr = num2str(numM); %#ok<*PFTUSW> 
                     disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
                     timeri(numM,2) = datetime('now')
                     ThermalResults{numM} = solve(ThermalModel{numM});
@@ -1404,6 +1486,8 @@ for I = 1:size(P,1)
             case 507
                 % Find Predicted R Value and Percent Error for Stud Analysis     
                 warning off
+                TempwI = MSD.BC.TempwI;
+                TempwO = MSD.BC.TempwO;
                 parfor numM = Logs.numMi:numM
                     numMstr = num2str(numM);
                     disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
@@ -1415,7 +1499,7 @@ for I = 1:size(P,1)
                     end
                     
                     % Find R Value
-                    dTempRatio = ((MSD.BC.TempwI-MSD.BC.TempwO)/(intersecttemp-MSD.BC.TempwO)); %Whole Wall dT / Foam dT
+                    dTempRatio = ((TempwI-TempwO)/(intersecttemp-TempwO)); %Whole Wall dT / Foam dT
                     RwM(numM,1) = Rf * dTempRatio;
                     RwM(numM,1) = RwM(numM,1) - Rf;
                     
@@ -1898,7 +1982,6 @@ for I = 1:size(P,1)
                     % Asign Lf and Tf
                     Tf = Foam(numM-Logs.Foam.numMAdj,1);
                     Lf = Foam(numM-Logs.Foam.numMAdj,2);
-                    wallGeometry2D(Lw,Tw,Lf,Tf)
 
                     % Plot Model
                     numMstr = num2str(numM);
@@ -2018,8 +2101,8 @@ for I = 1:size(P,1)
                         % Check Plate Legnth:
                         if isnan(Lp)
                             Lp = MSD.Plate.Length;
-                            disp(['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp)]);
+                            fprintf(2,['[!] [610] [Model ',num2str(numM),'] ',...
+                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp),'\n']);
                         end
 
                         % Interpolate Temperature:
@@ -2107,6 +2190,9 @@ for I = 1:size(P,1)
                 Tf = AResultsD(numM,4);
                 Lf = AResultsD(numM,5);
 
+                TempwI = str2double(Specifications{9,1});
+                TempwO = str2double(Specifications{10,1});
+
                 gateHFAP = 1;
                 while gateHFAP == 1
                     % Count Number of Points
@@ -2133,17 +2219,23 @@ for I = 1:size(P,1)
                         end
                     end
                         % Create Array and Table
+                        disp(['[$] [611] Getting Heat Flux at Point on Model ',numMstr,': (',num2str(x),',',num2str(y),')'])
                         HFAtPointP = evaluateHeatFlux(ThermalResults{numM},x,y);
-                        HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP];
+                        RfromHF = ((abs(TempwI - TempwO))/HFAtPointP) * 5.678;
+
+                        HFAtPointD(numHFAP,:) = [numHFAP,numM,x,y,HFAtPointP,RfromHF];
                         HFAtPoint = array2table(HFAtPointD,...
-                            'VariableNames',{'Point','Model #','X','Y','HeatFlux'});
-                        disp(HFAtPoint)
+                            'VariableNames',{'Point','Model #','X','Y','HeatFlux','Rwall'});
+                        if ~(qHFAM == 2 && numM < size(ThermalResults,2))
+                            disp(HFAtPoint)
+                        end
                         
                         if qHFAM == 0
                             % Clear Old Values:
                             clear x
                             clear y
                             clear HFAtPointP
+                            clear RfromHF
         
                             % Another?
                             gateHFAP = input(['[?] [606] [Model ',numMstr,'] ','Would you like to plot another point? (1 = y, 0 = n): ']);
@@ -2151,8 +2243,40 @@ for I = 1:size(P,1)
                             gateHFAP = 0;
                         end
                 end
+            case 612
+                % Plot Current Thermal Model Mesh
+                disp(['[$] [612] [Model ',numMstr,'] ','Plotting Mesh'])
 
-                
+                while numM > 0
+                    % Asign Lf and Tf
+                    disp(['[*] [612] [Model ',numMstr,'] ','Generating Mesh'])
+                    Tf = Foam(numM-Logs.Foam.numMAdj,1);
+                    Lf = Foam(numM-Logs.Foam.numMAdj,2);
+                    
+                    % Generate Mesh:
+                    Mesh612 = generateMesh(ThermalModel{numM},'Hmax',Hmax,'Hmin',Hmin);
+
+                    % Plot Model
+                    disp(['[*] [612] [Model ',numMstr,'] ','Plotting Mesh'])
+                    numMstr = num2str(numM);
+                    Fwg = figure('Name','Mesh');
+                    hold on
+                    title(['Mesh for Model ',numMstr,' - Note the Scale Difference'])
+                    xlabel('Thickness')
+                    ylabel('Length')
+                    pdemesh(Mesh612)
+                    xaxis = [0,Tw+Tf+Tw];
+                    yaxis = [-3*Lw/4,3*Lw/4];
+                    axis([xaxis,yaxis])
+                    axis square
+                    hold off
+                    drawnow
+                    disp(['[+] [612] [Model ',numMstr,'] ','Plotted Current Geometry']);
+                    numM = input(['[?] [612] [Model ',numMstr,'] ','Would you like to plot another mesh? (Choose Model # or 0 = n): ']);
+
+                end
+                clear Mesh612
+
             case 701
                 % Evaluate Condition. When Condition == 1, the Collection
                 % will be repeated
@@ -2198,16 +2322,19 @@ for I = 1:size(P,1)
                 end
             case 706
                 % Repeat Collection 66
+                run.p206 = false;
+                run.p210 = false;
+
                 switch qHFAM
                     case 0
                         Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                     case 1
                         qHFAM = 2;
-                        numM = Logs.numMi - 1;
+                        numM = 0;
 
                         Condition = 1;
 
-                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                        if size(ThermalResults,2) == 1
                             qHFAM = 0;
                             disp('[-] [706] There was only one model to plot in, so there is no sense in walking through the models')
                         end
@@ -2215,15 +2342,13 @@ for I = 1:size(P,1)
                         run.p301 = false;
                         run.p307 = true;
                     case 2
-                        if (numM-(Logs.numMi-1)) == size(ThermalResults,2)
+                        if numM == size(ThermalResults,2)
                             qHFAM = 0;
-                            numM = Logs.numMi;
+                            numM = 1;
                             run.p301 = true;
                             run.p307 = false;
                             Condition = input('[?] [705] Would you like to restart Collection 66? (y = 1, n = 0): ');
                             disp('[+] [706] Finished Walking Through Models')
-                        else
-                            disp('[*] [706] Restarting Collection')
                         end
 
                 end
@@ -2233,7 +2358,7 @@ for I = 1:size(P,1)
     
     if exist('Condition','var') % Determines if the loop should be repeated
         if Condition == 1
-            disp('[*] Repeating Collection')
+            disp(['[*] Repeating Collection #',num2str(P(I,1))])
         else
             break % Exits Loop
         end
@@ -2273,7 +2398,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = .16; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = true;
 
             % Stud
@@ -2312,7 +2437,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
-            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2346,7 +2471,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = MSD.Wall.TC;
             
             % Stud
-            MSD.Stud.TC = MSD.Wall.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2375,7 +2500,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = .302; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = true;
 
             % Wall and Foam Thermal Properties:
@@ -2383,7 +2508,7 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = 0.0288;
             
             % Stud
-            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % If Applicable
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
@@ -2397,12 +2522,12 @@ function MSD = msPreset(MSD)
         case 'ComplexNoFoam'
 
             % Property Style:
-            MSD.propertyStyle = 'Complex'; 
+            MSD.propertyStyle = 'ComplexNoFoam'; 
 
             % Shape of Wall:
 
-            MSD.Foam.Thickness = 10^-8;
-            MSD.Foam.Length = 89 * 10^-2; %m
+            MSD.Foam.Thickness = 0;
+            MSD.Foam.Length = 0; %m
             MSD.Foam.Height = MSD.Foam.Length; 
 
             MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
@@ -2412,7 +2537,7 @@ function MSD = msPreset(MSD)
             % Plate:
             MSD.Plate.Length = 0; %Plate Length
             MSD.Plate.Thickness = 0.0015875; % Plate Thickness
-            MSD.Plate.TC = 236; %Plate Thermal Conductivity
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
             MSD.Plate.On = false;
 
             % Wall and Foam Thermal Properties:
@@ -2420,12 +2545,12 @@ function MSD = msPreset(MSD)
             MSD.Foam.TC = 0.0288;
             
             % Stud
-            MSD.Stud.TC = MSD.Foam.TC*(10/4.38); % If Applicable
+            MSD.Stud.TC = .115; % R value for studs is 6.88/5.5in
             MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
             MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
 
             % Wall and Foam R Values. Foam Adjustment Settings:
-            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.eR = (16/((1.5/6.88) + (14.5/18))) + .45 + .81; % Effective R value
             MSD.Wall.R = 18 + .45 + .81; 
             MSD.Foam.R = 5;
 
