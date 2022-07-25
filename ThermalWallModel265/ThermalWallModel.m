@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A71
+%% ThermalWallModel v2.A72
 % Updated on July 22 2022
 
 clear
@@ -200,7 +200,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = .4*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -226,6 +226,8 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
     between the foam and the wall.
 - 'Complex' = Plate with stud, wallboard, and siding. This is meant to
     represent a real house
+- 'ComplexNoFoam' = Same as complex, but the wall siding continues to
+    infinity.
 
 %}
 MSD.propertyStyle = 'TimeMachine'; 
@@ -272,7 +274,7 @@ represent a real house
 'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
-MSD.Preset = 'Complex';
+MSD.Preset = 'ComplexNoFoam';
 
 %% Save or Load Model Specifications
 
@@ -2505,7 +2507,7 @@ function MSD = msPreset(MSD)
         case 'ComplexNoFoam'
 
             % Property Style:
-            MSD.propertyStyle = 'Complex'; 
+            MSD.propertyStyle = 'ComplexNoFoam'; 
 
             % Shape of Wall:
 
