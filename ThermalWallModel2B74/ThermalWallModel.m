@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A73
+%% ThermalWallModel v2.B74
 % Updated on July 25 2022
 
 clear
@@ -200,7 +200,7 @@ MSD.BC.TempwI = 309; %Interior Wall Temperature K
 MSD.BC.TempwO = 295; %Outdoor Wall Temperature K
 
 % Mesh Settings
-MSD.Mesh.Hmax = .4*10^-3; % Max Mesh Length
+MSD.Mesh.Hmax = 6*10^-3; % Max Mesh Length
 MSD.Mesh.Hdelta = .10; % Percent of Hmax Hmin is
 MSD.Mesh.Hmin = MSD.Mesh.Hmax*MSD.Mesh.Hdelta;
 
@@ -274,7 +274,7 @@ represent a real house
 'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
-MSD.Preset = 'ComplexNoFoam';
+MSD.Preset = 'Complex';
 
 %% Save or Load Model Specifications
 
