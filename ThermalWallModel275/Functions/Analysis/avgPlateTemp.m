@@ -1,6 +1,10 @@
 function AT = avgPlateTemp(thermalresults,Tw,Lp,numM,MSDLp)
-%AVGPLATETEMP Summary of this function goes here
-%   Detailed explanation goes here
+%AVGPLATETEMP Built for Collection 610 to get the temp across the plate
+%   MSDLp is the origonal length of the plate as defined 
+%   Lp is the length of the plate
+%   Tw is the thickness of the wall
+%   thermalresults cannot be the full cell array. It can only be one
+%   thermalresults object
 
 %% Declare Variable:
 persistent ATD

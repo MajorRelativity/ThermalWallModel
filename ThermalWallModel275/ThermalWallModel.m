@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A79
+%% ThermalWallModel v2.A80
 % Updated on July 26 2022
 
 % Clear Functions
@@ -2030,44 +2030,22 @@ for I = 1:size(P,1)
                 end
             case 609
                 % Create Graph of Temperatures Across Intersection:
+                a = 0;
                 gateP = 1;
                 while gateP == 1
-                    qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
                         
-                        Tf = AResultsD(numM,4);
                         Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Plot
-                        disp(['[$] [609] Plotting Model #',num2str(numM)])
-                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'ro')
-
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Temperature')
-
-                        drawnow
+                        % Function ("Analysis" Functions folder):
+                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
 
                         end
                         gateP = 0;
@@ -2077,35 +2055,11 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
                         
-                        Tf = AResultsD(numM,4);
                         Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-
-
-                        % Plot
-                        disp(['[$] [609] Plotting Model #',num2str(numM)])
-                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'ro')
-                        
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Temperature')
-
-                        drawnow
+                        % Function ("Analysis" Functions folder):
+                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
 
                         gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
