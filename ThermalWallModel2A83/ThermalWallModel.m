@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A82
+%% ThermalWallModel v2.A83
 % Updated on July 26 2022
 
 % Clear Functions
@@ -1455,8 +1455,8 @@ for I = 1:size(P,1)
                 RwM = RwM - Rf;
 
                 % Find Percent Errors:
-                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
-                pErrorET = abs((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
+                pErrorT = ((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
+                pErrorET = ((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
 
             case 504
                 % Duration with time2num
@@ -1535,8 +1535,8 @@ for I = 1:size(P,1)
                     RwM(numM,1) = RwM(numM,1) - Rf;
                     
                     % Find Percent Errors: 
-                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
-                    pErrorET(numM,1) = abs((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
+                    pErrorT(numM,1) = ((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
+                    pErrorET(numM,1) = ((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
 
 
                     % Save Intersect Temp
@@ -1771,9 +1771,10 @@ for I = 1:size(P,1)
                end
             case 603
                % 3D X Slice Analysis (Vertical X)
+               a = 0;
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from AResults): ');
+                   qTRpa = input('[?] [603] What model # do you want to Xslice? (a = all, or row index # from AResults): ');
                    
                    % Pull Model Specifications:
                    Tw = str2double(Specifications{6,1});
@@ -1783,7 +1784,7 @@ for I = 1:size(P,1)
                    % Choose Slice:
                    Xslice = Tw; % The only useful x slice is at the wall/foam intersection
 
-                   if qTRpa == -1
+                   if qTRpa == a
                        gateP = 0;
                         for i = 1:size(ThermalResults,2)
                             
