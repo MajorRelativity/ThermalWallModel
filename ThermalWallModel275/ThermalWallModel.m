@@ -1,7 +1,9 @@
-%% ThermalWallModel v2.A78
-% Updated on July 25 2022
+%% ThermalWallModel v2.A79
+% Updated on July 26 2022
 
+% Clear Functions
 clear
+clear avgPlateTemp
 
 % Add Paths:
 addpath("Functions")
@@ -332,6 +334,7 @@ run.p62 = true;
 run.p66 = true;
 
 % 100:
+run.p101 = true;
 run.p104 = true;
 
 % 200:
@@ -516,28 +519,33 @@ for preI = 1:size(preP,1)
                 break
             case 101
                 % Name Translation
-                % Foam and Wall Name Translation:
-                Tf = MSD.Foam.Thickness;
-                Lf = MSD.Foam.Length;
-                Hf = MSD.Foam.Height;
-                Tw = MSD.Wall.Thickness;
-                Lw = MSD.Wall.Length;
-                Hw = MSD.Wall.Height;
+                if run.p101
+                    % Foam and Wall Name Translation:
+                    Tf = MSD.Foam.Thickness;
+                    Lf = MSD.Foam.Length;
+                    Hf = MSD.Foam.Height;
+                    Tw = MSD.Wall.Thickness;
+                    Lw = MSD.Wall.Length;
+                    Hw = MSD.Wall.Height;
 
-                % R Value Name Translation:
-                eRw = MSD.Wall.eR;
-                Rw = MSD.Wall.R;
-                Rf = MSD.Foam.R;
+                    % R Value Name Translation:
+                    eRw = MSD.Wall.eR;
+                    Rw = MSD.Wall.R;
+                    Rf = MSD.Foam.R;
 
-                % Plate Name Translation:
-                Lp = MSD.Plate.Length;
+                    % Plate Name Translation:
+                    Lp = MSD.Plate.Length;
 
-                % Mesh Name Translation
-                Hmax = MSD.Mesh.Hmax;
-                Hmin = MSD.Mesh.Hmin;
-                HOverride = MSD.Mesh.HOverride;
+                    % Mesh Name Translation
+                    Hmax = MSD.Mesh.Hmax;
+                    Hmin = MSD.Mesh.Hmin;
+                    HOverride = MSD.Mesh.HOverride;
 
-                disp('[+] [101] Names Translated')
+                    % Prevent it from running again
+                    run.p101 = false;
+
+                    disp('[+] [101] Names Translated')
+                end
 
             case 102
                 % 3D Foam Analysis - Matrix Creation
@@ -975,6 +983,15 @@ for I = 1:size(P,1)
                     disp('[&] Starting Collection #62 - Generate All Plate Analysis Geometries')
                     run.p62 = false;
                 end
+            case 63
+                % Collection #63 - Solve All Plate Analysis Models
+                disp('[&] Starting Collection #63 - Solve All Plate Analysis Models')
+
+                % Overrides
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
+
             case 64
                 % Collection #64 - Plot Temperatures Across Intersection
                 disp('[&] Starting Collection #64 - Plot Temperatures Across Intersection')
@@ -2096,54 +2113,23 @@ for I = 1:size(P,1)
             case 610
                 % Get Average Temperature Across Plate Region
                 gateP = 1;
+                a = 0;
                 while gateP == 1
-                    qTRpa = input('[?] [610] What model # do you want to average the Intersection of? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [610] What model # do you want to average the Intersection of? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
                             
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
                         Lp = AResultsD(numM,11);
-                        numMstr = num2str(numM);
-
-                        % Check Plate Legnth:
-                        if isnan(Lp)
-                            Lp = MSD.Plate.Length;
-                            fprintf(2,['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp),'\n']);
-                        end
-
-                        % Interpolate Temperature:
-                        disp(['[*] [610] [Model ',num2str(numM),'] ',...
-                            'Getting Average'])
-
-                        y = linspace(-Lp/2,Lp/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
                         
-                        % Get Average Temperature:
-                        ATi = (ones(1,size(y,2)) * T')./size(y,2);
-
-                        if ~exist('ATD','var')
-                            ATD = [numM Lp ATi];
-                        else
-                            ATD = [ATD;numM Lp ATi];
+                        % Function (From "Analysis" Functions Folder):
+                        AT = avgPlateTemp(ThermalResults{numM},Tw,Lp,numM,MSD.Plate.Length); 
                         end
-                        AT = array2table(ATD,...
-                        'VariableNames',{'Model #','Plate Length','Mean Temp'});
 
-                        end
+                        % Display Table:
                         disp(AT)
                         gateP = 0;
                     else
@@ -2152,48 +2138,17 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
                         Lp = AResultsD(numM,11);
-                        numMstr = num2str(numM);
                         
-                        % Check Plate Legnth:
-                        if isnan(Lp)
-                            Lp = MSD.Plate.Length;
-                            disp(['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp)]);
-                        end
-
-                        % Interpolate Temperature:
-                        disp(['[*] [610] [Model ',num2str(numM),'] ',...
-                            'Getting Average'])
-                        y = linspace(-Lp/2,Lp/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Get Average Temperature:
-                        ATi = (ones(1,size(y,2)) * T')./size(y,2);
-
-                        if ~exist('ATD','var')
-                            ATD = [numM Lp ATi];
-                        else
-                            ATD = [ATD;numM Lp ATi];
-                        end
-                        AT = array2table(ATD,...
-                        'VariableNames',{'Model #','Plate Length','Mean Temp'});
+                        % Function:
+                        AT = avgPlateTemp(ThermalResults{numM},Tw,Lp,numM,MSD.Plate.Length);
 
                         disp(AT)
 
                         gateP = input('[?] [610] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                 end
+
             case 611
                 % 2D Get Heat Flux at Point
                 
