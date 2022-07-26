@@ -29,7 +29,7 @@ switch propertyStyle
         TP.Siding.T = 0.0127;
         
         % Find Stud 2 and Stud 3 Positions
-        TP.Stud.UpB2 = TP.Stud.UpB + 0.4064; % Places studs 16 inces apart
+        TP.Stud.UpB2 = TP.Stud.UpB + 0.4064; % Places studs 16 inches apart
         TP.Stud.UpB3 = TP.Stud.UpB - 0.4064;
 
         TP.Stud.LowB2 = TP.Stud.LowB + 0.4064;

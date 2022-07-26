@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A80
+%% ThermalWallModel v2.A81
 % Updated on July 26 2022
 
 % Clear Functions
