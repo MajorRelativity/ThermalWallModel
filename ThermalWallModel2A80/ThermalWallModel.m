@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.A81
+%% ThermalWallModel v2.A82
 % Updated on July 26 2022
 
 % Clear Functions
@@ -225,7 +225,7 @@ MSD.Mesh.HOverride = 15*10^-3; % Override Mesh Length (for inconsistant mesh
 
 % Foam Modification Settings:
 MSD.FMod.FstepT = 1; % Step size between foam trials for thickness
-MSD.FMod.FstepH = .1;% Step size between foam trials for thickness
+MSD.FMod.FstepH = .1;% Step size between foam trials for height
 MSD.FMod.FstepL = .1; % Step size between foam trials for length
 MSD.q.SF = 1; %Only analyze square foam sizes?
 
@@ -1884,11 +1884,12 @@ for I = 1:size(P,1)
             case 605
                 % 2D Contour Plot:
                 
+                a = 0;
                 gateP = 1;
                 while gateP == 1
-                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
                         % Pull Important Info:
