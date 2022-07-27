@@ -21,19 +21,22 @@ switch qW
 end
 
 %% Interpolate Heat Flux:
-lineWaitbar(0) % Reset Waitbar
-
 numMstr = num2str(numM);
 Y = linspace(-Lw/2,Lw/2,12);
 T = zeros(1,size(Y,2));
+N = length(Y);
 
+% Waitbar:
 Q = parallel.pool.DataQueue;
-afterEach(Q,lineWaitbar(1,length(Y),613,numM,'Evaluating Heat Flux: '));
+lineWaitbar(0)
+bar = @(t)lineWaitbar(1,N,613,numM,['Evaluating Heat Flux (',num2str(t),'): ']);
+afterEach(Q, bar);
 
 parfor i = 1:length(Y)
     % Evaluate Heat Flux:
     y = Y(i);
     T(i) = evaluateHeatFlux(thermalresults,x,y);
+    send(Q, T(i));
 end
 
 clear y
@@ -46,7 +49,7 @@ disp(['[$] [613] Plotting Model #',numMstr])
 fname = ['Heat Flux Across ',qWstr,' Wall from Model #',numMstr];
 figure('Name',fname)
 
-plot(y,T,'bo')
+plot(Y,T,'bo')
 
 title(fname)
 xlabel('Length (m)')
