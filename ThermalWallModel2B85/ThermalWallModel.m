@@ -1,9 +1,10 @@
-%% ThermalWallModel v2.A83
-% Updated on July 26 2022
+%% ThermalWallModel v2.86
+% Updated on July 27 2022
 
 % Clear Functions
 clear
 clear avgPlateTemp
+clear fluxAtWall
 
 % Add Paths:
 addpath("Functions")
@@ -33,6 +34,7 @@ Process ID:
     -01) Quit
     -02) Get Collection Programs
     -03) Unit Conversion Tool
+    -04) Save All Figures
 
 000) Collection
 
@@ -43,7 +45,7 @@ Process ID:
             003) Create Contour Plot Slices
             004) Get Temperature at Point
         Generate Geometry:
-            005) Generate Single Geometry with Stud
+            005) Generate Single Geometry with Thermal Properties
         Solve Models:
             006) Solve Single Model with Overrides
           
@@ -55,7 +57,7 @@ Process ID:
             053) Create Contour Plot Slices
             054) Get Temperature at Point
         Generate Geometry: 
-            055) Generate Single Geometry with Stud
+            055) Generate Single Geometry with Thermal Properties
             057) Generate All Stud Analysis Geometries
             059) Generate All Foam Analysis Geometries
             062) Generate All Plate Analysis Geometries
@@ -103,6 +105,7 @@ Process ID:
         116) Create 2D Data Save File
         117) Create 3D Data Save File
         118) Automatically Create ModelSavename
+        122) Create Figure Directory
 
     Other:
         121) Determine Conversion
@@ -123,6 +126,7 @@ Process ID:
     211) Make Log Data Directory
     212) Store Necessary Variables for ThermalModel
     213) Unpack Necessary Variables for ThermalModel
+    214) Save All Figures as PNGs
 
 300) Modification
 
@@ -181,6 +185,7 @@ Process ID:
 
     611) 2D Get Heat Flux at a Point
     612) Plot Current Mesh
+    613) 2D Create Graph of Heat Flux Across Wall
 
 700) Conditions
 
@@ -356,8 +361,11 @@ ColstrT4 = '\n    Analysis:';
 
 ColstrInput = '\n  Input: ';
 
-ColstrDebug3 = '\n -3 = Debug: Unit Conversion Tool ';
-ColstrDebug2 = '\n -2 = Debug: Show Collection Programs ';
+ColstrToolT = '\n  -99 to -2: General Tools';
+
+ColstrTool4 = '\n      -4 = Tool: Save All Figures ';
+ColstrTool3 = '\n      -3 = Tool: Unit Conversion Tool ';
+ColstrTool2 = '\n      -2 = Debug: Show Collection Programs ';
 ColstrQuit = '\n -1 = Quit ';
 
 ColstrRun = '\n  0 = Run with Nothing Else ';
@@ -370,7 +378,7 @@ Colstr2 = '\n      2 = Run Single Model From Geometry ';
 Colstr3 = '\n      3 = Create Contour Plot Slices';
 Colstr4 = '\n      4 = Get Temperature at Point';
 
-Colstr5 = '\n      5 = Plot Single Geometry with Stud';
+Colstr5 = '\n      5 = Plot Single Geometry with Thermal Properties';
 
 Colstr6 = '\n      6 = Run Single Model From Geometry with Mesh Overrides';
 
@@ -382,7 +390,7 @@ Colstr52 = '\n      52 = Run Single Model From Geometry ';
 Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
-Colstr55 = '\n      55 = Generate Single Geometry with Stud';
+Colstr55 = '\n      55 = Generate Single Geometry with Thermal Properties';
 Colstr57 = '\n      57 = Generate All Stud Analysis Geometries';
 Colstr59 = '\n      59 = Generate All Foam Analysis Geometries';
 Colstr62 = '\n      62 = Generate All Plate Analysis Geometries';
@@ -412,8 +420,8 @@ Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,...
     Colstr66,Colstr67,Colstr68];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
-ColstrDebug = [ColstrDebug2,ColstrDebug3];
-Colstr = [Colstr3D,Colstr2D,ColstrDebug];
+ColstrTool = [ColstrToolT,ColstrTool3,ColstrTool2];
+Colstr = [Colstr3D,Colstr2D,ColstrTool];
 
 % Colstr Pages:
 n = 0.1;
@@ -429,7 +437,9 @@ Colstr2DP2 = [Colstr2DT,Colstr2D2];
 Colstr2DP3 = [Colstr2DT,Colstr2D3];
 Colstr2DP4 = [Colstr2DT,Colstr2D4];
 
-ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4};
+ColstrToolP1 = ColstrTool;
+
+ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4,ColstrToolP1};
 ColstrPD = [];
 
 % Create Variables:
@@ -451,7 +461,7 @@ while gateC == 1
 
     % Subsequent Questions:
     if SQ
-        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrQuit,ColstrRun,ColstrPC,ColstrInput]);
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrRun,ColstrQuit,ColstrPC,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -744,9 +754,18 @@ for preI = 1:size(preP,1)
                 end
 
                 T = input('[?] [411] Please Enter the Thinkness This R is Associated to in Meters: ');
+            case 122
+                % Create Figure Directory
+                if ~exist('Figures','dir')
+                    mkdir Figures
+                    disp('[+] [122] Figures Directory Created')
+                end
+            case -4
+                % Collection #-4 - Tool: Save All Figures
+                Pline = [-4 214];
 
             case -3
-                % Collection #-3 - Unit Conversion Tool
+                % Collection #-3 - Tool: Unit Conversion Tool
 
                 switch MSD.q.CON
                     case 1
@@ -875,10 +894,12 @@ for I = 1:size(P,1)
             case 0
                 % Ignore and Finish Collection
                 break
+            case -4 
+                % Collection #-4 - Tool: Save All Figures
+                disp('[&] Starting Collection #-4 - Save All Figures')
             case -3
                 % Collection #-3 - Unit Conversion Tool
                 disp('[&] Starting Collection #-3 - Unit Conversion Tool')
-
             case 1
                 % Collection #1 - Generate Single Geometry
                 disp('[&] Starting Collection #1 - Generate Geometry')
@@ -945,6 +966,7 @@ for I = 1:size(P,1)
             case 56
                 % Collection #56 - Plot Current Thermal Properties
                 disp('[&] Starting Collection #56 - 2D Plot Current Termal Properties')
+                
             case 57
                 % Collection #57 - Generate All Geometries with Stud
                 if run.p57 == 1
@@ -1065,6 +1087,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Log file you would like to load: ')
                     [filenameAL, pathnameAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
                     load([pathnameAL,filenameAL])
+                    run.p206 = false;
                     disp(['[+] [206] File ',filenameAL,' has been loaded!'])
                 end
             case 207
@@ -1078,6 +1101,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Meshed Thermal Model file you would like to load: ')
                     [filenameTML, pathnameTML] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
                     load([pathnameTML,filenameTML])
+                    run.p208 = false;
                     disp(['[+] [208] File ',filenameTML,' has been loaded!'])
                 end
             case 209
@@ -1091,6 +1115,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Thermal Results file you would like to load: ')
                     [filenameTRL, pathnameTRL] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
                     load([pathnameTRL,filenameTRL])
+                    run.p210 = false;
                     disp(['[+] [210] File ',filenameTRL,' has been loaded!'])
                 end
             case 211
@@ -1131,6 +1156,19 @@ for I = 1:size(P,1)
                 
                 % Clear Variable
                 clear Store
+            case 214
+                % Save All Open Figures
+                disp('[$] [614] Saving All Figures as PNGs')
+                FigList = findobj(allchild(0), 'flat', 'Type', 'figure');
+                for iFig = 1:length(FigList)
+                    FigHandle = FigList(iFig);
+                    FigName   = get(FigHandle, 'Name');
+                    disp(['[*] [614] Saving Figure "',FigName,'" as a PNG'])
+                    FigSavename = ['Figures/',FigName,'.png'];
+                    saveas(FigHandle, FigSavename, 'png');
+                end
+
+                disp('[+] [614] All Figures Saved')
             case 301
                 % Select Thermal Model Number:
                 if run.p301
@@ -2228,7 +2266,7 @@ for I = 1:size(P,1)
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
 
-                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         end
                         gateP = 0;
@@ -2239,10 +2277,12 @@ for I = 1:size(P,1)
                         Lw = str2double(Specifications{7,1});
 
                         % Get Flux at Wall
-                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
+                    disp(aHF);
+                    disp('[#] [613] The variable "HF" contains all of the Heat Flux values')
                 end
 
             case 701
@@ -2487,6 +2527,43 @@ function MSD = msPreset(MSD)
 
             % Message:
             disp('[=] MSPreset "Complex" has been applied') 
+        case 'ComplexNoPlate'
+
+            % Property Style:
+            MSD.propertyStyle = 'ComplexNoPlate'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
+            MSD.Plate.On = false;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = .115; % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "ComplexNoPlate" has been applied') 
         case 'ComplexNoFoam'
 
             % Property Style:
