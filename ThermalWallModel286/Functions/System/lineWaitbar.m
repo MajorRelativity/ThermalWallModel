@@ -34,19 +34,19 @@ if ~exist('Fcn','var')
     error('[!] You must specify what type of output you want from lineWaitbar')
 end
 
-if ~exist('N','var')
+if ~exist('N','var') && ~isempty(N)
     error('[!] You must the total number of processes')
 end
 
-if exist('numP','var')
+if exist('numP','var') && ~isempty(numP)
     e.numP = true;
 end
 
-if exist('numM','var')
+if exist('numM','var') && ~isempty(numM)
     e.numM = true;
 end
 
-if exist('msg','var')
+if exist('msg','var') && ~isempty(msg)
     e.msg = true;
     if ~isa(msg,'char')
         error('[!] msg must be a char array!')

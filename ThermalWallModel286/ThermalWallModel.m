@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.86
+%% ThermalWallModel v2.87
 % Updated on July 27 2022
 
 % Clear Functions
@@ -1409,31 +1409,48 @@ for I = 1:size(P,1)
             case 408
                 % Generate All Meshes
                 disp('[$] [408] Generating All Meshes')
-                parfor numM = Logs.numMi:numM
-                    numMstr = num2str(numM);
-                    disp(['[*] [408] [Model ',numMstr,'] ','Generating Mesh'])
-                    timeri(numM,1) = datetime('now');
+
+                % Waitbar:
+                clear Q
+                Q = parallel.pool.DataQueue;
+                lineWaitbar(0)
+                N = length(Logs.numMi:numM);
+                bar = @(mode)lineWaitbar(mode,N,408,[],'Generating Meshes: ');
+                afterEach(Q, bar);
+
+                parfor m = Logs.numMi:numM
+                    send(Q,2);
+                    timeri(m,1) = datetime('now');
                     
                     % Generate Mesh
-                    ThermalModel{numM}.Mesh = generateMesh(ThermalModel{numM},'Hmin',Hmin,'Hmax',Hmax);
+                    ThermalModel{m}.Mesh = generateMesh(ThermalModel{m},'Hmin',Hmin,'Hmax',Hmax);
                     
-                    timerf(numM,1) = datetime('now');
-                    disp(['[*] [408] [Model ',numMstr,'] ','Mesh Generated'])  
+                    timerf(m,1) = datetime('now');
+                    send(Q,1);
                 end
                 disp('[+] [408] All Meshes generated')
 
             case 409
                 % Solve All Thermal Models
                 disp('[$] [408] Solving All Models')
-                parfor numM = Logs.numMi:size(ThermalModel,2)
-                    numMstr = num2str(numM); %#ok<*PFTUSW> 
-                    disp(['[*] [409] [Model ',numMstr,'] ','Solving Model'])
-                    timeri(numM,2) = datetime('now')
-                    ThermalResults{numM} = solve(ThermalModel{numM});
-                    timerf(numM,2) = datetime('now')
-                    disp(['[*] [409] [Model ',numMstr,'] ','Model Solved'])
+
+                % Waitbar:
+                clear Q
+                Q = parallel.pool.DataQueue;
+                lineWaitbar(0)
+                N = length(Logs.numMi:size(ThermalModel,2));
+                bar = @(mode)lineWaitbar(mode,N,409,[],'Solving Models: ');
+                afterEach(Q, bar);
+
+                parfor m = Logs.numMi:size(ThermalModel,2)
+                    send(Q,2);
+                    timeri(m,2) = datetime('now');
+                    ThermalResults{m} = solve(ThermalModel{m});
+                    timerf(m,2) = datetime('now');
+                    send(Q,1);
                 end
                 disp('[$] [408] All Models Solved')
+                pause(.5) % Let it settle
             case 410
                 % Generate Single Mesh with Overrides:
                 disp(['[$] [410] [Model ',numMstr,'] ','Generating Mesh with overrides'])
@@ -1553,13 +1570,22 @@ for I = 1:size(P,1)
                 
                 disp(['[+] [506] [Model ',numMstr,'] ','Added to Foam Analysis Result Logs'])
             case 507
-                % Find Predicted R Value and Percent Error for Stud Analysis     
+                % Find Predicted R Value and Percent Error for Stud Analysis 
+
+                % Waitbar:
+                clear Q
+                Q = parallel.pool.DataQueue;
+                lineWaitbar(0)
+                N = length(Logs.numMi:numM);
+                bar = @(args)lineWaitbar(args(1),N,507,[],['Predicting R Value (Model #',num2str(args(2)),'): ']);
+                afterEach(Q, bar);
+
                 warning off
                 TempwI = MSD.BC.TempwI;
                 TempwO = MSD.BC.TempwO;
                 parfor numM = Logs.numMi:numM
-                    numMstr = num2str(numM);
-                    disp(['[*] [507] [Model ',numMstr,'] ','Finding Predicted R Value'])
+                    send(Q,[2,numM])
+
                     % Find Temperature at Intersection:
                     if all(modelStyle == '3D')
                         intersecttemp = interpolateTemperature(ThermalResults{numM},Tw,0,0);
@@ -1576,9 +1602,10 @@ for I = 1:size(P,1)
                     pErrorT(numM,1) = ((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
                     pErrorET(numM,1) = ((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
 
-
                     % Save Intersect Temp
                     IntersectTemp(numM,1) = intersecttemp
+
+                    send(Q,[1,numM])
                 end
                 warning on
                 disp('[+] [507] Predicted R Values Found')
