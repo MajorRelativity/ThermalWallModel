@@ -53,6 +53,36 @@ switch propertyStyle
        
         % Thermal Conductivity:
         TC = Wallboard + Stud + Siding + Plate + Foam;
+    case 'ComplexNoPlate'
+        % Wallboard and Siding Boards
+        TP.Wallboard.TC = 0.16019;
+        TP.Siding.TC = .088993;
+        TP.Wallboard.T = 0.0127;
+        TP.Siding.T = 0.0127;
+        
+        % Find Stud 2 and Stud 3 Positions
+        TP.Stud.UpB2 = TP.Stud.UpB + 0.4064; % Places studs 16 inches apart
+        TP.Stud.UpB3 = TP.Stud.UpB - 0.4064;
+
+        TP.Stud.LowB2 = TP.Stud.LowB + 0.4064;
+        TP.Stud.LowB3 = TP.Stud.LowB - 0.4064;
+
+        % Pieces:
+
+        Stud = (TP.Wallboard.T<=location.x & TP.Wall.T - TP.Siding.T >= location.x).*(...
+            ((location.y >= TP.Stud.LowB & location.y <= TP.Stud.UpB) | (location.y >= TP.Stud.LowB2 & location.y <= TP.Stud.UpB2) | (location.y >= TP.Stud.LowB3 & location.y <= TP.Stud.UpB3)).*...
+            TP.Stud.TC +...
+            ~((location.y >= TP.Stud.LowB & location.y <= TP.Stud.UpB) | (location.y >= TP.Stud.LowB2 & location.y <= TP.Stud.UpB2) | (location.y >= TP.Stud.LowB3 & location.y <= TP.Stud.UpB3)).*...
+            TP.Wall.TC);
+
+        Wallboard = (location.x<TP.Wallboard.T).*TP.Wallboard.TC;
+
+        Siding = (location.x<TP.Wall.T & location.x>(TP.Wall.T - TP.Siding.T)).*TP.Siding.TC;
+
+        Foam = ((TP.Wall.T)<=location.x).*TP.Foam.TC;
+       
+        % Thermal Conductivity:
+        TC = Wallboard + Stud + Siding + Foam;
         
     case 'ComplexNoFoam'
         % Wallboard and Siding Boards

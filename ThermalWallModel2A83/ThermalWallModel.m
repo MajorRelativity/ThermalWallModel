@@ -1,5 +1,5 @@
 %% ThermalWallModel v2.B84
-% Updated on July 26 2022
+% Updated on July 27 2022
 
 % Clear Functions
 clear
@@ -2524,6 +2524,43 @@ function MSD = msPreset(MSD)
 
             % Message:
             disp('[=] MSPreset "Complex" has been applied') 
+        case 'ComplexNoPlate'
+
+            % Property Style:
+            MSD.propertyStyle = 'ComplexNoPlate'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
+            MSD.Plate.On = false;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = .115; % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "ComplexNoPlate" has been applied') 
         case 'ComplexNoFoam'
 
             % Property Style:
