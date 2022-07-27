@@ -1,9 +1,10 @@
-%% ThermalWallModel v2.B85
+%% ThermalWallModel v2.86
 % Updated on July 27 2022
 
 % Clear Functions
 clear
 clear avgPlateTemp
+clear fluxAtWall
 
 % Add Paths:
 addpath("Functions")
@@ -2265,7 +2266,7 @@ for I = 1:size(P,1)
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
 
-                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         end
                         gateP = 0;
@@ -2276,10 +2277,12 @@ for I = 1:size(P,1)
                         Lw = str2double(Specifications{7,1});
 
                         % Get Flux at Wall
-                        fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
+                    disp(aHF);
+                    disp('[#] [613] The variable "HF" contains all of the Heat Flux values')
                 end
 
             case 701
