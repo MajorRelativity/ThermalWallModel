@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.87
+%% ThermalWallModel v2.88
 % Updated on July 27 2022
 
 % Clear Functions
@@ -245,6 +245,7 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
     between the foam and the wall.
 - 'Complex' = Plate with stud, wallboard, and siding. This is meant to
     represent a real house
+- 'ComplexNoPlate' - Same as complex but without the plate
 - 'ComplexNoFoam' = Same as complex, but the wall siding continues to
     infinity.
 
@@ -290,6 +291,7 @@ MSD.Foam.R = 5;
  the Foam is extended to meet the height of the wall
 'Complex' - Plate with stud, wallboard, and siding. This is meant to
 represent a real house
+'ComplexNoPlate' - Same as complex but without the plate
 'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
@@ -301,7 +303,7 @@ MSD.Preset = 'Complex';
 MSD = msPreset(MSD);
 
 % Creates Directors for Model Specifications
-if ~exist('ModelSpecifications','dir')
+if ~isfolder('ModelSpecifications')
     mkdir ModelSpecifications
 end
 
@@ -601,7 +603,7 @@ for preI = 1:size(preP,1)
                 end
             case 105
                 % Create Log Directory
-                if ~exist('ThermalData','dir')
+                if ~isfolder('ThermalData')
                     mkdir ThermalData
                     disp('[+] [105] ThermaData Directory Created')
                 end
@@ -756,7 +758,7 @@ for preI = 1:size(preP,1)
                 T = input('[?] [411] Please Enter the Thinkness This R is Associated to in Meters: ');
             case 122
                 % Create Figure Directory
-                if ~exist('Figures','dir')
+                if ~isfolder('Figures')
                     mkdir Figures
                     disp('[+] [122] Figures Directory Created')
                 end
@@ -1038,7 +1040,7 @@ for I = 1:size(P,1)
 
             case 203
                 % Make Directory:
-                if ~exist('ThermalModels','dir')
+                if ~isfolder('ThermalModels')
                     mkdir ThermalModels
                     disp('[+] [203] ThermaModels Directory Created')
                 end
