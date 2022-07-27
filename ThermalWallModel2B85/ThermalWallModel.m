@@ -1,8 +1,16 @@
-%% ThermalWallModel v2.76
-% Updated on July 25 2022
+%% ThermalWallModel v2.86
+% Updated on July 27 2022
 
+% Clear Functions
 clear
+clear avgPlateTemp
+clear fluxAtWall
+
+% Add Paths:
 addpath("Functions")
+addpath("Functions/Modeling")
+addpath("Functions/System")
+addpath("Functions/Analysis")
 
 %% Documentation:
 
@@ -26,6 +34,7 @@ Process ID:
     -01) Quit
     -02) Get Collection Programs
     -03) Unit Conversion Tool
+    -04) Save All Figures
 
 000) Collection
 
@@ -36,7 +45,7 @@ Process ID:
             003) Create Contour Plot Slices
             004) Get Temperature at Point
         Generate Geometry:
-            005) Generate Single Geometry with Stud
+            005) Generate Single Geometry with Thermal Properties
         Solve Models:
             006) Solve Single Model with Overrides
           
@@ -48,7 +57,7 @@ Process ID:
             053) Create Contour Plot Slices
             054) Get Temperature at Point
         Generate Geometry: 
-            055) Generate Single Geometry with Stud
+            055) Generate Single Geometry with Thermal Properties
             057) Generate All Stud Analysis Geometries
             059) Generate All Foam Analysis Geometries
             062) Generate All Plate Analysis Geometries
@@ -96,6 +105,7 @@ Process ID:
         116) Create 2D Data Save File
         117) Create 3D Data Save File
         118) Automatically Create ModelSavename
+        122) Create Figure Directory
 
     Other:
         121) Determine Conversion
@@ -116,6 +126,7 @@ Process ID:
     211) Make Log Data Directory
     212) Store Necessary Variables for ThermalModel
     213) Unpack Necessary Variables for ThermalModel
+    214) Save All Figures as PNGs
 
 300) Modification
 
@@ -174,6 +185,7 @@ Process ID:
 
     611) 2D Get Heat Flux at a Point
     612) Plot Current Mesh
+    613) 2D Create Graph of Heat Flux Across Wall
 
 700) Conditions
 
@@ -218,7 +230,7 @@ MSD.Mesh.HOverride = 15*10^-3; % Override Mesh Length (for inconsistant mesh
 
 % Foam Modification Settings:
 MSD.FMod.FstepT = 1; % Step size between foam trials for thickness
-MSD.FMod.FstepH = .1;% Step size between foam trials for thickness
+MSD.FMod.FstepH = .1;% Step size between foam trials for height
 MSD.FMod.FstepL = .1; % Step size between foam trials for length
 MSD.q.SF = 1; %Only analyze square foam sizes?
 
@@ -327,6 +339,7 @@ run.p62 = true;
 run.p66 = true;
 
 % 100:
+run.p101 = true;
 run.p104 = true;
 
 % 200:
@@ -348,8 +361,11 @@ ColstrT4 = '\n    Analysis:';
 
 ColstrInput = '\n  Input: ';
 
-ColstrDebug3 = '\n -3 = Debug: Unit Conversion Tool ';
-ColstrDebug2 = '\n -2 = Debug: Show Collection Programs ';
+ColstrToolT = '\n  -99 to -2: General Tools';
+
+ColstrTool4 = '\n      -4 = Tool: Save All Figures ';
+ColstrTool3 = '\n      -3 = Tool: Unit Conversion Tool ';
+ColstrTool2 = '\n      -2 = Debug: Show Collection Programs ';
 ColstrQuit = '\n -1 = Quit ';
 
 ColstrRun = '\n  0 = Run with Nothing Else ';
@@ -362,7 +378,7 @@ Colstr2 = '\n      2 = Run Single Model From Geometry ';
 Colstr3 = '\n      3 = Create Contour Plot Slices';
 Colstr4 = '\n      4 = Get Temperature at Point';
 
-Colstr5 = '\n      5 = Plot Single Geometry with Stud';
+Colstr5 = '\n      5 = Plot Single Geometry with Thermal Properties';
 
 Colstr6 = '\n      6 = Run Single Model From Geometry with Mesh Overrides';
 
@@ -374,7 +390,7 @@ Colstr52 = '\n      52 = Run Single Model From Geometry ';
 Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
 
-Colstr55 = '\n      55 = Generate Single Geometry with Stud';
+Colstr55 = '\n      55 = Generate Single Geometry with Thermal Properties';
 Colstr57 = '\n      57 = Generate All Stud Analysis Geometries';
 Colstr59 = '\n      59 = Generate All Foam Analysis Geometries';
 Colstr62 = '\n      62 = Generate All Plate Analysis Geometries';
@@ -404,8 +420,8 @@ Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,...
     Colstr66,Colstr67,Colstr68];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
-ColstrDebug = [ColstrDebug2,ColstrDebug3];
-Colstr = [Colstr3D,Colstr2D,ColstrDebug];
+ColstrTool = [ColstrToolT,ColstrTool3,ColstrTool2];
+Colstr = [Colstr3D,Colstr2D,ColstrTool];
 
 % Colstr Pages:
 n = 0.1;
@@ -421,7 +437,9 @@ Colstr2DP2 = [Colstr2DT,Colstr2D2];
 Colstr2DP3 = [Colstr2DT,Colstr2D3];
 Colstr2DP4 = [Colstr2DT,Colstr2D4];
 
-ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4};
+ColstrToolP1 = ColstrTool;
+
+ColstrP = {Colstr3DP1,Colstr3DP2,Colstr2DP1,Colstr2DP2,Colstr2DP3,Colstr2DP4,ColstrToolP1};
 ColstrPD = [];
 
 % Create Variables:
@@ -443,7 +461,7 @@ while gateC == 1
 
     % Subsequent Questions:
     if SQ
-        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrQuit,ColstrRun,ColstrPC,ColstrInput]);
+        qCollection(numC) = input(['[?] What else would you like to do?',ColstrPD,ColstrRun,ColstrQuit,ColstrPC,ColstrInput]);
     end
     
     % Takes action based on the current choice:
@@ -511,28 +529,33 @@ for preI = 1:size(preP,1)
                 break
             case 101
                 % Name Translation
-                % Foam and Wall Name Translation:
-                Tf = MSD.Foam.Thickness;
-                Lf = MSD.Foam.Length;
-                Hf = MSD.Foam.Height;
-                Tw = MSD.Wall.Thickness;
-                Lw = MSD.Wall.Length;
-                Hw = MSD.Wall.Height;
+                if run.p101
+                    % Foam and Wall Name Translation:
+                    Tf = MSD.Foam.Thickness;
+                    Lf = MSD.Foam.Length;
+                    Hf = MSD.Foam.Height;
+                    Tw = MSD.Wall.Thickness;
+                    Lw = MSD.Wall.Length;
+                    Hw = MSD.Wall.Height;
 
-                % R Value Name Translation:
-                eRw = MSD.Wall.eR;
-                Rw = MSD.Wall.R;
-                Rf = MSD.Foam.R;
+                    % R Value Name Translation:
+                    eRw = MSD.Wall.eR;
+                    Rw = MSD.Wall.R;
+                    Rf = MSD.Foam.R;
 
-                % Plate Name Translation:
-                Lp = MSD.Plate.Length;
+                    % Plate Name Translation:
+                    Lp = MSD.Plate.Length;
 
-                % Mesh Name Translation
-                Hmax = MSD.Mesh.Hmax;
-                Hmin = MSD.Mesh.Hmin;
-                HOverride = MSD.Mesh.HOverride;
+                    % Mesh Name Translation
+                    Hmax = MSD.Mesh.Hmax;
+                    Hmin = MSD.Mesh.Hmin;
+                    HOverride = MSD.Mesh.HOverride;
 
-                disp('[+] [101] Names Translated')
+                    % Prevent it from running again
+                    run.p101 = false;
+
+                    disp('[+] [101] Names Translated')
+                end
 
             case 102
                 % 3D Foam Analysis - Matrix Creation
@@ -731,9 +754,18 @@ for preI = 1:size(preP,1)
                 end
 
                 T = input('[?] [411] Please Enter the Thinkness This R is Associated to in Meters: ');
+            case 122
+                % Create Figure Directory
+                if ~exist('Figures','dir')
+                    mkdir Figures
+                    disp('[+] [122] Figures Directory Created')
+                end
+            case -4
+                % Collection #-4 - Tool: Save All Figures
+                Pline = [-4 214];
 
             case -3
-                % Collection #-3 - Unit Conversion Tool
+                % Collection #-3 - Tool: Unit Conversion Tool
 
                 switch MSD.q.CON
                     case 1
@@ -862,10 +894,12 @@ for I = 1:size(P,1)
             case 0
                 % Ignore and Finish Collection
                 break
+            case -4 
+                % Collection #-4 - Tool: Save All Figures
+                disp('[&] Starting Collection #-4 - Save All Figures')
             case -3
                 % Collection #-3 - Unit Conversion Tool
                 disp('[&] Starting Collection #-3 - Unit Conversion Tool')
-
             case 1
                 % Collection #1 - Generate Single Geometry
                 disp('[&] Starting Collection #1 - Generate Geometry')
@@ -932,6 +966,7 @@ for I = 1:size(P,1)
             case 56
                 % Collection #56 - Plot Current Thermal Properties
                 disp('[&] Starting Collection #56 - 2D Plot Current Termal Properties')
+                
             case 57
                 % Collection #57 - Generate All Geometries with Stud
                 if run.p57 == 1
@@ -970,6 +1005,15 @@ for I = 1:size(P,1)
                     disp('[&] Starting Collection #62 - Generate All Plate Analysis Geometries')
                     run.p62 = false;
                 end
+            case 63
+                % Collection #63 - Solve All Plate Analysis Models
+                disp('[&] Starting Collection #63 - Solve All Plate Analysis Models')
+
+                % Overrides
+                run.p206 = false;
+                run.p208 = false;
+                run.p210 = false;
+
             case 64
                 % Collection #64 - Plot Temperatures Across Intersection
                 disp('[&] Starting Collection #64 - Plot Temperatures Across Intersection')
@@ -1043,6 +1087,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Log file you would like to load: ')
                     [filenameAL, pathnameAL] = uigetfile('*.*','[?] Choose the Log file you would like to load: ');
                     load([pathnameAL,filenameAL])
+                    run.p206 = false;
                     disp(['[+] [206] File ',filenameAL,' has been loaded!'])
                 end
             case 207
@@ -1056,6 +1101,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Meshed Thermal Model file you would like to load: ')
                     [filenameTML, pathnameTML] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
                     load([pathnameTML,filenameTML])
+                    run.p208 = false;
                     disp(['[+] [208] File ',filenameTML,' has been loaded!'])
                 end
             case 209
@@ -1069,6 +1115,7 @@ for I = 1:size(P,1)
                     disp('[?] Choose the Thermal Results file you would like to load: ')
                     [filenameTRL, pathnameTRL] = uigetfile('*.*','[?] Choose the Meshed Thermal Model file you would like to load: ');
                     load([pathnameTRL,filenameTRL])
+                    run.p210 = false;
                     disp(['[+] [210] File ',filenameTRL,' has been loaded!'])
                 end
             case 211
@@ -1109,6 +1156,19 @@ for I = 1:size(P,1)
                 
                 % Clear Variable
                 clear Store
+            case 214
+                % Save All Open Figures
+                disp('[$] [614] Saving All Figures as PNGs')
+                FigList = findobj(allchild(0), 'flat', 'Type', 'figure');
+                for iFig = 1:length(FigList)
+                    FigHandle = FigList(iFig);
+                    FigName   = get(FigHandle, 'Name');
+                    disp(['[*] [614] Saving Figure "',FigName,'" as a PNG'])
+                    FigSavename = ['Figures/',FigName,'.png'];
+                    saveas(FigHandle, FigSavename, 'png');
+                end
+
+                disp('[+] [614] All Figures Saved')
             case 301
                 % Select Thermal Model Number:
                 if run.p301
@@ -1433,8 +1493,8 @@ for I = 1:size(P,1)
                 RwM = RwM - Rf;
 
                 % Find Percent Errors:
-                pErrorT = abs((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
-                pErrorET = abs((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
+                pErrorT = ((RwM - Rw)/Rw) * 100; %Percent Error from Insulation R
+                pErrorET = ((RwM - eRw)/eRw) * 100; %Percent Error from Effective R
 
             case 504
                 % Duration with time2num
@@ -1513,8 +1573,8 @@ for I = 1:size(P,1)
                     RwM(numM,1) = RwM(numM,1) - Rf;
                     
                     % Find Percent Errors: 
-                    pErrorT(numM,1) = abs((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
-                    pErrorET(numM,1) = abs((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
+                    pErrorT(numM,1) = ((RwM(numM,1) - Rw)/Rw) * 100; %Percent Error from Insulation
+                    pErrorET(numM,1) = ((RwM(numM,1) - eRw)/eRw) * 100; %Percent Error from Effective
 
 
                     % Save Intersect Temp
@@ -1749,9 +1809,10 @@ for I = 1:size(P,1)
                end
             case 603
                % 3D X Slice Analysis (Vertical X)
+               a = 0;
                gateP = 1;
                while gateP == 1
-                   qTRpa = input('[?] [603] What model # do you want to Xslice? (-1 = all, or row index # from AResults): ');
+                   qTRpa = input('[?] [603] What model # do you want to Xslice? (a = all, or row index # from AResults): ');
                    
                    % Pull Model Specifications:
                    Tw = str2double(Specifications{6,1});
@@ -1761,7 +1822,7 @@ for I = 1:size(P,1)
                    % Choose Slice:
                    Xslice = Tw; % The only useful x slice is at the wall/foam intersection
 
-                   if qTRpa == -1
+                   if qTRpa == a
                        gateP = 0;
                         for i = 1:size(ThermalResults,2)
                             
@@ -1862,11 +1923,12 @@ for I = 1:size(P,1)
             case 605
                 % 2D Contour Plot:
                 
+                a = 0;
                 gateP = 1;
                 while gateP == 1
-                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [605] What model # do you want to 2D Plot? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
                         % Pull Important Info:
@@ -2008,44 +2070,22 @@ for I = 1:size(P,1)
                 end
             case 609
                 % Create Graph of Temperatures Across Intersection:
+                a = 0;
                 gateP = 1;
                 while gateP == 1
-                    qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
                         
-                        Tf = AResultsD(numM,4);
                         Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Plot
-                        disp(['[$] [609] Plotting Model #',num2str(numM)])
-                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'ro')
-
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Temperature')
-
-                        drawnow
+                        % Function ("Analysis" Functions folder):
+                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
 
                         end
                         gateP = 0;
@@ -2055,35 +2095,11 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
                         
-                        Tf = AResultsD(numM,4);
                         Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-
-
-                        % Plot
-                        disp(['[$] [609] Plotting Model #',num2str(numM)])
-                        fname = ['Temperature Across Intersection from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'ro')
-                        
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Temperature')
-
-                        drawnow
+                        % Function ("Analysis" Functions folder):
+                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
 
                         gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
@@ -2091,54 +2107,23 @@ for I = 1:size(P,1)
             case 610
                 % Get Average Temperature Across Plate Region
                 gateP = 1;
+                a = 0;
                 while gateP == 1
-                    qTRpa = input('[?] [610] What model # do you want to average the Intersection of? (-1 = all, or row index # from AResults): ');
+                    qTRpa = input('[?] [610] What model # do you want to average the Intersection of? (a = all, or row index # from AResults): ');
     
-                    if qTRpa == -1
+                    if qTRpa == a
                         % Create plot for all table values
                         for numM = 1:size(ThermalResults,2)
                             
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
                         Lp = AResultsD(numM,11);
-                        numMstr = num2str(numM);
-
-                        % Check Plate Legnth:
-                        if isnan(Lp)
-                            Lp = MSD.Plate.Length;
-                            fprintf(2,['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp),'\n']);
-                        end
-
-                        % Interpolate Temperature:
-                        disp(['[*] [610] [Model ',num2str(numM),'] ',...
-                            'Getting Average'])
-
-                        y = linspace(-Lp/2,Lp/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
                         
-                        % Get Average Temperature:
-                        ATi = (ones(1,size(y,2)) * T')./size(y,2);
-
-                        if ~exist('ATD','var')
-                            ATD = [numM Lp ATi];
-                        else
-                            ATD = [ATD;numM Lp ATi];
+                        % Function (From "Analysis" Functions Folder):
+                        AT = avgPlateTemp(ThermalResults{numM},Tw,Lp,numM,MSD.Plate.Length); 
                         end
-                        AT = array2table(ATD,...
-                        'VariableNames',{'Model #','Plate Length','Mean Temp'});
 
-                        end
+                        % Display Table:
                         disp(AT)
                         gateP = 0;
                     else
@@ -2147,48 +2132,17 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
                         Lp = AResultsD(numM,11);
-                        numMstr = num2str(numM);
                         
-                        % Check Plate Legnth:
-                        if isnan(Lp)
-                            Lp = MSD.Plate.Length;
-                            disp(['[!] [610] [Model ',num2str(numM),'] ',...
-                                'Plate Length not Found in AResults, using length from Model Specifications: ',num2str(Lp)]);
-                        end
-
-                        % Interpolate Temperature:
-                        disp(['[*] [610] [Model ',num2str(numM),'] ',...
-                            'Getting Average'])
-                        y = linspace(-Lp/2,Lp/2);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        for i = y
-                            T(c) = interpolateTemperature(ThermalResults{numM},Tw,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Get Average Temperature:
-                        ATi = (ones(1,size(y,2)) * T')./size(y,2);
-
-                        if ~exist('ATD','var')
-                            ATD = [numM Lp ATi];
-                        else
-                            ATD = [ATD;numM Lp ATi];
-                        end
-                        AT = array2table(ATD,...
-                        'VariableNames',{'Model #','Plate Length','Mean Temp'});
+                        % Function:
+                        AT = avgPlateTemp(ThermalResults{numM},Tw,Lp,numM,MSD.Plate.Length);
 
                         disp(AT)
 
                         gateP = input('[?] [610] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                 end
+
             case 611
                 % 2D Get Heat Flux at Point
                 
@@ -2287,7 +2241,6 @@ for I = 1:size(P,1)
                 clear Mesh612
             case 613
                 % Create Graph of Heat Flux Across the Outdoor Wall:
-                gateP = 1;
                 qW = input('[?] [613] Plot Heat Flux across: (1 = Outdoor Wall, 2 = Indoor Wall, -1 = Quit): ');
                 switch qW
                     case 1
@@ -2299,6 +2252,7 @@ for I = 1:size(P,1)
                         return
                 end
                 
+                gateP = 1;
                 while gateP == 1
                     a = 0;
                     qTRpa = input(['[?] [613] What model # do you want to plot the Heat Flux across the',...
@@ -2311,90 +2265,24 @@ for I = 1:size(P,1)
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2,12);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-                        
-                        switch qW
-                            case 1
-                                x = Tw;
-                            case 2
-                                x = 0;
-                        end
-
-                        for i = y
-                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
-                            c = c + 1;
-                        end
-                        clear c
-                        
-                        % Plot
-                        disp(['[$] [613] Plotting Model #',num2str(numM)])
-                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'bo')
-
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Heat Flux')
-
-                        drawnow
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         end
                         gateP = 0;
                     else
                         % Create plot for specific value
                         numM = qTRpa;
-
-                        % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
-                        
-                        Tf = AResultsD(numM,4);
-                        Lf = AResultsD(numM,5);
-                        numMstr = num2str(numM);
 
-                        % Interpolate Temperature:
-                        y = linspace(-Lf/2,Lf/2,12);
-                        T = zeros(1,size(y,2));
-                        c = 1;
-
-                        switch qW
-                            case 1
-                                x = Tw;
-                            case 2
-                                x = 0;
-                        end
-                        
-                        for i = y
-                            T(c) = evaluateHeatFlux(ThermalResults{numM},x,i);
-                            c = c + 1;
-                        end
-                        clear c
-
-
-                        % Plot
-                        disp(['[$] [613] Plotting Model #',num2str(numM)])
-                        fname = ['Heat Flux Across ',qWstr,' Wall from Model #',num2str(numM)];
-                        figure('Name',fname)
-        
-                        plot(y,T,'bo')
-                        
-                        title(fname)
-                        xlabel('Length (m)')
-                        ylabel('Heat Flux')
-
-                        drawnow
+                        % Get Flux at Wall
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
+                    disp(aHF);
+                    disp('[#] [613] The variable "HF" contains all of the Heat Flux values')
                 end
 
             case 701
@@ -2639,6 +2527,43 @@ function MSD = msPreset(MSD)
 
             % Message:
             disp('[=] MSPreset "Complex" has been applied') 
+        case 'ComplexNoPlate'
+
+            % Property Style:
+            MSD.propertyStyle = 'ComplexNoPlate'; 
+
+            % Shape of Wall:
+
+            MSD.Foam.Thickness = 2.54 * 10^-2; %m
+            MSD.Foam.Length = 45.6 * 10^-2; %m
+            MSD.Foam.Height = MSD.Foam.Length; 
+
+            MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
+            MSD.Wall.Length = 90 * 10^-2; %m 
+            MSD.Wall.Height = MSD.Wall.Length;
+
+            % Plate:
+            MSD.Plate.Length = .302; %Plate Length
+            MSD.Plate.Thickness = 0.0015875; % Plate Thickness
+            MSD.Plate.TC = 150; %Plate Thermal Conductivity
+            MSD.Plate.On = false;
+
+            % Wall and Foam Thermal Properties:
+            MSD.Wall.TC = 0.044051; % Thermal Conductivity for the Wall W/(m*K)
+            MSD.Foam.TC = 0.0288;
+            
+            % Stud
+            MSD.Stud.TC = .115; % If Applicable
+            MSD.Stud.Pos = 0; % Location of the center of the stud on the diagram
+            MSD.Stud.Length = 0.0381; % Length of the stud along the y direction in meters
+
+            % Wall and Foam R Values. Foam Adjustment Settings:
+            MSD.Wall.eR = (16/((1.5/4.38) + (14.5/18))) + .45 + .81; % Effective R value
+            MSD.Wall.R = 18 + .45 + .81; 
+            MSD.Foam.R = 5;
+
+            % Message:
+            disp('[=] MSPreset "ComplexNoPlate" has been applied') 
         case 'ComplexNoFoam'
 
             % Property Style:

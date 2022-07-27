@@ -11,8 +11,11 @@ preP = [];
 for C = qCollection
     
     switch C
+        case -4
+            % Collection #-4 - Tool: Save All Figures
+            prePline = [122 -4];
         case -3
-            % Collection #-3 - Debug: Unit Conversion Tool
+            % Collection #-3 - Tool: Unit Conversion Tool
             prePline = [101 112 121 -3];
         case -2
             % Collection #-2 - Debug: Display Collection Index
