@@ -26,7 +26,7 @@ end
 
 %% Interpolate Heat Flux:
 numMstr = num2str(numM);
-Y = linspace(-Lw/2,Lw/2,90);
+Y = linspace(-Lw/2,Lw/2);
 F = zeros(1,size(Y,2));
 N = length(Y);
 

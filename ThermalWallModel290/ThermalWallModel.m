@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.89
+%% ThermalWallModel v2.90
 % Updated on July 28 2022
 
 % Clear Functions
@@ -2110,11 +2110,12 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
+                        Lw = str2double(Specifications{7,1});
                         
                         Lf = AResultsD(numM,5);
 
                         % Function ("Analysis" Functions folder):
-                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
+                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM);
 
                         end
                         gateP = 0;
@@ -2124,15 +2125,20 @@ for I = 1:size(P,1)
 
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
-                        
-                        Lf = AResultsD(numM,5);
+                        Lw = str2double(Specifications{7,1});
 
                         % Function ("Analysis" Functions folder):
-                        tempAtIntersection(ThermalResults{numM},Tw,Lf,numM);
+                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM);
 
                         gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                 end
+                disp(aTemp)
+                disp('[#] [609] The variable "Temp" contains all of the Temperature and Y values')
+
+                save(LogSavename,'aTemp','Temp','-append')
+                disp('[+] [609] aTemp and Temp have been saved to Logs')
+
             case 610
                 % Get Average Temperature Across Plate Region
                 gateP = 1;
@@ -2311,7 +2317,7 @@ for I = 1:size(P,1)
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
                     disp(aHF);
-                    disp('[#] [613] The variable "HF" contains all of the Heat Flux values')
+                    disp('[#] [613] The variable "HF" contains all of the Heat Flux and Y values')
 
                     save(LogSavename,'aHF','HF','-append')
                     disp('[+] [613] aHF and HF have been saved to Logs')
