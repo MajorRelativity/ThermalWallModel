@@ -119,6 +119,9 @@ for C = qCollection
         case 68
             % Collection #68 - 2D Plot Heat Flux Across Wall
             prePline = [101 119 108 68]; %prePrograms always end with their program ID #
+        case 69
+            % Collection #69 - 2D Plot Full Heat Flux
+            prePline = [101 119 108 69]; %prePrograms always end with their program ID #
             
 
     end

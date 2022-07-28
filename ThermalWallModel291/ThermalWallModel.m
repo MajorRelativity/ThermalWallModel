@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.91
+%% ThermalWallModel v2.92
 % Updated on July 28 2022
 
 % Clear Functions
@@ -234,6 +234,10 @@ MSD.FMod.FstepH = .1;% Step size between foam trials for height
 MSD.FMod.FstepL = .1; % Step size between foam trials for length
 MSD.q.SF = 1; %Only analyze square foam sizes?
 
+% Plotting Model Specifications:
+MSD.Plot.HFSF = .001; % Scales the heat flux so that direction is visible on the screen
+MSD.Plot.PN = 100; % If applies, the number of points that will get plotted.
+
 %% Specific Model Specifications (User Edited):
 
 % Property Style:
@@ -391,6 +395,7 @@ Colstr51 = '\n      51 = Generate Single Geometry ';
 Colstr52 = '\n      52 = Run Single Model From Geometry ';
 Colstr53 = '\n      53 = Create Contour Plot';
 Colstr54 = '\n      54 = Get Temperature at Point';
+Colstr66 = '\n      66 = Get Heat Flux At Point';
 
 Colstr55 = '\n      55 = Generate Single Geometry with Thermal Properties';
 Colstr57 = '\n      57 = Generate All Stud Analysis Geometries';
@@ -405,9 +410,9 @@ Colstr56 = '\n      56 = Plot Current Thermal Properties';
 Colstr60 = '\n      60 = Plot Single Geometry';
 Colstr64 = '\n      64 = Plot Temperatures Across Intersection';
 Colstr65 = '\n      65 = Get Average Temperature Across Plate Region';
-Colstr66 = '\n      66 = Get Heat Flux At Point';
 Colstr67 = '\n      67 = Plot Single Mesh';
 Colstr68 = '\n      68 = Plot Heat Flux Across Wall';
+Colstr69 = '\n      69 = Plot Full Heat Flux';
 
 % General Colstr
 Colstr3D1 = [ColstrT1,Colstr1,Colstr2,Colstr3,Colstr4];
@@ -415,11 +420,11 @@ Colstr3D2 = [ColstrT2,Colstr5];
 Colstr3D3 = [ColstrT3,Colstr6];
 Colstr3D = [Colstr3DT,Colstr3D1,Colstr3D2,Colstr3D3];
 
-Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54];
+Colstr2D1 = [ColstrT1,Colstr51,Colstr52,Colstr53,Colstr54,Colstr66];
 Colstr2D2 = [ColstrT2,Colstr55,Colstr57,Colstr59,Colstr62];
 Colstr2D3 = [ColstrT3,Colstr58,Colstr61,Colstr63];
 Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,...
-    Colstr66,Colstr67,Colstr68];
+    Colstr67,Colstr68,Colstr69];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
 ColstrTool = [ColstrToolT,ColstrTool4,ColstrTool3,ColstrTool2];
@@ -874,6 +879,10 @@ for preI = 1:size(preP,1)
             case 68
                 % Collection #68 - 2D Plot Heat Flux Across Wall
                 Pline = [68 206 210 613]; % All collections must start with their collection #
+            case 69
+                % Collection #69 - 2D Plot Full Heat Flux
+                Pline = [69 206 208 210 614];
+
         end
     end
     % Concatonate Collection to P
@@ -1037,6 +1046,9 @@ for I = 1:size(P,1)
             case 68
                 % Collection #68 - Plot Heat Flux Across Wall
                 disp('[&] Starting Collection #68 - Plot Heat Flux Across Wall')
+            case 69
+                % Collection #69 - Plot Full Heat Flux
+                disp('[&] Starting Collection #69 - Plot Full Heat Flux')
 
             case 203
                 % Make Directory:
@@ -2105,6 +2117,7 @@ for I = 1:size(P,1)
                 % Create Graph of Temperatures Across Intersection:
                 a = 0;
                 gateP = 1;
+                disp(['[#] [609] ',num2str(MSD.Plot.PN),' points will be ploted'])
                 while gateP == 1
                     qTRpa = input('[?] [609] What model # do you want to plot the Intersection of? (a = all, or row index # from AResults): ');
     
@@ -2119,7 +2132,7 @@ for I = 1:size(P,1)
                         Lf = AResultsD(numM,5);
 
                         % Function ("Analysis" Functions folder):
-                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM);
+                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM,MSD.Plot.PN);
 
                         end
                         gateP = 0;
@@ -2132,7 +2145,7 @@ for I = 1:size(P,1)
                         Lw = str2double(Specifications{7,1});
 
                         % Function ("Analysis" Functions folder):
-                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM);
+                        [Temp,aTemp] = tempAtIntersection(ThermalResults{numM},Tw,Lw,numM,MSD.Plot.PN);
 
                         gateP = input('[?] [609] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
@@ -2281,6 +2294,7 @@ for I = 1:size(P,1)
             case 613
                 % Create Graph of Heat Flux Across the Outdoor Wall:
                 qW = input('[?] [613] Plot Heat Flux across: (1 = Outdoor Wall, 2 = Indoor Wall, -1 = Quit): ');
+                disp(['[#] [613] ',num2str(MSD.Plot.PN),' points will be ploted'])
                 switch qW
                     case 1
                         qWstr = 'Outdoor';
@@ -2305,7 +2319,7 @@ for I = 1:size(P,1)
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
 
-                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,MSD.Plot.PN);
 
                         end
                         gateP = 0;
@@ -2316,7 +2330,7 @@ for I = 1:size(P,1)
                         Lw = str2double(Specifications{7,1});
 
                         % Get Flux at Wall
-                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,MSD.Plot.PN);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
@@ -2325,6 +2339,37 @@ for I = 1:size(P,1)
 
                     save(LogSavename,'aHF','HF','-append')
                     disp('[+] [613] aHF and HF have been saved to Logs')
+                end
+            case 614
+                % Plot Heat Flux for the Model:
+                gateP = 1;
+                disp(['[#] [614] Heat Flux Scale Factor is set to ',num2str(MSD.Plot.HFSF)])
+                while gateP == 1
+                    a = 0;
+                    qTRpa = input('[?] [614] What model # do you want to plot the Heat Flux of? (a = all, or row index # from AResults): ');
+
+                    if qTRpa == a
+                        % Create plot for all table values
+                        lineWaitbar(0);
+                        N = size(ThermalResults,2);
+                        for numM = 1:size(ThermalResults,2)
+                            lineWaitbar(2,N,614,[],['Evaluating Heat Flux (Model #',num2str(numM),'): '])
+                            fluxPlot(ThermalModel{numM},ThermalResults{numM},numM,MSD.Plot.HFSF);
+                            lineWaitbar(1,N,614,[],['Evaluating Heat Flux (Model #',num2str(numM),'): '])
+                        end
+                        disp('[+] [614] Plotted All Models')
+                        gateP = 0;
+                    else
+                        % Create plot for specific value
+                        numM = qTRpa;
+
+                        % Plot Heat Flux
+                        disp(['[$] [614] Plotting Model #',num2str(numM)])
+                        fluxPlot(ThermalModel{numM},ThermalResults{numM},numM,MSD.Plot.HFSF);
+                        disp(['[+] [614] Plotted Model #',num2str(numM)])
+
+                        gateP = input('[?] [614] Would you like to plot anything else? (1 = y, 0 = n): ');
+                    end
                 end
 
             case 701

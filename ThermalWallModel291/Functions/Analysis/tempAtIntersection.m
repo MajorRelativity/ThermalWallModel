@@ -1,17 +1,20 @@
-function [Temp,aTemp] = tempAtIntersection(thermalresults,Tw,Lw,numM)
-%TEMPATINTERSECTION Summary of this function goes here
+function [Temp,aTemp] = tempAtIntersection(thermalresults,Tw,Lw,numM,PN)
+%TEMPATINTERSECTION Plots and obtains all temperatures across Tw
 %   Tw is the wall thickness
 %   Lf is the length of the foam
+%   PN is the number of points that will be plotted
 
 %% Define variables
 persistent TempD
 persistent aTempD
 
 %% Interpolate Temperature:
-Y = linspace(-Lw/2,Lw/2);
+Y = linspace(-Lw/2,Lw/2,PN);
 T = zeros(1,length(Y));
 
 % Waitbar
+gcp;
+
 Q = parallel.pool.DataQueue;
 lineWaitbar(0)
 N = length(Y);
