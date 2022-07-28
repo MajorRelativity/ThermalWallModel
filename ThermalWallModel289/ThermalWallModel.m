@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.88
-% Updated on July 27 2022
+%% ThermalWallModel v2.89
+% Updated on July 28 2022
 
 % Clear Functions
 clear
@@ -422,7 +422,7 @@ Colstr2D4 = [ColstrT4,Colstr56,Colstr60,Colstr64,Colstr65,...
     Colstr66,Colstr67,Colstr68];
 Colstr2D = [Colstr2DT,Colstr2D1,Colstr2D2,Colstr2D3,Colstr2D4];
 
-ColstrTool = [ColstrToolT,ColstrTool3,ColstrTool2];
+ColstrTool = [ColstrToolT,ColstrTool4,ColstrTool3,ColstrTool2];
 Colstr = [Colstr3D,Colstr2D,ColstrTool];
 
 % Colstr Pages:
@@ -1080,7 +1080,7 @@ for I = 1:size(P,1)
             case 205
                 % Save Analysis Logs
                 disp('[$] [205] Saving Logs')
-                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM","Logs",'-v7.3')
+                save(LogSavename,"AResults","AResultsD","AResultsC","Specifications","numM","Logs",'LogSavename','-v7.3')
                 disp(['[+] [205] Logs have been saved as ',LogSavename])
 
             case 206
@@ -2312,6 +2312,9 @@ for I = 1:size(P,1)
                     end
                     disp(aHF);
                     disp('[#] [613] The variable "HF" contains all of the Heat Flux values')
+
+                    save(LogSavename,'aHF','HF','-append')
+                    disp('[+] [613] aHF and HF have been saved to Logs')
                 end
 
             case 701
