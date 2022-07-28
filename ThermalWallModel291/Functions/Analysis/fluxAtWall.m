@@ -35,6 +35,7 @@ Q = parallel.pool.DataQueue;
 lineWaitbar(0)
 bar = @(t)lineWaitbar(1,N,613,numM,['Evaluating Heat Flux (',num2str(t),'): ']);
 afterEach(Q, bar);
+lineWaitbar(2,N,613,numM,'Evaluating Heat Flux: ')
 
 parfor i = 1:length(Y)
     % Evaluate Heat Flux:

@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.90
+%% ThermalWallModel v2.91
 % Updated on July 28 2022
 
 % Clear Functions
@@ -295,7 +295,7 @@ represent a real house
 'ComplexNoFoam' - Same as complex but the foam is not on the wall
 
 %}
-MSD.Preset = 'Complex';
+MSD.Preset = 'ComplexNoPlate';
 
 %% Save or Load Model Specifications
 
@@ -1162,10 +1162,14 @@ for I = 1:size(P,1)
                 % Save All Open Figures
                 disp('[$] [614] Saving All Figures as PNGs')
                 FigList = findobj(allchild(0), 'flat', 'Type', 'figure');
+                
+                lineWaitbar(0)
+                lineWaitbar(2,length(FigList),214,[],'Saving Figures: ')
+
                 for iFig = 1:length(FigList)
                     FigHandle = FigList(iFig);
                     FigName   = get(FigHandle, 'Name');
-                    disp(['[*] [614] Saving Figure "',FigName,'" as a PNG'])
+                    lineWaitbar(1,length(FigList),214,[],['Saving Figure "',FigName,'" as a PNG: '])
                     FigSavename = ['Figures/',FigName,'.png'];
                     saveas(FigHandle, FigSavename, 'png');
                 end
@@ -2579,6 +2583,9 @@ function MSD = msPreset(MSD)
             MSD.Wall.Thickness = (13.97 + 1.27 + 1.27) * 10^-2; %m
             MSD.Wall.Length = 90 * 10^-2; %m 
             MSD.Wall.Height = MSD.Wall.Length;
+
+            % ADJUSTMENT FOR SPECIAL TESTING PURPOSES
+            %MSD.Foam.Length = MSD.Wall.Length - .01; %m
 
             % Plate:
             MSD.Plate.Length = .302; %Plate Length

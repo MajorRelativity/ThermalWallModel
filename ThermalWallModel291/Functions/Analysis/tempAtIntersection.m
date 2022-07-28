@@ -17,6 +17,7 @@ lineWaitbar(0)
 N = length(Y);
 bar = @(t)lineWaitbar(1,N,609,numM,['Evaluating Temperature (',num2str(t),'): ']);
 afterEach(Q, bar);
+lineWaitbar(2,N,609,numM,'Evaluating Temperature: ')
 
 % Interpolation
 for i = 1:length(Y)
