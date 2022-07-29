@@ -1,5 +1,5 @@
-%% ThermalWallModel v2.94
-% Updated on July 28 2022
+%% ThermalWallModel v2.95
+% Updated on July 29 2022
 
 % Clear Functions
 clear
@@ -127,7 +127,7 @@ Process ID:
     212) Store Necessary Variables for ThermalModel
     213) Unpack Necessary Variables for ThermalModel
     214) Save All Figures as PNGs
-    215) Start Parallel Pool with Maximum Number of Cores
+    215) Start Parallel Pool 
 
 300) Modification
 
@@ -238,6 +238,9 @@ MSD.q.SF = 1; %Only analyze square foam sizes?
 % Plotting Model Specifications:
 MSD.Plot.HFSF = .001; % Scales the heat flux so that direction is visible on the screen
 MSD.Plot.PN = 100; % If applies, the number of points that will get plotted.
+
+% Parallel Pool Settings:
+MSD.parpool = 2; %(1 = Full # of Cores, 2 = System Preffered # of Cores)
 
 %% Specific Model Specifications (User Edited):
 
@@ -1191,10 +1194,16 @@ for I = 1:size(P,1)
                 disp('[+] [614] All Figures Saved')
             case 215
                 % Create Parallel Pool with Maximum Cores:
-                cores = feature('numcores');
-                disp(['[#] [215] Number of cores identified to be: ',num2str(cores)])
                 if isempty(gcp('nocreate'))
-                    pool = parpool(cores);
+                    switch MSD.parpool
+                        case 1
+                            cores = feature('numcores');
+                            disp(['[#] [215] Number of cores identified to be: ',num2str(cores)])
+                            pool = parpool(cores);
+                        case 2
+                            pool = parpool;
+                    end
+                        
                 end
             case 301
                 % Select Thermal Model Number:
@@ -2324,7 +2333,7 @@ for I = 1:size(P,1)
                 gateP = 1;
                 while gateP == 1
                     a = 0;
-                    qTRpa = input(['[?] [613] What model # do you want to plot the Heat Flux across the',...
+                    qTRpa = input(['[?] [613] What model # do you want to plot the Heat Flux across the ',...
                         qWstr,' Wall of? (a = all, or row index # from AResults): ']);
     
                     if qTRpa == a
