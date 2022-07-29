@@ -1,4 +1,4 @@
-function [HF,aHF] = fluxAtWall(qW,numM,thermalresults,Tw,Lw,PN)
+function [HF,aHF] = fluxAtWall(qW,numM,thermalresults,Tw,Lw,Tf,PN)
 %HEATFLUXATWALL Plots the Heat Flux across one of the two walls
 %   qW determines the wall that gets plotted over
 %   numM is the model number

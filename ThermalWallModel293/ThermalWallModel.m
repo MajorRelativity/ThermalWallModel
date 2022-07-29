@@ -1,4 +1,4 @@
-%% ThermalWallModel v2.92
+%% ThermalWallModel v2.94
 % Updated on July 28 2022
 
 % Clear Functions
@@ -127,6 +127,7 @@ Process ID:
     212) Store Necessary Variables for ThermalModel
     213) Unpack Necessary Variables for ThermalModel
     214) Save All Figures as PNGs
+    215) Start Parallel Pool with Maximum Number of Cores
 
 300) Modification
 
@@ -767,6 +768,7 @@ for preI = 1:size(preP,1)
                     mkdir Figures
                     disp('[+] [122] Figures Directory Created')
                 end
+
             case -4
                 % Collection #-4 - Tool: Save All Figures
                 Pline = [-4 214];
@@ -846,7 +848,7 @@ for preI = 1:size(preP,1)
                 
             case 58
                 % Collection #58 - 2D Solve All Stud Analysis Models
-                Pline = [58 204 213 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
+                Pline = [58 204 213 215 303 408 409 507 504 508 509 510 211 205 207 209]; % All collections must start with their collection #
                 
             case 59
                 % Collection #59 - 2D Create all Foam Analysis Geometries
@@ -857,16 +859,16 @@ for preI = 1:size(preP,1)
                 Pline = [60 204 213 301 608]; % All collections must start with their collection #
             case 61
                 % Collection #61 - 2D Solve All Foam Analysis Models
-                Pline = [61 204 213 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
+                Pline = [61 204 213 215 305 408 409 507 504 506 509 510 211 205 207 209]; % All collections must start with their collection #
             case 62
                 % Collection #62 - 2D Generate All Plate Analysis Geometries
                 Pline = [62 505 401 306 406 407 704 701 212 203]; % All collections must start with their collection #
             case 63
                 % Collection #63 - 2D Solve All Plate Analysis Models
-                Pline = [63 204 213 303 408 409 507 504 511 509 510 211 205 207 209]; % All collections must start with their collection #
+                Pline = [63 204 213 215 303 408 409 507 504 511 509 510 211 205 207 209]; % All collections must start with their collection #
             case 64
                 % Collection #64 - 2D Plot Temperatures Across Intersection
-                Pline = [64 206 210 609]; % All collections must start with their collection #
+                Pline = [64 206 210 215 609]; % All collections must start with their collection #
             case 65
                 % Collection #65 - 2D Get Temperature Across Plate Region
                 Pline = [65 206 210 610]; % All collections must start with their collection #
@@ -878,7 +880,7 @@ for preI = 1:size(preP,1)
                 Pline = [67 204 213 301 612]; % All collections must start with their collection #
             case 68
                 % Collection #68 - 2D Plot Heat Flux Across Wall
-                Pline = [68 206 210 613]; % All collections must start with their collection #
+                Pline = [68 206 210 215 613]; % All collections must start with their collection #
             case 69
                 % Collection #69 - 2D Plot Full Heat Flux
                 Pline = [69 206 208 210 614];
@@ -1187,6 +1189,13 @@ for I = 1:size(P,1)
                 end
 
                 disp('[+] [614] All Figures Saved')
+            case 215
+                % Create Parallel Pool with Maximum Cores:
+                cores = feature('numcores');
+                disp(['[#] [215] Number of cores identified to be: ',num2str(cores)])
+                if isempty(gcp('nocreate'))
+                    pool = parpool(cores);
+                end
             case 301
                 % Select Thermal Model Number:
                 if run.p301
@@ -2325,8 +2334,9 @@ for I = 1:size(P,1)
                         % Pull Important Info:
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
+                        Tf = AResultsD(numM,4);
 
-                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,MSD.Plot.PN);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,Tf,MSD.Plot.PN);
 
                         end
                         gateP = 0;
@@ -2335,9 +2345,10 @@ for I = 1:size(P,1)
                         numM = qTRpa;
                         Tw = str2double(Specifications{6,1});
                         Lw = str2double(Specifications{7,1});
+                        Tf = AResultsD(numM,4);
 
                         % Get Flux at Wall
-                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,MSD.Plot.PN);
+                        [HF,aHF] = fluxAtWall(qW,numM,ThermalResults{numM},Tw,Lw,Tf,MSD.Plot.PN);
 
                         gateP = input('[?] [613] Would you like to plot anything else? (1 = y, 0 = n): ');
                     end
