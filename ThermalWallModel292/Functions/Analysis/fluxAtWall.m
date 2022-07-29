@@ -20,6 +20,9 @@ switch qW
     case 2
         qWstr = 'Indoor';
         x = 0;
+    case 3
+        qWstr = 'Outdoor Foam';
+        x = Tw + Tf;
     otherwise
         disp('[~] Quitting Script')
         return

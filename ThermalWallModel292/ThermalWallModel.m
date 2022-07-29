@@ -2293,13 +2293,20 @@ for I = 1:size(P,1)
                 clear Mesh612
             case 613
                 % Create Graph of Heat Flux Across the Outdoor Wall:
-                qW = input('[?] [613] Plot Heat Flux across: (1 = Outdoor Wall, 2 = Indoor Wall, -1 = Quit): ');
+                qW = input(['[?] [613] Plot Heat Flux across: ' ...
+                    '\n    1 = Outdoor Wall ' ...
+                    '\n    2 = Indoor Wall ' ...
+                    '\n    3 = Outdoor Foam ' ...
+                    '\n   -1 = Quit' ...
+                    '\n  Input: ']);
                 disp(['[#] [613] ',num2str(MSD.Plot.PN),' points will be ploted'])
                 switch qW
                     case 1
                         qWstr = 'Outdoor';
                     case 2
                         qWstr = 'Indoor';
+                    case 3
+                        qWstr = 'Outdoor Foam';
                     otherwise
                         disp('[~] Quitting Script')
                         return
